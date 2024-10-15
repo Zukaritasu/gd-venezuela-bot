@@ -1,0 +1,124 @@
+{
+    "states": [
+        {
+            "name": "Apure",
+            "roleId": "1121220058786578532",
+            "flagUrl": "https://media.discordapp.net/attachments/1295063221396439082/1295063883224190987/apure.png"
+        },
+        {
+            "name": "Anzoátegui",
+            "roleId": "1121219983746285658",
+            "flagUrl": "https://media.discordapp.net/attachments/1295063221396439082/1295063882892709978/anzoategui.png"
+        },
+        {
+            "name": "Barinas",
+            "roleId": "1121220201644556288",
+            "flagUrl": "https://media.discordapp.net/attachments/1295063221396439082/1295063883953868810/barinas.png"
+        },
+        {
+            "name": "Amazonas",
+            "roleId": "1121219836924674088",
+            "flagUrl": "https://media.discordapp.net/attachments/1295063221396439082/1295063882318217326/amazonas.png"
+        },
+        {
+            "name": "Aragua",
+            "roleId": "1121220115011207238",
+            "flagUrl": "https://media.discordapp.net/attachments/1295063221396439082/1295063883605868554/aragua.png"
+        },
+        {
+            "name": "Bolivar",
+            "roleId": "1121220255365214278",
+            "flagUrl": "https://media.discordapp.net/attachments/1295063221396439082/1295063884369235968/bolivar.png"
+        },
+        {
+            "name": "Carabobo",
+            "roleId": "1121220330170613781",
+            "flagUrl": "https://media.discordapp.net/attachments/1295063221396439082/1295063884759302286/carabobo.png"
+        },
+        {
+            "name": "Cojedes",
+            "roleId": "1121220445241360384",
+            "flagUrl": "https://media.discordapp.net/attachments/1295063221396439082/1295063885417812009/cojedes.png"
+        },
+        {
+            "name": "Delta Amacuro",
+            "roleId": "1121220498748084375",
+            "flagUrl": "https://media.discordapp.net/attachments/1295063221396439082/1295063881911373924/delta-amacuro.png"
+        },
+        {
+            "name": "Guarico",
+            "roleId": "1121220954945757324",
+            "flagUrl": "https://media.discordapp.net/attachments/1295063221396439082/1295063942703349863/guarico.png"
+        },
+        {
+            "name": "Falcon",
+            "roleId": "1121220893713104928",
+            "flagUrl": "https://media.discordapp.net/attachments/1295063221396439082/1295063942321930240/falcon.png"
+        },
+        {
+            "name": "Caracas",
+            "roleId": "1121220557254426775",
+            "flagUrl": "https://media.discordapp.net/attachments/1295063221396439082/1295063885174411374/caracas.png"
+        },
+        {
+            "name": "Merida",
+            "roleId": "1121221072054919178",
+            "flagUrl": "https://media.discordapp.net/attachments/1295063221396439082/1295063943865176124/merida.png"
+        },
+        {
+            "name": "Lara",
+            "roleId": "1121221006988677293",
+            "flagUrl": "https://media.discordapp.net/attachments/1295063221396439082/1295063943135498291/lara.png"
+        },
+        {
+            "name": "Monagas",
+            "roleId": "1121221256784658513",
+            "flagUrl": "https://media.discordapp.net/attachments/1295063221396439082/1295063944762884096/monagas.png"
+        },
+        {
+            "name": "Portuguesa",
+            "roleId": "1121221397109297322",
+            "flagUrl": "https://media.discordapp.net/attachments/1295063221396439082/1295063945538961418/portuguesa.png"
+        },
+        {
+            "name": "Sucre",
+            "roleId": "1121221471063257118",
+            "flagUrl": "https://media.discordapp.net/attachments/1295063221396439082/1295063946029699163/sucre.png"
+        },
+        {
+            "name": "Nueva Esparta",
+            "roleId": "1121221319309144165",
+            "flagUrl": "https://media.discordapp.net/attachments/1295063221396439082/1295063945165672630/nueva-esparta.png"
+        },
+        {
+            "name": "Tachira",
+            "roleId": "1121221511332765796",
+            "flagUrl": "https://media.discordapp.net/attachments/1295063221396439082/1295063941822812160/tachira.png"
+        },
+        {
+            "name": "Miranda",
+            "roleId": "1121221115096875058",
+            "flagUrl": "https://media.discordapp.net/attachments/1295063221396439082/1295063944326807623/miranda.png"
+        },
+        {
+            "name": "Trujillo",
+            "roleId": "1121221606816100423",
+            "flagUrl": "https://media.discordapp.net/attachments/1295063221396439082/1295063979105849425/trujillo.png"
+        },
+        {
+            "name": "Vargas",
+            "roleId": "1121221655650381825",
+            "flagUrl": "https://media.discordapp.net/attachments/1295063221396439082/1295063979512824010/vargas.png"
+        },
+        {
+            "name": "Zulia",
+            "roleId": "1121221763615952950",
+            "flagUrl": "https://media.discordapp.net/attachments/1295063221396439082/1295063978741072029/zulia.png"
+        },
+        {
+            "name": "Yaracuy",
+            "roleId": "1121221710755143801",
+            "flagUrl": "https://media.discordapp.net/attachments/1295063221396439082/1295063979864883383/yaracuy.png"
+        }
+    ]
+}
