@@ -1,5 +1,5 @@
 {
-  "name": "gd-venezuela-bot",
+  "name": "GD Venezuela Bot",
   "version": "1.0.0",
   "description": "GD Venezuela Bot is designed to provide information to players from all over the country.",
   "main": "index.js",
@@ -7,9 +7,10 @@
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
-  "author": "",
+  "author": "Zukaritasu",
   "license": "ISC",
   "dependencies": {
-    "discord.js": "^14.16.3"
+    "discord.js": "^14.16.3",
+    "mongodb": "^6.9.0"
   }
 }

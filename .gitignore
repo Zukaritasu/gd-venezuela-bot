@@ -131,3 +131,4 @@ dist
 
 # Bot config
 .botconfig/
+hashlist.json
