@@ -25,6 +25,8 @@ const { exit } = require('process');
 
 const HASHLIST_FILENAME = './hashlist.json';
 
+process.chdir(__dirname);
+
 //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 function generateSHA256(filePath) {

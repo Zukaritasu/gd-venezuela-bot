@@ -22,6 +22,9 @@ const botenv = require('./botenv')
 //
 // +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 //
+
+process.chdir(__dirname);
+
 const rest = new REST().setToken(TOKEN);
 (async () => {
     try {

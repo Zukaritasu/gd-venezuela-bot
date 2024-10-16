@@ -24,6 +24,8 @@ const { Db, MongoClient } = require('mongodb');
 // +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 //
 
+process.chdir(__dirname);
+
 
 (async () => {
     /** @type Db */
