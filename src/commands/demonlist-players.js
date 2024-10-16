@@ -135,6 +135,11 @@ async function createEmbedLeaderboard() {
     embed.setTimestamp()
     embed.addFields(players)
 
+    embed.setAuthor({
+        name: 'Venezuela',
+        iconURL: 'https://flagcdn.com/w640/ve.png'
+    })
+
     return { embeds: [embed] }
 }
 
