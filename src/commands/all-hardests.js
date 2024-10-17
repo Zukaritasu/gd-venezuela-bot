@@ -79,7 +79,7 @@ async function execute(_client, database, interaction) {
 
 module.exports = {
     data: new SlashCommandBuilder()
-        .setName('all-hardests')
+        .setName('hardests')
         .setDescription('Todos los Hardest del país'),
     execute,
 };

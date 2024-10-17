@@ -19,7 +19,7 @@ const { SlashCommandBuilder, EmbedBuilder, ChatInputCommandInteraction, ActionRo
     ButtonBuilder, ButtonStyle,
     Client } = require('discord.js');
 const https = require('https');
-const utils = require('../utils');
+const utils = require('../../utils');
 const { Db } = require('mongodb');
 
 const EMBED_COLOR = 0x2b2d31 /** Black */
@@ -161,7 +161,7 @@ async function execute(_client, _database, interaction) {
 
 module.exports = {
     data: new SlashCommandBuilder()
-        .setName('demonlist-players')
+        .setName('jugadores_demonlist')
         .setDescription('Lista de Jugadores de la Demonlist'),
     execute,
 };

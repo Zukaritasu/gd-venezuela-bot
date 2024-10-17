@@ -16,7 +16,7 @@
  */
 
 const { SlashCommandBuilder, ChatInputCommandInteraction } = require('discord.js');
-const embeds = require('../embeds')
+const embeds = require('../../embeds')
 
 //
 // +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
@@ -35,7 +35,7 @@ async function execute(client, database, interaction) {
 
 module.exports = {
     data: new SlashCommandBuilder()
-        .setName('count-players')
+        .setName('jugadores_cantidad')
         .setDescription('Cantidad de jugadores por estado del país'),
     execute,
 };

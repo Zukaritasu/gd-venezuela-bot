@@ -16,10 +16,10 @@
  */
 
 const { SlashCommandBuilder, ChatInputCommandInteraction, PermissionsBitField, GuildMember } = require('discord.js');
-const { states } = require('../../.botconfig/country-states.json')
+const { states } = require('../../../.botconfig/country-states.json')
 const https = require('https');
 const { Db } = require('mongodb');
-const utils = require('../utils');
+const utils = require('../../utils');
 
 //
 // +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
@@ -179,7 +179,7 @@ async function execute(_client, database, interaction) {
 
 module.exports = {
     data: new SlashCommandBuilder()
-        .setName('set-hardest')
+        .setName('staff_hardest')
         .setDescription('Define el hardest del país (solo personal autorizado)')
         .addUserOption(option =>
             option.setName('user')

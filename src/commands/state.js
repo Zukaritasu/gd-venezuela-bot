@@ -374,7 +374,7 @@ async function execute(_client, database, interaction) {
 
 module.exports = {
     data: new SlashCommandBuilder()
-        .setName('state-info')
+        .setName('estado_info')
         .setDescription('Muestra la información de un estado del país'),
     execute,
 };

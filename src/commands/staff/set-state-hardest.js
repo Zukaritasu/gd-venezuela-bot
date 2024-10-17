@@ -16,9 +16,9 @@
  */
 
 const { SlashCommandBuilder, ChatInputCommandInteraction } = require('discord.js');
-const { states } = require('../../.botconfig/country-states.json');
+const { states } = require('../../../.botconfig/country-states.json');
 const { Db } = require('mongodb');
-const utils = require('../utils')
+const utils = require('../../utils')
 
 //
 // +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
@@ -106,7 +106,7 @@ async function execute(_client, database, interaction) {
 
 module.exports = {
     data: new SlashCommandBuilder()
-        .setName('set-state-hardest')
+        .setName('staff_estado_hardest')
         .setDescription('Nivel más difícil completado en el estado (solo personal autorizado)')
         .addStringOption(option =>
             option.setName('player')
