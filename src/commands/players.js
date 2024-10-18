@@ -15,7 +15,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-const { SlashCommandBuilder, ChatInputCommandInteraction} = require('discord.js');
+const { SlashCommandBuilder, ChatInputCommandInteraction } = require('discord.js');
 
 
 //
@@ -36,6 +36,8 @@ async function execute(client, database, interaction) {
         await require('./players/creator-point-players').execute(client, database, interaction)
     } else if (subcommand === 'demonlist') {
         await require('./players/demonlist-players').execute(client, database, interaction)
+    } else if (subcommand === 'retirados_demonlist') {
+        await require('./players/demonlist-player-removed').execute(client, database, interaction)
     }
 }
 
@@ -54,6 +56,10 @@ module.exports = {
         .addSubcommand(subcommand =>
             subcommand
                 .setName('demonlist')
-                .setDescription('Lista de Jugadores de la Demonlist')),
+                .setDescription('Lista de Jugadores de la Demonlist'))
+        .addSubcommand(subcommand =>
+            subcommand
+                .setName('retirados_demonlist')
+                .setDescription('Lista de Jugadores retirados de la Demonlist')),
     execute,
 };
