@@ -223,15 +223,10 @@ async function processAccountCreatorPoint(interaction, database) {
 async function execute(_client, database, interaction) {
     try {
         await interaction.deferReply({ ephemeral: true });
-        if (!utils.isAdministrator(interaction.member)) {
+        if (!utils.isAdministrator(interaction.member))
             await interaction.editReply('No tienes privilegios suficientes para realizar esta acción');
-        } else {
-            if (interaction.member.id !== '591640548490870805') {
-                await interaction.editReply('Esta opción no está disponible. Intente más tarde');
-            } else {
-                await processAccountCreatorPoint(interaction, database);
-            }
-        }
+        else
+            await processAccountCreatorPoint(interaction, database);
     } catch (error) {
         console.error(error)
         await interaction.editReply('An unknown error has occurred. Please try again later');
