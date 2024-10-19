@@ -29,15 +29,21 @@ const { SlashCommandBuilder, ChatInputCommandInteraction } = require('discord.js
  * @param {ChatInputCommandInteraction} interaction 
  */
 async function execute(client, database, interaction) {
+    const subcommandGroup = interaction.options.getSubcommandGroup();
     const subcommand = interaction.options.getSubcommand();
-    if (subcommand === 'cantidad') {
+
+    if (subcommandGroup === 'demonlist') {
+        if (subcommand === 'retirados') {
+            await require('./players/demonlist-player-removed').execute(client, database, interaction)
+        } else if (subcommand === 'activos') {
+            await require('./players/demonlist-players').execute(client, database, interaction)
+        }
+    }
+
+    else if (subcommand === 'cantidad') {
         await require('./players/count-players').execute(client, database, interaction)
     } else if (subcommand === 'cp') {
         await require('./players/creator-point-players').execute(client, database, interaction)
-    } else if (subcommand === 'demonlist') {
-        await require('./players/demonlist-players').execute(client, database, interaction)
-    } else if (subcommand === 'retirados_demonlist') {
-        await require('./players/demonlist-player-removed').execute(client, database, interaction)
     }
 }
 
@@ -53,13 +59,17 @@ module.exports = {
             subcommand
                 .setName('cp')
                 .setDescription('Lista de Jugadores con puntos de creador'))
-        .addSubcommand(subcommand =>
-            subcommand
-                .setName('demonlist')
-                .setDescription('Lista de Jugadores de la Demonlist'))
-        .addSubcommand(subcommand =>
-            subcommand
-                .setName('retirados_demonlist')
-                .setDescription('Lista de Jugadores retirados de la Demonlist')),
+        .addSubcommandGroup(subCommandGroup =>
+            subCommandGroup.setName('demonlist')
+                .setDescription('Demonlist')
+                .addSubcommand(subcommand =>
+                    subcommand
+                        .setName('retirados')
+                        .setDescription('Lista de Jugadores retirados de la Demonlist'))
+                .addSubcommand(subcommand =>
+                    subcommand
+                        .setName('activos')
+                        .setDescription('Lista de Jugadores activos de la Demonlist'))
+        ),
     execute,
 };
