@@ -16,11 +16,53 @@
  */
 
 const { SlashCommandBuilder, ChatInputCommandInteraction } = require('discord.js');
-const embeds = require('../../embeds')
+const { states } = require('../../../.botconfig/country-states.json')
 
 //
 // +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 //
+
+const EMBED_COLOR = 0x2b2d31
+
+/**
+ * @param {Client} client 
+ * @param {ChatInputCommandInteraction} interaction 
+ * @returns 
+ */
+async function embedNumberPlayers(_client, _database, interaction) {
+    let fields = [];
+
+    for (const state of states) {
+        const role = interaction.guild.roles.cache.get(state.roleId);
+        if (role !== undefined) {
+            fields.push({
+                name: state.name,
+                value: `${role.members.size}`,
+                inline: true
+            })
+        } else {
+            fields.push({
+                name: state.name,
+                value: `unknown`,
+                inline: true
+            })
+        }
+    }
+
+    return {
+        content: '',
+        embeds: [
+            new EmbedBuilder()
+                .setColor(EMBED_COLOR)
+                .setTitle('Cantidad de Jugadores por Estado')
+                .addFields(fields)
+                .setTimestamp()
+                .setFooter({ text: `GD Venezuela` })
+                .setThumbnail('https://flagcdn.com/256x192/ve.png')
+        ],
+        components: []
+    };
+}
 
 /**
  * 
@@ -29,8 +71,18 @@ const embeds = require('../../embeds')
  * @param {ChatInputCommandInteraction} interaction 
  */
 async function execute(client, database, interaction) {
-    await interaction.deferReply();
-    await interaction.editReply({ embeds: [await embeds.embedNumberPlayers(client, database, interaction)]});
+    try {
+        await interaction.deferReply();
+        await interaction.editReply(await embedNumberPlayers(client, database, interaction));
+    } catch (error) {
+        console.error(error)
+        await interaction.editReply(
+            {
+                content: 'An unknown error has occurred',
+                embeds: [],
+                components: []
+            });
+    }
 }
 
 module.exports = {
