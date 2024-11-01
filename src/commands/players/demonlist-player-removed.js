@@ -20,6 +20,7 @@ const { SlashCommandBuilder, EmbedBuilder, ChatInputCommandInteraction, ActionRo
     Client } = require('discord.js');
 const https = require('https');
 const utils = require('../../utils');
+const apipcrate = require('../../apipcrate');
 const { Db } = require('mongodb');
 
 const EMBED_COLOR = 0x2b2d31 /** Black */
@@ -35,32 +36,18 @@ function categorizeDemons(records) {
 
     records.forEach(record => {
         const position = record.demon.position;
-        if (position <= 75) {
-            mainCount++;
-        } else if (position <= 150) {
-            extendedCount++;
-        } else {
-            legacyCount++;
+        if (record.progress === 100) {
+            if (position <= 75) {
+                mainCount++;
+            } else if (position <= 150) {
+                extendedCount++;
+            } else {
+                legacyCount++;
+            }
         }
     });
 
     return `${mainCount} Main, ${extendedCount} Extended, ${legacyCount} Legacy`;
-}
-
-/**
- * 
- * @param {string} url 
- * @returns 
- */
-async function getResponse(url) {
-    return new Promise(function (resolve, reject) {
-        https.get(`https://www.pointercrate.com/${url}`, res => {
-            let data = [];
-            res.on('data', chunk => { data.push(chunk); });
-            res.on('end', () => { resolve(JSON.parse(Buffer.concat(data).toString())) });
-            res.on('error', err => { reject(err); })
-        });
-    });
 }
 
 /**
@@ -70,8 +57,8 @@ async function getResponse(url) {
  */
 async function getPlayerInfo(id) {
     /** @type Object */
-    const response = await getResponse(`api/v1/players/${id}`);
-    if (response instanceof Error)
+    const response = await apipcrate.getPlayerInfo(id);
+    if (response instanceof Error || response instanceof SyntaxError)
         throw response
     return categorizeDemons(response.data.records)
 }
@@ -95,7 +82,7 @@ function escapeDiscordSpecialChars(input) {
  */
 async function getVenezuelaLeaderboard() {
     /** @type Object[] */
-    const response = await getResponse('api/v1/players?nation=VE');
+    const response = await apipcrate.getCountryLeaderboard('VE');
     if (response instanceof Error)
         throw response
 
@@ -160,8 +147,5 @@ async function execute(_client, _database, interaction) {
 }
 
 module.exports = {
-    data: new SlashCommandBuilder()
-        .setName('demonlist_players_removed')
-        .setDescription('Jugadores retirados de la Demonlist'),
-    execute,
+    execute
 };

@@ -40,10 +40,12 @@ async function execute(client, database, interaction) {
         if (subcommand === 'hardest') {
             await require('./staff/set-state-hardest').execute(client, database, interaction)
         }
-    } 
-    
+    }
+
     else if (subcommand === 'hardest') {
         await require('./staff/set-hardest').execute(client, database, interaction)
+    } else if (subcommand === 'info') {
+        await require('./staff/info').execute(client, database, interaction)
     }
 }
 
@@ -57,7 +59,15 @@ module.exports = {
                 .addSubcommand(subcommand =>
                     subcommand
                         .setName('cp')
-                        .setDescription('Guarda un jugador con puntos de creador (solo personal autorizado)'))
+                        .setDescription('Guarda un jugador con puntos de creador (solo personal autorizado)')
+                        .addUserOption(option =>
+                            option.setName('user')
+                                .setDescription('Seleccione el jugador')
+                                .setRequired(true))
+                        .addStringOption(option =>
+                            option.setName('player')
+                                .setDescription('Nombre del jugador en Geometry Dash')
+                                .setRequired(true)))
         )
         .addSubcommandGroup(subCommandGroup =>
             subCommandGroup.setName('estado')
@@ -65,12 +75,55 @@ module.exports = {
                 .addSubcommand(subcommand =>
                     subcommand
                         .setName('hardest')
-                        .setDescription('Nivel más difícil completado en el Estado (solo personal autorizado)'))
+                        .setDescription('Nivel más difícil completado en el Estado (solo personal autorizado)')
+                        .addStringOption(option =>
+                            option.setName('player')
+                                .setDescription('Nombre del usuario')
+                                .setRequired(true)
+                        )
+                        .addStringOption(option =>
+                            option.setName('level')
+                                .setDescription('Nombre del nivel')
+                                .setRequired(true)
+                        )
+                        .addRoleOption(option =>
+                            option.setName('state')
+                                .setDescription('Rol del estado')
+                                .setRequired(true)
+                        )
+                        .addStringOption(option =>
+                            option.setName('youtube')
+                                .setDescription('Enlace del vídeo de YouTube')
+                        ))
         )
         .addSubcommand(subcommand =>
             subcommand
                 .setName('hardest')
-                .setDescription('Define el hardest del país (solo personal autorizado)')),
-        
+                .setDescription('Define el hardest del país (solo personal autorizado)')
+                .addUserOption(option =>
+                    option.setName('user')
+                        .setDescription('Selecciona el jugador')
+                        .setRequired(true))
+                .addStringOption(option =>
+                    option.setName('player')
+                        .setDescription('Nombre del jugador')
+                        .setRequired(true))
+                .addStringOption(option =>
+                    option.setName('level')
+                        .setDescription('Enlace del nivel en Pointercrate')
+                        .setRequired(true))
+                .addStringOption(option =>
+                    option.setName('ytvideo')
+                        .setDescription('Enlace del video de YouTube')
+                        .setRequired(true))
+                .addIntegerOption(option =>
+                    option.setName('attemps')
+                        .setDescription('Cantidad de intentos totales')
+                        .setRequired(true)))
+        .addSubcommand(subcommand =>
+            subcommand
+                .setName('info')
+                .setDescription('Información del Personal del Servidor')),
+
     execute,
 };

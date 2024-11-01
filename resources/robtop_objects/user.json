@@ -1,0 +1,290 @@
+[
+    {
+        "key": 1,
+        "value": "userName",
+        "type": "String",
+        "description": "The name of player"
+    },
+    {
+        "key": 2,
+        "value": "userID",
+        "type": "Integer",
+        "description": "The ID of player"
+    },
+    {
+        "key": 3,
+        "value": "stars",
+        "type": "Integer",
+        "description": "The count of stars player have"
+    },
+    {
+        "key": 4,
+        "value": "demons",
+        "type": "Integer",
+        "description": "The count of demons player have"
+    },
+    {
+        "key": 6,
+        "value": "ranking",
+        "type": "Integer",
+        "description": "The global leaderboard position of the player"
+    },
+    {
+        "key": 7,
+        "value": "accountHighlight",
+        "type": "Integer",
+        "description": "The accountID of the player. Is used for highlighting the player on the leaderboards"
+    },
+    {
+        "key": 8,
+        "value": "creatorpoints",
+        "type": "Integer",
+        "description": "The count of creatorpoints player have"
+    },
+    {
+        "key": 9,
+        "value": "iconID",
+        "type": "Integer",
+        "description": "Maybe... link"
+    },
+    {
+        "key": 10,
+        "value": "color",
+        "type": "Integer",
+        "description": "First color of the player use"
+    },
+    {
+        "key": 11,
+        "value": "color2",
+        "type": "Integer",
+        "description": "Second color of the player use"
+    },
+    {
+        "key": 13,
+        "value": "secretCoins",
+        "type": "Integer",
+        "description": "The count of coins player have"
+    },
+    {
+        "key": 14,
+        "value": "iconType",
+        "type": "Integer",
+        "description": "The iconType of the player use"
+    },
+    {
+        "key": 15,
+        "value": "special",
+        "type": "Integer",
+        "description": "The special number of the player use"
+    },
+    {
+        "key": 16,
+        "value": "accountID",
+        "type": "Integer",
+        "description": "The accountid of this player"
+    },
+    {
+        "key": 17,
+        "value": "usercoins",
+        "type": "Integer",
+        "description": "The count of usercoins player have"
+    },
+    {
+        "key": 18,
+        "value": "messageState",
+        "type": "Integer",
+        "description": "0: All, 1: Only friends, 2: None"
+    },
+    {
+        "key": 19,
+        "value": "friendsState",
+        "type": "Integer",
+        "description": "0: All, 1: None"
+    },
+    {
+        "key": 20,
+        "value": "youTube",
+        "type": "String",
+        "description": "The youtubeurl of player"
+    },
+    {
+        "key": 21,
+        "value": "accIcon",
+        "type": "Integer",
+        "description": "The icon number of the player use"
+    },
+    {
+        "key": 22,
+        "value": "accShip",
+        "type": "Integer",
+        "description": "The ship number of the player use"
+    },
+    {
+        "key": 23,
+        "value": "accBall",
+        "type": "Integer",
+        "description": "The ball number of the player use"
+    },
+    {
+        "key": 24,
+        "value": "accBird",
+        "type": "Integer",
+        "description": "The bird number of the player use"
+    },
+    {
+        "key": 25,
+        "value": "accDart(wave)",
+        "type": "Integer",
+        "description": "The dart(wave) number of the player use"
+    },
+    {
+        "key": 26,
+        "value": "accRobot",
+        "type": "Integer",
+        "description": "The robot number of the player use"
+    },
+    {
+        "key": 27,
+        "value": "accStreak",
+        "type": "Integer",
+        "description": "The streak of the user"
+    },
+    {
+        "key": 28,
+        "value": "accGlow",
+        "type": "Integer",
+        "description": "The glow number of the player use"
+    },
+    {
+        "key": 29,
+        "value": "isRegistered",
+        "type": "Integer",
+        "description": "If an account is registered or not"
+    },
+    {
+        "key": 30,
+        "value": "globalRank",
+        "type": "Integer",
+        "description": "The global rank of this player"
+    },
+    {
+        "key": 31,
+        "value": "friendstate",
+        "type": "Integer",
+        "description": "0: None, 1: already is friend, 3: send request to target, but target haven't accept, 4: target send request, but haven't accept"
+    },
+    {
+        "key": 38,
+        "value": "messages",
+        "type": "Integer",
+        "description": "How many new messages the user has (shown in-game as a notification)"
+    },
+    {
+        "key": 39,
+        "value": "friendRequests",
+        "type": "Integer",
+        "description": "How many new friend requests the user has (shown in-game as a notification)"
+    },
+    {
+        "key": 40,
+        "value": "newFriends",
+        "type": "Integer",
+        "description": "How many new Friends the user has (shown in-game as a notification)"
+    },
+    {
+        "key": 41,
+        "value": "NewFriendRequest",
+        "type": "Bool",
+        "description": "Appears on userlist endpoint to show if the friend request is new"
+    },
+    {
+        "key": 42,
+        "value": "age",
+        "type": "String",
+        "description": "The time since you submitted a levelScore"
+    },
+    {
+        "key": 43,
+        "value": "accSpider",
+        "type": "Integer",
+        "description": "The spider number of the player use"
+    },
+    {
+        "key": 44,
+        "value": "twitter",
+        "type": "String",
+        "description": "The twitter of player"
+    },
+    {
+        "key": 45,
+        "value": "twitch",
+        "type": "String",
+        "description": "The twitch of player"
+    },
+    {
+        "key": 46,
+        "value": "diamonds",
+        "type": "Integer",
+        "description": "The count of diamonds player have"
+    },
+    {
+        "key": 48,
+        "value": "accExplosion",
+        "type": "Integer",
+        "description": "The explosion number of the player use"
+    },
+    {
+        "key": 49,
+        "value": "modlevel",
+        "type": "Integer",
+        "description": "0: None, 1: Normal Mod(yellow), 2: Elder Mod(orange)"
+    },
+    {
+        "key": 50,
+        "value": "commentHistoryState",
+        "type": "Integer",
+        "description": "0: All, 1: Only friends, 2: None"
+    },
+    {
+        "key": 51,
+        "value": "color3",
+        "type": "Integer",
+        "description": "The ID of the player's glow color"
+    },
+    {
+        "key": 52,
+        "value": "moons",
+        "type": "Integer",
+        "description": "The amount of moons the player has"
+    },
+    {
+        "key": 53,
+        "value": "accSwing",
+        "type": "Integer",
+        "description": "The player's swing"
+    },
+    {
+        "key": 54,
+        "value": "accJetpack",
+        "type": "Integer",
+        "description": "The player's jetpack"
+    },
+    {
+        "key": 55,
+        "value": "demons",
+        "type": "String",
+        "description": "Breakdown of the player's demons, in the format {easy},{medium},{hard}.{insane},{extreme},{easyPlatformer},{mediumPlatformer},{hardPlatformer},{insanePlatformer},{extremePlatformer},{weekly},{gauntlet}"
+    },
+    {
+        "key": 56,
+        "value": "classicLevels",
+        "type": "String",
+        "description": "Breakdown of the player's classic mode non-demons, in the format {auto},{easy},{normal},{hard},{harder},{insane},{daily},{gauntlet}"
+    },
+    {
+        "key": 57,
+        "value": "platformerLevels",
+        "type": "String",
+        "description": "Breakdown of the player's platformer mode non-demons, in the format {auto},{easy},{normal},{hard},{harder},{insane}"
+    }
+]

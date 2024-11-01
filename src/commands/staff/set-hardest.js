@@ -50,8 +50,9 @@ function getResponseJSON(level) {
  * @param {string} videoUrl YouTube video link
  * @param {*} levelId Level ID in Pointercrate
  * @param {*} stateName Name of the country state
+ * @param {number} attemps attemps
  */
-async function updateHardest(database, interaction, username, memberId, videoUrl, levelId, stateName) {
+async function updateHardest(database, interaction, username, memberId, videoUrl, levelId, stateName, attemps) {
     try {
         let hardest = await database.collection('config').findOne({ type: 'hardest' })
         let result = null;
@@ -63,7 +64,8 @@ async function updateHardest(database, interaction, username, memberId, videoUrl
                     memberId: memberId,
                     videoUrl: videoUrl,
                     levelId: levelId,
-                    stateName: stateName
+                    stateName: stateName,
+                    attemps: attemps
                 });
         } else {
             result = await database.collection('config').updateOne(
@@ -74,7 +76,8 @@ async function updateHardest(database, interaction, username, memberId, videoUrl
                         memberId: memberId,
                         videoUrl: videoUrl,
                         levelId: levelId,
-                        stateName: stateName
+                        stateName: stateName,
+                        attemps: attemps
                     }
                 }
             )
@@ -129,6 +132,14 @@ async function validateUserInfo(interaction) {
         }
     }
 
+    const attemps = interaction.options.getInteger('attemps', false)
+    if (attemps <= 0) {
+        return {
+            error: true,
+            message: 'El número de intentos es inválido, debe introducir un valor mayor que 0'
+        }
+    }
+
     const response = await getResponseJSON(position)
     if (response instanceof Error) {
         return {
@@ -142,7 +153,8 @@ async function validateUserInfo(interaction) {
         videoUrl: videoUrl,
         memberId: member.id,
         stateName: states.find(state => state.roleId === stateResult).name,
-        levelId: response[0].id
+        levelId: response[0].id,
+        attemps: attemps
     }
 }
 
@@ -167,7 +179,8 @@ async function execute(_client, database, interaction) {
                     userInfo.memberId,
                     userInfo.videoUrl,
                     userInfo.levelId,
-                    userInfo.stateName
+                    userInfo.stateName,
+                    userInfo.attemps
                 )
             }
         }
@@ -178,24 +191,5 @@ async function execute(_client, database, interaction) {
 }
 
 module.exports = {
-    data: new SlashCommandBuilder()
-        .setName('staff_hardest')
-        .setDescription('Define el hardest del país (solo personal autorizado)')
-        .addUserOption(option =>
-            option.setName('user')
-                .setDescription('Selecciona el jugador')
-                .setRequired(true))
-        .addStringOption(option =>
-            option.setName('player')
-                .setDescription('Nombre del jugador')
-                .setRequired(true))
-        .addStringOption(option =>
-            option.setName('level')
-                .setDescription('Enlace del nivel en Pointercrate')
-                .setRequired(true))
-        .addStringOption(option =>
-            option.setName('ytvideo')
-                .setDescription('Enlace del video de YouTube')
-                .setRequired(true)),
-    execute,
+    execute
 };

@@ -18,31 +18,15 @@
 const { SlashCommandBuilder, EmbedBuilder, ChatInputCommandInteraction, ActionRowBuilder,
     ButtonBuilder, ButtonStyle,
     Client } = require('discord.js');
-const https = require('https');
 const utils = require('../utils');
+const apipcrate = require('../apipcrate');
 const { Db } = require('mongodb');
 
 const EMBED_COLOR = 0x2b2d31 /** Black */
 
 //
-// +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+//============================================================================
 //
-
-/**
- * 
- * @param {Number} level 
- * @returns Object
- */
-function getResponseJSON(id) {
-    return new Promise(function (resolve, reject) {
-        https.get(`https://www.pointercrate.com/api/v2/demons/${id}`, res => {
-            let data = [];
-            res.on('data', chunk => { data.push(chunk); });
-            res.on('end', () => { resolve(JSON.parse(Buffer.concat(data).toString()).data) });
-            res.on('error', err => { reject(err); })
-        });
-    });
-}
 
 /**
  * 
@@ -52,9 +36,17 @@ function getResponseJSON(id) {
  * @returns 
  */
 async function createEmbed(hardest, database, interaction) {
-    const levelInfo = await getResponseJSON(hardest.levelId)
-    if (levelInfo instanceof Error) {
+    const response = await apipcrate.getDemon(hardest.levelId)
+    if (response instanceof Error) {
+        console.error(response)
         return { content: 'Ha ocurrido un error al consultar la informacion del nivel' };
+    }
+
+    const levelInfo = response.data
+
+    let attemps = hardest.attemps ?? null
+    if (attemps) {
+        attemps = attemps.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".")
     }
 
     let embed = new EmbedBuilder()
@@ -62,7 +54,8 @@ async function createEmbed(hardest, database, interaction) {
     embed.setTitle(`${levelInfo.name} (Top #${levelInfo.position})`)
     embed.addFields(
         { name: 'Usuario', value: `<:cn:1295174767317618748> <@${hardest.memberId}>`, inline: true },
-        { name: 'Hardest del Estado', value: `${hardest.stateName}`, inline: true }
+        { name: 'Hardest del Estado', value: `${hardest.stateName}`, inline: true },
+        { name: 'Intentos', value: `${attemps ?? 'unknown'}`, inline: true }
     )
     embed.setTimestamp()
     embed.setFooter({ text: `GD Venezuela` })

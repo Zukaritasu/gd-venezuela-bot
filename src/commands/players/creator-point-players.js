@@ -18,37 +18,17 @@
 const { SlashCommandBuilder, EmbedBuilder, ChatInputCommandInteraction, ActionRowBuilder,
     ButtonBuilder, ButtonStyle,
     Client } = require('discord.js');
-const https = require('https');
-const utils = require('../../utils');
 const { Db } = require('mongodb');
-const axios = require('axios');
+const robtopapi = require('../../robtopapi');
 
 const EMBED_COLOR = 0x2b2d31 /** Black */
-
-/**
- * 
- * @param {number} accountID 
- */
-async function getGJUserInfo20(accountID) {
-    const data = new URLSearchParams({
-        "secret": "Wmfd2893gb7",
-        "targetAccountID": accountID
-    });
-
-    return axios.post('http://www.boomlings.com/database/getGJUserInfo20.php', data, {
-        headers: {
-            'User-Agent': '',
-            'Content-Type': 'application/x-www-form-urlencoded'
-        }
-    })
-}
 
 /**
  * 
  * @param {Db} database 
  * @param {ChatInputCommandInteraction} interaction 
  */
-async function getUserCreatorPointsList(database, interaction) {
+async function getCreatorPointsUsersList(database, interaction) {
     let fields = []
     try {
         const cpPlayers = database.collection('cpPlayers')
@@ -58,21 +38,16 @@ async function getUserCreatorPointsList(database, interaction) {
             if (member === undefined)
                 continue
 
-            const response = (await getGJUserInfo20(doc.accountID)).data
-            if (`${response}` === '-1') {
+            const response = await robtopapi.getGJUserInfo20(doc.accountID)
+            if (response === null) {
                 continue
             }
 
-            const map = new Map();
-            const pairs = response.split(':');
-            for (let i = 0; i < pairs.length; i += 2) 
-                map.set(pairs[i], pairs[i + 1]);
-
             fields.push(
                 {
-                    cpCount: parseInt(map.get('8')),
-                    name: `${map.get('1')}`,//member.user.globalName ? member.user.globalName : member.user.username,
-                    value: `${map.get('8')}`,
+                    cpCount: parseInt(response.get('creatorpoints')),
+                    name: `${response.get('userName')}`,//member.user.globalName ? member.user.globalName : member.user.username,
+                    value: `${response.get('creatorpoints')}`,
                     inline: true
                 })
         }
@@ -89,7 +64,7 @@ async function getUserCreatorPointsList(database, interaction) {
 
     const embed = new EmbedBuilder()
     embed.setColor(0x2b2d31)
-    embed.setTitle(`Jugadores con Puntos de Creador`)
+    embed.setTitle(`JUGADORES CON PUNTOS DE CREADOR`)
     embed.setFooter({ text: `GD Venezuela` })
     embed.setThumbnail('https://cdn.discordapp.com/attachments/1041217295743197225/1296321837847805973/cp_venezuela.png')
     embed.setTimestamp()
@@ -112,7 +87,7 @@ async function getUserCreatorPointsList(database, interaction) {
 async function execute(_client, database, interaction) {
     try {
         await interaction.deferReply();
-        await interaction.editReply(await getUserCreatorPointsList(database, interaction));
+        await interaction.editReply(await getCreatorPointsUsersList(database, interaction));
     } catch (error) {
         console.error(error)
         await interaction.editReply('An unknown error has occurred. Please try again later');
@@ -120,8 +95,5 @@ async function execute(_client, database, interaction) {
 }
 
 module.exports = {
-    data: new SlashCommandBuilder()
-        .setName('jugadores_cp')
-        .setDescription('Lista de Jugadores con puntos de creador'),
-    execute,
+    execute
 };

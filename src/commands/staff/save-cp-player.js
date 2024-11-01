@@ -234,16 +234,5 @@ async function execute(_client, database, interaction) {
 }
 
 module.exports = {
-    data: new SlashCommandBuilder()
-        .setName('staff_cp_jugador')
-        .setDescription('Guarda un jugador con puntos de creador (solo personal autorizado)')
-        .addUserOption(option =>
-            option.setName('user')
-                .setDescription('Seleccione el jugador')
-                .setRequired(true))
-        .addStringOption(option =>
-            option.setName('player')
-                .setDescription('Nombre del jugador en Geometry Dash')
-                .setRequired(true)),
-    execute,
+    execute
 };

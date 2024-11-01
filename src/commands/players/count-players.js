@@ -15,7 +15,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-const { SlashCommandBuilder, ChatInputCommandInteraction } = require('discord.js');
+const { SlashCommandBuilder, ChatInputCommandInteraction, EmbedBuilder } = require('discord.js');
 const { states } = require('../../../.botconfig/country-states.json')
 
 //
@@ -35,17 +35,21 @@ async function embedNumberPlayers(_client, _database, interaction) {
     for (const state of states) {
         const role = interaction.guild.roles.cache.get(state.roleId);
         if (role !== undefined) {
-            fields.push({
-                name: state.name,
-                value: `${role.members.size}`,
-                inline: true
-            })
+            fields.push(
+                {
+                    name: state.name,
+                    value: `${role.members.size}`,
+                    inline: true
+                }
+            )
         } else {
-            fields.push({
-                name: state.name,
-                value: `unknown`,
-                inline: true
-            })
+            fields.push(
+                {
+                    name: state.name,
+                    value: `unknown`,
+                    inline: true
+                }
+            )
         }
     }
 
@@ -54,11 +58,15 @@ async function embedNumberPlayers(_client, _database, interaction) {
         embeds: [
             new EmbedBuilder()
                 .setColor(EMBED_COLOR)
-                .setTitle('Cantidad de Jugadores por Estado')
+                .setTitle('CANTIDAD DE JUGADORES POR ESTADO')
                 .addFields(fields)
                 .setTimestamp()
                 .setFooter({ text: `GD Venezuela` })
-                .setThumbnail('https://flagcdn.com/256x192/ve.png')
+                //.setThumbnail('https://flagcdn.com/256x192/ve.png')
+                .setAuthor({
+                    name: 'Venezuela',
+                    iconURL: 'https://flagcdn.com/w640/ve.png'
+                })
         ],
         components: []
     };
@@ -86,8 +94,5 @@ async function execute(client, database, interaction) {
 }
 
 module.exports = {
-    data: new SlashCommandBuilder()
-        .setName('jugadores_cantidad')
-        .setDescription('Cantidad de jugadores por estado del país'),
-    execute,
+    execute
 };

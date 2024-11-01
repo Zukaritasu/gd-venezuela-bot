@@ -16,7 +16,6 @@
  */
 
 const { SlashCommandBuilder, ChatInputCommandInteraction, EmbedBuilder } = require('discord.js');
-const embeds = require('../embeds');
 const { Db } = require('mongodb');
 
 //
@@ -32,12 +31,22 @@ async function createEmbedList(database) {
 
     try {
         const hardests = database.collection('states')
+        const countryHardest = await database.collection('config').findOne({ type: 'hardest' })
+
+        const getTrophy = (player) => {
+            if (countryHardest) {
+                if (countryHardest.username === player) {
+                    return ' <:top1_trofeo:1301284275110416404>'
+                }
+            }
+            return ''
+        }
 
         for await (const doc of hardests.find()) {
             fields.push(
                 {
                     name: doc.stateName,
-                    value: `${doc.player} / ${doc.levelName}`,
+                    value: `${doc.player}${getTrophy(doc.player)} / ${doc.levelName}`,
                     inline: true
                 })
         }
@@ -53,6 +62,10 @@ async function createEmbedList(database) {
     embed.setTimestamp()
     embed.setFooter({ text: `GD Venezuela` })
     embed.setThumbnail('https://cdn.discordapp.com/attachments/1041060604850483404/1294740130422063189/Epic_Extreme_Demon.png')
+    embed.setAuthor({
+        name: 'Venezuela',
+        iconURL: 'https://flagcdn.com/w640/ve.png'
+    })
 
     return { embeds: [embed] };
 }

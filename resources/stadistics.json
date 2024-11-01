@@ -1,0 +1,26 @@
+{
+    "STAR_GRINDER": {
+        "name": "STARGRINDER",
+        "roleId": "1216240462742950020",
+        "thumbnail": "https://media.discordapp.net/attachments/1037758697990000672/1301280019947196506/gdstar.png",
+        "key": "stars"
+    },
+    "MOON_GRINDER": {
+        "name": "MOONGRINDER",
+        "roleId": "1216242788358688859",
+        "thumbnail": "https://media.discordapp.net/attachments/1037758697990000672/1301274697882665031/gdmoon.png",
+        "key": "moons"
+    },
+    "DEMON_GRINDER": {
+        "name": "DEMONGRINDER",
+        "roleId": "1119805100857237524",
+        "thumbnail": "https://media.discordapp.net/attachments/1037758697990000672/1301280017887662110/gddemon.png",
+        "key": "demons"
+    },
+    "USER_COIN_GRINDER": {
+        "name": "USERCOINGRINDER",
+        "roleId": "1221273094035865771",
+        "thumbnail": "https://cdn.discordapp.com/attachments/1037758697990000672/1301280883604590662/gdusercoin.png",
+        "key": "usercoins"
+    }
+}

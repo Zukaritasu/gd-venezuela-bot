@@ -15,366 +15,74 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-const { SlashCommandBuilder, ChatInputCommandInteraction, ActionRowBuilder,
-    StringSelectMenuBuilder, StringSelectMenuOptionBuilder, EmbedBuilder,
-    ButtonStyle, ButtonBuilder } = require('discord.js');
-const { states } = require('../../.botconfig/country-states.json');
-const { Db } = require('mongodb');
-const utils = require('../utils')
+const { SlashCommandBuilder, ChatInputCommandInteraction } = require('discord.js');
+
+const statistics = require('../../resources/stadistics.json')
+
 
 //
 // +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 //
 
-const ERROR_TIMEOUT_MESSAGE = 'Collector received no interactions before ending with reason: time'
-
 /**
  * 
- * @param {Db} database 
- * @returns 
- */
-async function getHardestStateInfo(database, stateId /* <roleId> */) {
-    let info = {
-        levelName: 'unknown',
-        player: 'unknown',
-        ytVideo: null
-    }
-
-    let hardest = await database.collection('states').findOne({ stateId: `${stateId}` })
-    if (hardest !== null) {
-        info.levelName = hardest.levelName
-        info.player = hardest.player
-        info.ytVideo = hardest.ytVideo
-    }
-
-    return info;
-}
-
-/**
- * 
- * @param {ChatInputCommandInteraction} interaction 
- * @param {string} roleId 
- */
-async function getStateInfo(database, interaction, roleId) {
-    let info = {
-        stateName: 'unknown',
-        stateFlag: null,
-        hardest: 'unknown',
-        player: 'unknown', /* player who has the hardest in the state */
-        videoImage: null,
-        ytVideo: null,
-        players: 0,
-        starGdr: 0,        /* 1216240462742950020 */
-        extremeDms: 0,     /* 1225498328754552914 */
-        moonGdr: 0,        /* 1216242788358688859 */
-        creatorPts: 0      /* 1216234978673819798 */
-    }
-
-    // get state info
-
-    info.stateName = states.find(state => state.roleId === `${roleId}`).name //interaction.guild.roles.cache.get(roleId);
-    info.stateFlag = states.find(state => state.roleId === `${roleId}`).flagUrl
-
-    //******************** */
-
-    // get hardest state
-
-    const hardestInfo = await getHardestStateInfo(database, roleId)
-
-    info.player = hardestInfo.player
-    info.hardest = hardestInfo.levelName
-    info.ytVideo = hardestInfo.ytVideo
-
-    if (info.ytVideo === null || info.ytVideo.length === 0) {
-        /* Alternative image link in case the video link is missing */
-        info.videoImage = 'https://media.discordapp.net/attachments/1037758697990000672/1295422400145395823/video-not-available.png'
-    } else {
-        info.videoImage = await utils.getYouTubeThumbnail(hardestInfo.ytVideo)
-    }
-
-    //******************** */
-
-    const starGdrRoleId = '1216240462742950020';
-    const extremeDmsRoleId = '1225498328754552914';
-    const moonGdrRoleId = '1216242788358688859';
-    const creatorPtsRoleId = '1216234978673819798';
-
-    const members = interaction.guild.members.cache
-        .filter(member => member.roles.cache.has(roleId))
-
-    info.players = members.size;
-    info.starGdr = members.filter(member => member.roles.cache.has(starGdrRoleId)).size;
-    info.extremeDms = members.filter(member => member.roles.cache.has(extremeDmsRoleId)).size;
-    info.moonGdr = members.filter(member => member.roles.cache.has(moonGdrRoleId)).size;
-    info.creatorPts = members.filter(member => member.roles.cache.has(creatorPtsRoleId)).size;
-
-    return info;
-}
-
-/**
- * 
- * @param {*} interaction 
- * @returns 
- */
-function createEmbedTable(_interaction, option) {
-    const row = new ActionRowBuilder()
-    const componentsBtns = []
-
-    const backButton = new ButtonBuilder()
-    backButton.setCustomId('back')
-    backButton.setEmoji('<:goback:1295223304205897730>')
-    backButton.setStyle(ButtonStyle.Primary)
-    componentsBtns.push(backButton)
-
-    const followButton = new ButtonBuilder()
-    followButton.setCustomId('close')
-    followButton.setEmoji('<:closeicon:1219429070266437693>')
-    followButton.setStyle(ButtonStyle.Danger)
-    componentsBtns.push(followButton)
-
-    row.addComponents(componentsBtns);
-
-    return { content: 'Okay', embeds: [], components: [row] }
-}
-
-/**
- * @param {*} response 
- * @param {*} confirmation 
- * @param {*} interaction 
- * @param {*} collectorFilter 
- * @returns {Promise}
- */
-async function showStateInfo(database, response, confirmation, interaction, collectorFilter) {
-    const info = await getStateInfo(database, interaction, confirmation.values[0])
-
-    const embed = new EmbedBuilder()
-    embed.setColor(0x2b2d31)
-    embed.setTitle(`${info.stateName}`)
-    //embed.setDescription(description)
-    embed.setFooter({ text: `GD Venezuela` })
-    embed.setThumbnail(info.stateFlag)
-    embed.setTimestamp()
-
-    embed.addFields(
-        { name: 'Hardest', value: `${info.hardest}`, inline: true },
-        { name: 'Vencedor', value: `${info.player}`, inline: true },
-        { name: 'Jugadores', value: `${info.players}`, inline: true },
-        { name: 'Star Grinders', value: `${info.starGdr}`, inline: false, index: 0 },
-        { name: 'Usuarios con Extreme Demons', value: `${info.extremeDms}`, inline: false, index: 1 },
-        { name: 'Moon Grinders', value: `${info.moonGdr}`, inline: false, index: 2 },
-        { name: 'Usuarios con Creator Point', value: `${info.creatorPts}`, inline: false, index: 3 }
-    )
-
-    if (info.videoImage !== null) {
-        embed.setImage(info.videoImage)
-    }
-
-    const row = new ActionRowBuilder()
-    const componentsBtns = []
-
-    const backButton = new ButtonBuilder()
-    backButton.setCustomId('back')
-    backButton.setEmoji('<:goback:1295223304205897730>')
-    backButton.setStyle(ButtonStyle.Primary)
-    componentsBtns.push(backButton)
-
-    const followButton = new ButtonBuilder()
-    followButton.setCustomId('close')
-    followButton.setEmoji('<:closeicon:1219429070266437693>')
-    followButton.setStyle(ButtonStyle.Danger)
-    componentsBtns.push(followButton)
-
-    let videoButton = null
-    if (info.ytVideo) {
-        videoButton = new ButtonBuilder()
-        videoButton.setLabel('Ver Video')
-        videoButton.setURL(info.ytVideo)
-        videoButton.setStyle(ButtonStyle.Link)
-        componentsBtns.push(videoButton)
-    }
-
-    row.addComponents(componentsBtns);
-
-    const message = { content: '', embeds: [embed], components: [row] }
-
-    /* The menu of options is created depending on the number of users
-    per statistic in the game (grinder) */
-
-    /*let menuOptions = []
-
-    embed.data.fields.forEach(field => {
-        if ('index' in field) {
-            menuOptions.push(new StringSelectMenuOptionBuilder()
-                .setLabel(field.name)
-                .setValue(`${field.index}`)
-            )
-        }
-    })
-
-    if (menuOptions.length > 0) {
-        message.components.push(new ActionRowBuilder().addComponents(
-            new StringSelectMenuBuilder()
-                .setCustomId('option')
-                .setPlaceholder('Selecciona una opción')
-                .addOptions(menuOptions)))
-    }*/
-
-    /*-----------*/
-
-    try {
-        while (true) {
-            await confirmation.update(message);
-            confirmation = await response.awaitMessageComponent(
-                {
-                    filter: collectorFilter,
-                    time: 300000 // 5 min
-                }
-            );
-
-            if (confirmation.customId === 'back') {
-                return confirmation
-            } else if (confirmation.customId === 'option') {
-                const messageTable = createEmbedTable(interaction, confirmation.values[0])
-                await confirmation.update(messageTable)
-                try {
-                    confirmation = await response.awaitMessageComponent(
-                        {
-                            filter: collectorFilter,
-                            time: 300000 // 5 min
-                        }
-                    );
-                } catch (error) {
-                    messageTable.components.forEach(rows => rows.components
-                            .forEach(component => component.setDisabled(true)))
-                    await interaction.editReply(
-                        {
-                            embeds: [embed],
-                            components: message.components
-                        }
-                    );
-                    break;
-                }
-
-                if (confirmation.customId === 'close') {
-                    await response.delete(); break;
-                }
-            } else {
-                await response.delete(); break;
-            }
-        }
-    } catch (e) {
-        try { // try catch to ensure if a new exception occurs from calling the editReply method
-            if (e.message !== ERROR_TIMEOUT_MESSAGE) {
-                console.error(e)
-                await interaction.editReply(
-                    {
-                        embeds: [],
-                        content: 'An unknown error has occurred',
-                        components: []
-                    }
-                );
-            } else {
-                message.components.forEach(rows => {
-                    rows.components.forEach(component => {
-                        if (videoButton !== component) {
-                            component.setDisabled(true)
-                        }
-                    })
-                })
-                await interaction.editReply(
-                    {
-                        embeds: [embed],
-                        components: message.components
-                    }
-                );
-            }
-        } catch (err) {
-
-        }
-
-    }
-
-    return null
-}
-
-/**
- * @returns Message
- */
-function creaeStateSelector() {
-    const cb = new StringSelectMenuBuilder()
-    cb.setCustomId('state')
-    cb.setPlaceholder('Seleccionar')
-
-    for (let i = 0; i < states.length; i++) {
-        cb.addOptions(new StringSelectMenuOptionBuilder()
-            .setLabel(states[i].name)
-            .setValue(states[i].roleId)
-        );
-    }
-
-    return {
-        content: 'Selecciona un estado del país',
-        components: [new ActionRowBuilder().addComponents(cb)],
-        embeds: []
-    }
-}
-
-/**
- * 
- * @param {*} _client 
- * @param {*} _database 
+ * @param {*} client 
+ * @param {*} database 
  * @param {ChatInputCommandInteraction} interaction 
  */
-async function execute(_client, database, interaction) {
-    await interaction.deferReply();
-    let response = await interaction.editReply(creaeStateSelector());
-    let confirmation = null;
+async function execute(client, database, interaction) {
+    const subcommandGroup = interaction.options.getSubcommandGroup();
+    const subcommand = interaction.options.getSubcommand();
 
-    try {
-        while (true) {
-            if (confirmation !== null) {
-                await confirmation.update(creaeStateSelector())
-            }
-
-            const collectorFilter = i => i.user.id === interaction.user.id;
-            confirmation = await response.awaitMessageComponent(
-                {
-                    filter: collectorFilter,
-                    time: 300000 // 5 min
-                }
-            );
-
-            confirmation = await showStateInfo(database, response, confirmation,
-                interaction, collectorFilter)
-            if (confirmation === null) {
-                break;
-            }
+    if (subcommandGroup === 'grinders') {
+        if (subcommand === 'moon') {
+            await require('./state/statistics').processStateStatistics(client, database, interaction, statistics.MOON_GRINDER)
+        } else if (subcommand === 'star') {
+            await require('./state/statistics').processStateStatistics(client, database, interaction, statistics.STAR_GRINDER)
+        } else if (subcommand === 'demon') {
+            await require('./state/statistics').processStateStatistics(client, database, interaction, statistics.DEMON_GRINDER)
+        } else if (subcommand === 'user_coin') {
+            await require('./state/statistics').processStateStatistics(client, database, interaction, statistics.USER_COIN_GRINDER)
         }
-    } catch (e) {
-        try { // try catch to ensure if a new exception occurs from the call to the 
-            // editReply method and the delete method
-            if (e.message === ERROR_TIMEOUT_MESSAGE) {
-                if (response)
-                    await response.delete();
-            } else {
-                console.error(e);
-                await interaction.editReply(
-                    {
-                        embeds: [],
-                        content: 'An unknown error has occurred',
-                        components: []
-                    }
-                );
-            }
-        } catch (err) {
+    }
 
-        }
+    else if (subcommand === 'info') {
+        await require('./state/info').execute(client, database, interaction)
     }
 }
 
 module.exports = {
     data: new SlashCommandBuilder()
-        .setName('estado_info')
-        .setDescription('Muestra la información de un estado del país'),
+        .setName('estado')
+        .setDescription('Información relacionada a un Estado del pais')
+        .addSubcommand(subcommand =>
+            subcommand
+                .setName('info')
+                .setDescription('Muestra la información de un Estado del país'))
+        .addSubcommandGroup(subcommandGroup =>
+            subcommandGroup
+                .setName('grinders')
+                .setDescription('Jugadores de un Estado que se dedican a grindear')
+                .addSubcommand(subcommand =>
+                    subcommand
+                        .setName('moon')
+                        .setDescription('Jugadores dedicados a grindear lunas')
+                )
+                .addSubcommand(subcommand =>
+                    subcommand
+                        .setName('star')
+                        .setDescription('Jugadores dedicados a grindear estrellas')
+                )
+                .addSubcommand(subcommand =>
+                    subcommand
+                        .setName('demon')
+                        .setDescription('Jugadores dedicados a grindear demons')
+                )
+                .addSubcommand(subcommand =>
+                    subcommand
+                        .setName('user_coin')
+                        .setDescription('Jugadores dedicados a grindear user coin')
+                )
+        ),
     execute,
 };

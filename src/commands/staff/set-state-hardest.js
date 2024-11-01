@@ -34,7 +34,7 @@ const utils = require('../../utils')
  * @param {*} ytVideo 
  */
 async function updateStateHardest(interaction, database, stateId, player, level, ytVideo) {
-    if(!utils.isValidYouTubeUrl(ytVideo)) {
+    if(ytVideo && !utils.isValidYouTubeUrl(ytVideo)) {
         await interaction.editReply('Enlace invalido (YouTube)')
         return
     } 
@@ -53,7 +53,7 @@ async function updateStateHardest(interaction, database, stateId, player, level,
                 stateName: states.find(state => state.roleId === stateId).name,
                 player: player,
                 levelName: level,
-                ytVideo: ytVideo
+                ytVideo: ytVideo ?? ''
             });
     } else {
         // the state's most difficult level is updated
@@ -63,7 +63,7 @@ async function updateStateHardest(interaction, database, stateId, player, level,
                 $set: {
                     player: player,
                     levelName: level,
-                    ytVideo: ytVideo
+                    ytVideo: ytVideo ?? ''
                 }
             }
         )
@@ -105,28 +105,5 @@ async function execute(_client, database, interaction) {
 }
 
 module.exports = {
-    data: new SlashCommandBuilder()
-        .setName('staff_estado_hardest')
-        .setDescription('Nivel más difícil completado en el estado (solo personal autorizado)')
-        .addStringOption(option =>
-            option.setName('player')
-                .setDescription('Nombre del usuario')
-                .setRequired(true)
-        )
-        .addStringOption(option =>
-            option.setName('level')
-                .setDescription('Nombre del nivel')
-                .setRequired(true)
-        )
-        .addStringOption(option =>
-            option.setName('youtube')
-                .setDescription('Enlace del vídeo de YouTube')
-                .setRequired(true)
-        )
-        .addRoleOption(option =>
-            option.setName('state')
-                .setDescription('Rol del estado')
-                .setRequired(true)
-        ),
     execute,
 };

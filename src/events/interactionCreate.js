@@ -15,16 +15,31 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-const { Events } = require('discord.js');
+const { Events, Client, ChatInputCommandInteraction } = require('discord.js');
+const { Db } = require('mongodb');
 
 module.exports = {
     name: Events.InteractionCreate,
     once: false,
+    /**
+     * 
+     * @param {Client} client 
+     * @param {Db} database 
+     * @param {ChatInputCommandInteraction} interaction 
+     */
     async execute(client, database, interaction) {
         if (interaction.isChatInputCommand()) {
-            const command = interaction.client.commands.get(interaction.commandName);
-            if (command !== null) {
-                await command.execute(client, database, interaction);
+            if (interaction.guild) {
+                const command = interaction.client.commands.get(interaction.commandName);
+                if (command !== null)
+                    await command.execute(client, database, interaction);
+            } else {
+                console.error("Guild is null. The bot might not be in the server or lacks the necessary permissions.");
+                await interaction.reply(
+                    {
+                        content: 'Error al consultar la información del servidor'
+                    }
+                );
             }
         }
     },
