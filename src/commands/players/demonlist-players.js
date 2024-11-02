@@ -27,31 +27,7 @@ const playerProfile = require('./demonlist/profile')
 const EMBED_COLOR = 0x2b2d31 /** Black */
 const ERROR_TIMEOUT_MESSAGE = 'Collector received no interactions before ending with reason: time'
 
-/**
- * 
- * @param {Array<Object>} records 
- */
-function categorizeDemons(records) {
-    let mainCount = 0;
-    let extendedCount = 0;
-    let legacyCount = 0;
 
-    records.forEach(record => {
-        const position = record.demon.position;
-
-        if (record.progress === 100) {
-            if (position <= 75) {
-                mainCount++;
-            } else if (position <= 150) {
-                extendedCount++;
-            } else {
-                legacyCount++;
-            }
-        }
-    });
-
-    return `${mainCount} Main, ${extendedCount} Extended, ${legacyCount} Legacy`;
-}
 
 /**
  * 
@@ -63,7 +39,7 @@ async function getPlayerInfo(id) {
     const response = await apipcrate.getPlayerInfo(id);
     if (response instanceof Error)
         throw response
-    return categorizeDemons(response.data.records)
+    return apipcrate.utils.getNumberDemonsByCategory(response.data.records)
 }
 
 /**

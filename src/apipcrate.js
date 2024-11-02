@@ -80,16 +80,44 @@ async function getPlayerExtraInfo(id) {
     return playerInfo
 }
 
+/**
+ * 
+ * @param {object} params 
+ * @returns string
+ */
+function getNumberDemonsByCategory(records) {
+    let mainCount = 0;
+    let extendedCount = 0;
+    let legacyCount = 0;
+
+    records.forEach(record => {
+        const position = record.demon.position;
+
+        if (record.progress === 100) {
+            if (position <= 75) {
+                mainCount++;
+            } else if (position <= 150) {
+                extendedCount++;
+            } else {
+                legacyCount++;
+            }
+        }
+    });
+
+    return `${mainCount} Main, ${extendedCount} Extended, ${legacyCount} Legacy`;
+}
+
 //
 //============================================================================
 //
-
-
 
 module.exports = {
     getDemon: (id) => getResponseJSON(`api/v2/demons/${id}`),
     getCountryLeaderboard: (code) => getResponseJSON(`api/v1/players?nation=${code}`),
     getPlayerInfo: (id) => getResponseJSON(`api/v1/players/${id}`),
     /** */
-    getPlayerExtraInfo
+    getPlayerExtraInfo,
+    utils: {
+        getNumberDemonsByCategory
+    }
 }

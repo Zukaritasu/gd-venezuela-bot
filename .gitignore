@@ -132,3 +132,4 @@ dist
 # Bot config
 .botconfig/token.json
 hashlist.json
+package-lock.json
