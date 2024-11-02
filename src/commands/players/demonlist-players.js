@@ -144,7 +144,7 @@ async function createEmbedLeaderboard(database, interaction) {
         
         while (true) {
             if (confirmation !== null) {
-                await confirmation.update(message)
+                await confirmation.editReply(message)
             }
 
             confirmation = await response.awaitMessageComponent(
@@ -153,6 +153,8 @@ async function createEmbedLeaderboard(database, interaction) {
                     time: 300000 // 5 min
                 }
             );
+
+            await confirmation.deferUpdate();
 
             if (confirmation.customId === 'close') {
                 await interaction.deleteReply(response); break;
@@ -173,7 +175,7 @@ async function createEmbedLeaderboard(database, interaction) {
                         break
                     }
 
-                    await confirmation.update(embedProfileMessage = {
+                    await confirmation.editReply(embedProfileMessage = {
                         content: '',
                         embeds: [embedProfile],
                         components: [
@@ -196,6 +198,8 @@ async function createEmbedLeaderboard(database, interaction) {
                             time: 300000 // 5 min
                         }
                     );
+
+                    await confirmation.deferUpdate();
 
                     if (confirmation.customId === 'close') {
                         await interaction.deleteReply(response); break;
