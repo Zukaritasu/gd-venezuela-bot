@@ -19,6 +19,9 @@ const axios = require('axios');
 
 const robtopUser = require('../resources/robtop_objects/user.json')
 
+/** @type {import('redis').RedisClientType} */
+let redisObject = null
+
 /**
  * 
  * @param {*} accountID 
@@ -92,5 +95,6 @@ async function dataToUserObject(accountID) {
 }
 
 module.exports = {
+    setRedisClientObject: (redisObj) => redisObject = redisObj,
     getGJUserInfo20: async (accountID) => dataToUserObject(accountID)
 }

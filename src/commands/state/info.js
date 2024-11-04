@@ -21,6 +21,7 @@ const { SlashCommandBuilder, ChatInputCommandInteraction, ActionRowBuilder,
 const { states } = require('../../../.botconfig/country-states.json');
 const { Db } = require('mongodb');
 const utils = require('../../utils')
+const aredlapi = require('../../aredlapi')
 
 //
 // +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
@@ -67,7 +68,9 @@ async function getStateInfo(database, interaction, roleId) {
         starGdr: 0,        /* 1216240462742950020 */
         extremeDms: 0,     /* 1225498328754552914 */
         moonGdr: 0,        /* 1216242788358688859 */
-        creatorPts: 0      /* 1216234978673819798 */
+        creatorPts: 0,     /* 1216234978673819798 */
+        userCoinGdr: 0,    /* 1221273094035865771 */
+        demonGdr: 0        /* 1119805100857237524 */
     }
 
     // get state info
@@ -96,8 +99,10 @@ async function getStateInfo(database, interaction, roleId) {
 
     const starGdrRoleId = '1216240462742950020';
     const extremeDmsRoleId = '1225498328754552914';
+    const demonGdrRoleId = '1119805100857237524';
     const moonGdrRoleId = '1216242788358688859';
     const creatorPtsRoleId = '1216234978673819798';
+    const userCoinGdrRoleId = '1221273094035865771';
 
     const members = interaction.guild.members.cache
         .filter(member => member.roles.cache.has(roleId))
@@ -107,6 +112,8 @@ async function getStateInfo(database, interaction, roleId) {
     info.extremeDms = members.filter(member => member.roles.cache.has(extremeDmsRoleId)).size;
     info.moonGdr = members.filter(member => member.roles.cache.has(moonGdrRoleId)).size;
     info.creatorPts = members.filter(member => member.roles.cache.has(creatorPtsRoleId)).size;
+    info.userCoinGdr = members.filter(member => member.roles.cache.has(userCoinGdrRoleId)).size;
+    info.demonGdr = members.filter(member => member.roles.cache.has(demonGdrRoleId)).size;
 
     return info;
 }
@@ -140,7 +147,7 @@ function createEmbedTable(_interaction, option) {
 /**
  * @param {*} response 
  * @param {*} confirmation 
- * @param {*} interaction 
+ * @param {ChatInputCommandInteraction} interaction 
  * @param {*} collectorFilter 
  * @returns {Promise}
  */
@@ -155,15 +162,47 @@ async function showStateInfo(database, response, confirmation, interaction, coll
     embed.setThumbnail(info.stateFlag)
     embed.setTimestamp()
 
+    //if (interaction.member.id === '591640548490870805') {
+    const getNumberToString = (number) => {
+        const strSpaces = '          '
+        return strSpaces.substring(0, strSpaces.length - number.toString().length).concat(number.toString())
+    }
+
+    const levels = await aredlapi.getLevels()
+    let levelName = `**${info.hardest}**`
+    if (!(levels instanceof Error)) {
+        const result = levels.find(level => level.name === info.hardest)
+        if (result) {
+            levelName = `${levelName} #${result.position}`
+        }
+    }
+
     embed.addFields(
-        { name: 'Hardest', value: `${info.hardest}`, inline: true },
-        { name: 'Vencedor', value: `${info.player}`, inline: true },
-        { name: 'Jugadores', value: `${info.players}`, inline: true },
-        { name: 'Star Grinders', value: `${info.starGdr}`, inline: false, index: 0 },
-        { name: 'Usuarios con Extreme Demons', value: `${info.extremeDms}`, inline: false, index: 1 },
-        { name: 'Moon Grinders', value: `${info.moonGdr}`, inline: false, index: 2 },
-        { name: 'Usuarios con Creator Point', value: `${info.creatorPts}`, inline: false, index: 3 }
+        { name: 'Hardest de Estado', value: levelName, inline: true },
+        { name: 'Completado por', value: `**${info.player}**`, inline: true },
+        { name: 'Cantidad de jugadores', value: `<:user:1302725281420673164> \`${getNumberToString(info.players)}\``, inline: false },
+        {
+            name: 'Cantidad de jugadores grinders',
+            value: `<:StarA:1302308005869649920> \`${getNumberToString(info.starGdr)}\`\n<:Moon:1302308034412019803> \`${getNumberToString(info.moonGdr)}\`\n<:ExtremeDemon:1302310587765883042> \`${getNumberToString(info.extremeDms)}\`\n<:Demon:1302308056918655040> \`${getNumberToString(info.demonGdr)}\`\n<:CreatorPoints:1302308069010706474> \`${getNumberToString(info.creatorPts)}\`\n<:UserCoinVerified:1302308078703874172> \`${getNumberToString(info.userCoinGdr)}\`\n`,
+            inline: false
+        }
     )
+    /*} else {
+        embed.addFields(
+            { name: 'Hardest', value: `${info.hardest}`, inline: true },
+            { name: 'Vencedor', value: `${info.player}`, inline: true },
+            { name: 'Jugadores', value: `${info.players}`, inline: true },
+            { name: 'Star Grinders', value: `${info.starGdr}`, inline: false, index: 0 },
+            { name: 'Usuarios con Extreme Demons', value: `${info.extremeDms}`, inline: false, index: 1 },
+            { name: 'Moon Grinders', value: `${info.moonGdr}`, inline: false, index: 2 },
+            { name: 'Usuarios con Creator Point', value: `${info.creatorPts}`, inline: false, index: 3 }
+        )
+    }*/
+
+    embed.setAuthor({
+        name: 'Venezuela',
+        iconURL: 'https://flagcdn.com/w640/ve.png'
+    })
 
     if (info.videoImage !== null) {
         embed.setImage(info.videoImage)
@@ -221,7 +260,7 @@ async function showStateInfo(database, response, confirmation, interaction, coll
                     );
                 } catch (error) {
                     messageTable.components.forEach(rows => rows.components
-                            .forEach(component => component.setDisabled(true)))
+                        .forEach(component => component.setDisabled(true)))
                     await interaction.editReply(
                         {
                             embeds: [embed],

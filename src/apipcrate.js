@@ -21,12 +21,16 @@ const https = require('https');
 //============================================================================
 //
 
+/** @type {import('redis').RedisClientType} */
+let redisObject = null
+
 /**
  * 
  * @param {*} url 
  * @returns 
  */
 async function getResponseJSON(url) {
+    console.log(redisObject)
     return new Promise((resolve) => {
         const options = {
             hostname: 'www.pointercrate.com',
@@ -112,10 +116,12 @@ function getNumberDemonsByCategory(records) {
 //
 
 module.exports = {
+    setRedisClientObject: (redisObj) => redisObject = redisObj,
+    /////
     getDemon: (id) => getResponseJSON(`api/v2/demons/${id}`),
     getCountryLeaderboard: (code) => getResponseJSON(`api/v1/players?nation=${code}`),
     getPlayerInfo: (id) => getResponseJSON(`api/v1/players/${id}`),
-    /** */
+    /////
     getPlayerExtraInfo,
     utils: {
         getNumberDemonsByCategory

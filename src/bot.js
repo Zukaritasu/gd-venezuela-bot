@@ -19,6 +19,7 @@ const { Client, GatewayIntentBits, ActivityType } = require('discord.js');
 const botenv = require('./botenv')
 const { TOKEN, URI_DATABASE } = require('../.botconfig/token.json');
 const { Db, MongoClient } = require('mongodb');
+const redis = require('redis')
 
 //
 // +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
@@ -39,6 +40,23 @@ process.chdir(__dirname);
 		console.error(e);
 		return
 	}
+
+    // Modules are loaded to define the redis object
+
+    const modules = [ './apipcrate', './aredlapi', './robtopapi' ]
+    const redisClient = redis.createClient()
+
+    try {
+        await redisClient.connect();
+        console.log('Redis client connected');
+        
+        modules.forEach(module => require(module).setRedisClientObject(redisClient))
+    } catch (error) {
+        console.error(error);
+		return
+    }
+
+    // The bot client instance is created
 
     const client = new Client({
         intents:
