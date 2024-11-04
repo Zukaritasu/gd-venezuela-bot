@@ -31,7 +31,7 @@ let redisObject = null
  */
 async function getResponseJSON(url) {
     console.log(redisObject)
-    return new Promise((resolve) => {
+    return new Promise(async (resolve) => {
         const options = {
             hostname: 'www.pointercrate.com',
             path: `/${url}`,
@@ -43,7 +43,33 @@ async function getResponseJSON(url) {
             }
         };
 
-        https.get(options, res => {
+        const key = `${options.hostname}${options.path}`
+
+        try {
+            const response = await redisObject.get(key)
+            if (response)
+                return resolve(JSON.parse(response));
+            https.get(options, res => {
+                let data = [];
+                res.on('error', error => {
+                    resolve(error);
+                });
+                res.on('data', chunk => { data.push(chunk); });
+                res.on('end', async () => {
+                    try {
+                        const jsonResponseData = JSON.parse(Buffer.concat(data).toString())
+                        await redisObject.setEx(key, 21600, JSON.stringify(jsonResponseData))
+                        resolve(jsonResponseData)
+                    } catch (error) {
+                        resolve(error);
+                    }
+                });
+            });
+        } catch (error) {
+            resolve(error);
+        }
+        
+        /*https.get(options, res => {
             let data = [];
             res.on('error', error => {
                 resolve(error);
@@ -56,7 +82,7 @@ async function getResponseJSON(url) {
                     resolve(error);
                 }
             });
-        });
+        });*/
     });
 }
 
