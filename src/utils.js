@@ -91,6 +91,19 @@ async function getYouTubeThumbnail(videoUrl) {
 }
 
 /**
+ * @param {string} input
+ * @returns {string}
+ */
+function escapeDiscordSpecialChars(input) {
+    const specialChars = ['*', '_', '`', '~'];
+    specialChars.forEach(char => {
+        input = input.replace(new RegExp(`\\${char}`, 'g'), `\\${char}`);
+    });
+
+    return input;
+}
+
+/**
  * 
  * @param {GuildMember} member 
  * @returns {boolean}
@@ -103,5 +116,6 @@ module.exports = {
     isValidYouTubeUrl,
     getYouTubeThumbnail,
     isAdministrator,
-    isValidPointercrateUrl
+    isValidPointercrateUrl,
+    escapeDiscordSpecialChars
 }

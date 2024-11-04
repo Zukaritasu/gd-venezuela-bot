@@ -179,7 +179,7 @@ async function showStateInfo(database, response, confirmation, interaction, coll
 
     embed.addFields(
         { name: 'Hardest de Estado', value: levelName, inline: true },
-        { name: 'Completado por', value: `**${info.player}**`, inline: true },
+        { name: 'Completado por', value: `**${utils.escapeDiscordSpecialChars(info.player)}**`, inline: true },
         { name: 'Cantidad de jugadores', value: `<:user:1302725281420673164> \`${getNumberToString(info.players)}\``, inline: false },
         {
             name: 'Cantidad de jugadores grinders',

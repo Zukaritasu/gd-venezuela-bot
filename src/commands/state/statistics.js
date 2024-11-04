@@ -18,6 +18,7 @@
 const { ChatInputCommandInteraction, Client, StringSelectMenuBuilder, StringSelectMenuOptionBuilder, ActionRowBuilder, EmbedBuilder, ButtonBuilder, ButtonStyle } = require("discord.js")
 const { Db } = require("mongodb")
 const robtopapi = require('../../robtopapi')
+const utils = require('../../utils')
 
 const { states } = require('../../../.botconfig/country-states.json');
 
@@ -96,7 +97,7 @@ async function showStadistic(database, response, confirmation, interaction, coll
             const member = grinders.at(i)
             const number = await getUserStadistic(database, member.id, stadistic)
             fields.push({
-                name:   member.user.username,
+                name:   utils.escapeDiscordSpecialChars(member.user.username),
                 number: number,
                 value:  number === -1 ? 'no registrado': number.toString().replace(/\B(?=(\d{3})+(?!\d))/g, "."),
                 inline: true

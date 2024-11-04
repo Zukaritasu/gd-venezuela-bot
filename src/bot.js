@@ -35,7 +35,7 @@ process.chdir(__dirname);
 	try {
 		database = (await (mongodb = new MongoClient(URI_DATABASE)).connect())
 			.db('gdvenezuela')
-		console.error('Database connection successful!');
+		console.log('Database connection successful!');
 	} catch (e) {
 		console.error(e);
 		return

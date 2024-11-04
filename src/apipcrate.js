@@ -30,7 +30,6 @@ let redisObject = null
  * @returns 
  */
 async function getResponseJSON(url) {
-    console.log(redisObject)
     return new Promise(async (resolve) => {
         const options = {
             hostname: 'www.pointercrate.com',

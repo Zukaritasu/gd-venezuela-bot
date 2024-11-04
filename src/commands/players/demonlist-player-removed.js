@@ -39,19 +39,6 @@ async function getPlayerInfo(id) {
 }
 
 /**
- * @param {string} input
- * @returns {string}
- */
-function escapeDiscordSpecialChars(input) {
-    const specialChars = ['*', '_', '`', '~'];
-    specialChars.forEach(char => {
-        input = input.replace(new RegExp(`\\${char}`, 'g'), `\\${char}`);
-    });
-
-    return input;
-}
-
-/**
  * 
  * @returns
  */
@@ -66,7 +53,7 @@ async function getVenezuelaLeaderboard() {
         if (response[i].score === 0 || response[i].banned) {
             players.push({
                 score: response[i].score,
-                    name: escapeDiscordSpecialChars(response[i].name),
+                    name: utils.escapeDiscordSpecialChars(response[i].name),
                 value: `${response[i].score > 0 ? `${response[i].score.toFixed(2)} puntos\n` : ''} ${await getPlayerInfo(response[i].id)}`
                     .concat(`${response[i].banned ? '\n***banned***' : ''}`), // to string
                 inline: true
