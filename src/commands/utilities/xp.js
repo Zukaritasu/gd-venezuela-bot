@@ -24,7 +24,7 @@ const { Db } = require("mongodb")
  * @param {ChatInputCommandInteraction} interaction 
  */
 async function execute(database, interaction) {
-    if (interaction.member.id === '591640548490870805') {
+    try {
         const top_xp = await database.collection('config').findOne(
             {
                 type: 'top_xp'
@@ -56,7 +56,7 @@ async function execute(database, interaction) {
             }
             return `\`${str}\``;
         }
-        
+
         for (let i = 0; i < top_xp.usersList.length && i < 15; i++) {
             description += `<:estrella_gris:1303810481911238726> ${formatNumber(position++)} <@${top_xp.usersList[i].id}> | XP: \`${top_xp.usersList[i].xp}\` ${top_xp.usersList[i].id === interaction.member.id ? '**<**' : ''}\n`
         }
@@ -64,8 +64,15 @@ async function execute(database, interaction) {
         embed.setDescription(description)
 
         await interaction.reply({ embeds: [embed] })
-    } else {
-        await interaction.reply('Comando no disponible!')
+    } catch (error) {
+        console.error(error)
+        try {
+            await interaction.reply({ 
+                content: 'Ups! Ha ocurrido un error. Intenta mas tarde... <:birthday2:1249345278566465617>' 
+            })
+        } catch (e) {
+            
+        }
     }
 }
 
