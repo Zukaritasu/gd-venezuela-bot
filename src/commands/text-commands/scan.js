@@ -20,7 +20,8 @@ const { Db } = require("mongodb");
 
 const STAR_ROLE_ID = '1302401396133466246'
 const PROBOT_USER_ID = '282859044593598464'
-const MAX_COUNT_USER_ROLES = 15
+const MAX_COUNT_USER_ROLES = 25
+const MAX_COUNT_USERS_TOP = 15
 
 /**
  * Roles of users who should not be assigned the role
@@ -54,7 +55,7 @@ async function debugUserRoles(message) {
     let rolesRemoved = 0
     for (let i = 0; i < staffMembers.size; i++) {
         if (roleIdsToCheck.some(roleId => staffMembers.at(i).roles.cache.has(roleId))) {
-            await staffMembers.at(i).roles.remove(STAR_ROLE_ID, 'It has dropped out of the top 15')
+            await staffMembers.at(i).roles.remove(STAR_ROLE_ID, 'Removed the user\'s role for being Staff or Notable')
             rolesRemoved++
         }
     }
@@ -96,6 +97,7 @@ function getProBotTopUsers(_message, messages) {
         }
     })
 
+    // Do not remove the sort!
     return users.sort((a, b) => a.position - b.position)
 }
 
@@ -111,7 +113,7 @@ async function removeInvalidRolesFromUsers(users, message) {
     message.guild.members.cache.filter(member => member.roles.cache.has(STAR_ROLE_ID))
         .forEach(async member => {
             if (users.findIndex(user => user.id === member.id) === -1) {
-                await member.roles.remove(STAR_ROLE_ID, 'It has dropped out of the top 15')
+                await member.roles.remove(STAR_ROLE_ID, 'It has dropped out of the top 15 or 25')
                 invalidRoles++
             }
         })
@@ -170,14 +172,13 @@ async function scan(database, message, parameters) {
             limit: parameters.length >= 1 ? parseInt(parameters[0]) : 5
         }))
 
+        if (users.length === 0)
+            return message.reply('An error has occurred, report it to zuka :)')
+        if (users.length < MAX_COUNT_USER_ROLES)
+            return message.reply(`${users.length} users have been found, ${MAX_COUNT_USER_ROLES - users.length} user(s) are missing. Insert another page`)
         if (!await saveUsersListXP(database, message, users))
             return
 
-        if (users.length === 0)
-            return message.reply('An error has occurred, report it to zuka :)')
-
-        if (users.length < MAX_COUNT_USER_ROLES)
-            return message.reply(`${users.length} users have been found, ${MAX_COUNT_USER_ROLES - users.length} user(s) are missing. Insert another page`)
         const rolesRemoved = await debugUserRoles(message)
 
         users.splice(MAX_COUNT_USER_ROLES)
@@ -185,16 +186,16 @@ async function scan(database, message, parameters) {
 
         let addedRoles = 0
 
-        users.forEach(async user => {
-            const member = message.guild.members.cache.get(user.id)
+        for (let i = 0; i < MAX_COUNT_USERS_TOP; i++) {
+            const member = message.guild.members.cache.get(users[i].id)
             if (member) {
                 if (!member.roles.cache.has(STAR_ROLE_ID)) {
-                    await member.roles.add(STAR_ROLE_ID, 'Role assigned for being active');
+                        await member.roles.add(STAR_ROLE_ID, 'Role assigned for being active');
                     addedRoles++
                 }
             }
-        })
-
+        }
+        
         message.reply(` The user scan has been completed!\nNumber of roles removed as a member of (Staff/Notable): ${rolesRemoved}\nNumber of roles removed for having dropped out of the top: ${InvalidRoles}\nNumber of roles assigned for having entered the top: ${addedRoles}`)
     } catch (e) {
         console.error(e)
