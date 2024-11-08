@@ -58,7 +58,7 @@ async function execute(database, interaction) {
         }
 
         for (let i = 0; i < top_xp.usersList.length && i < 15; i++) {
-            description += `<:estrella_gris:1303810481911238726> ${formatNumber(position++)} <@${top_xp.usersList[i].id}> | XP: \`${top_xp.usersList[i].xp}\` ${top_xp.usersList[i].id === interaction.member.id ? '**<**' : ''}\n`
+            description += `<:estrella2:1303859148877987880> ${formatNumber(position++)} <@${top_xp.usersList[i].id}> | XP: \`${top_xp.usersList[i].xp}\` ${top_xp.usersList[i].id === interaction.member.id ? '**<**' : ''}\n`
         }
 
         embed.setDescription(description)
