@@ -47,16 +47,19 @@ function isRoleAssignable(member) {
  * their 'Stars' role removed as that is the policy.
  * 
  * @param {GuildMember} message
+ * @param {string[]?} usersException 
  * @returns {Promise<number>} number of roles removed
  */
-async function debugUserRoles(message) {
-    const staffMembers = message.guild.members.cache.filter(member => member.roles.cache.has(STAR_ROLE_ID))
+async function debugUserRoles(message, usersException) {
+    const members = message.guild.members.cache.filter(member => member.roles.cache.has(STAR_ROLE_ID))
 
     let rolesRemoved = 0
-    for (let i = 0; i < staffMembers.size; i++) {
-        if (roleIdsToCheck.some(roleId => staffMembers.at(i).roles.cache.has(roleId))) {
-            await staffMembers.at(i).roles.remove(STAR_ROLE_ID, 'Removed the user\'s role for being Staff or Notable')
-            rolesRemoved++
+    for (let i = 0; i < members.size; i++) {
+        if (roleIdsToCheck.some(roleId => members.at(i).roles.cache.has(roleId))) {
+            if (!usersException.some(value => value === members.at(i).id)) {
+                    await members.at(i).roles.remove(STAR_ROLE_ID, 'Removed the user\'s role for being Staff or Notable')
+                rolesRemoved++
+            }
         }
     }
 
@@ -105,16 +108,19 @@ function getProBotTopUsers(_message, messages) {
  * Users who are not in the top are removed from the role
  * 
  * @param {{ id: string, position: number, assigned: boolean }[]} users 
- * @param {Message} message 
+ * @param {Message} message
+ * @param {string[]?} usersException 
  * @returns {Promise<number>} number of roles removed
  */
-async function removeInvalidRolesFromUsers(users, message) {
+async function removeInvalidRolesFromUsers(users, message, usersException) {
     let invalidRoles = 0
     message.guild.members.cache.filter(member => member.roles.cache.has(STAR_ROLE_ID))
         .forEach(async member => {
             if (users.findIndex(user => user.id === member.id) === -1) {
-                await member.roles.remove(STAR_ROLE_ID, 'It has dropped out of the top 15 or 25')
-                invalidRoles++
+                if (!usersException.some(value => value === member.id)) {
+                        await member.roles.remove(STAR_ROLE_ID, 'It has dropped out of the top 15 or 25')
+                    invalidRoles++
+                }
             }
         })
 
@@ -146,8 +152,9 @@ async function saveUsersListXP(database, message, users) {
             result = await database.collection('config').updateOne(
                 { _id: top_xp._id },
                 {
-                    type: 'top_xp',
-                    usersList: users
+                    $set: {
+                        usersList: users
+                    }
                 });
         }
 
@@ -179,10 +186,14 @@ async function scan(database, message, parameters) {
         if (!await saveUsersListXP(database, message, users))
             return
 
-        const rolesRemoved = await debugUserRoles(message)
+        const usersException = [
+            '555969393570611211' // jaeger
+        ]
+
+        const rolesRemoved = await debugUserRoles(message, usersException)
 
         users.splice(MAX_COUNT_USER_ROLES)
-        const InvalidRoles = await removeInvalidRolesFromUsers(users, message)
+        const InvalidRoles = await removeInvalidRolesFromUsers(users, message, usersException)
 
         let addedRoles = 0
 
