@@ -37,15 +37,20 @@ The last feature that has been added to the bot is a small user XP monitoring sy
 
 | Command | Description |
 | --- | --- |
-| --scan | Scan the Embeds sent by the ProBot bot to extract the leaderboard. Receives a parameter of type number indicating how many embeds to scan. |
+| --scan | Scan the Embeds sent by the ProBot bot to extract the leaderboard. Receives a parameter of type number indicating how many embeds to scan |
 | --clean | Cleans a specific channel |
 
 ## Contribution
 
 If you want to support the project, you can make a fork and make a pull request; there is no specific syntax to follow in the code, you can do it as you like. You need to have the latest version of NodeJS and discord-js v14.
 
+## APIs
+
+- [Pointercrate API](https://www.pointercrate.com/documentation/index)
+- [All Rated Extreme Demon List API](https://github.com/All-Rated-Extreme-Demon-List/AREDL)
+
 ## Social Networks
-- [Discord Server GD Venezuela](https://discord.gg/gdvenezuela)
+- [GD Venezuela Discord Server](https://discord.gg/gdvenezuela)
 - [X \(Twitter\)](https://x.com/GD_Venezuela)
 
 *If you want to communicate with us to contribute to the project, join the Discord server!*
