@@ -15,7 +15,7 @@ The last feature that has been added to the bot is a small user XP monitoring sy
 
 If you want to support the project, you can make a fork and make a pull request; there is no specific syntax to follow in the code, you can do it as you like. You need to have the latest version of NodeJS and discord-js v14.
 
-## Social Networking
+## Social Networks
 - [Discord Server GD Venezuela](https://discord.gg/gdvenezuela)
 - [X \(Twitter\)](https://x.com/GD_Venezuela)
 
