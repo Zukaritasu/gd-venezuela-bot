@@ -35,6 +35,8 @@ async function execute(_client, database, interaction) {
     if (subcommandGroup === 'top') {
         if (subcommand === 'xp') {
             await require('./utilities/xp').execute(database, interaction)
+        } else if (subcommand === 'rank') {
+            await require('./utilities/rank').execute(database, interaction)
         }
     }
 }
@@ -51,6 +53,11 @@ module.exports = {
                     subcommand
                         .setName('xp')
                         .setDescription('Tabla de clasificación de los jugadores Top 15')
+                )
+                .addSubcommand(subcommand =>
+                    subcommand
+                        .setName('rank')
+                        .setDescription('Muestra tu posición en el Top 15')
                 )
         ),
     execute,

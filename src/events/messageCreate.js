@@ -32,7 +32,7 @@ async function updateLeaderboard(database, message) {
         const botMessage = await channel.messages.fetch('1304939931248099348');
         await botMessage.edit(
             {
-                content: '**Top 15 usuarios con mas XP de Texto en el servidor!**\n\nPara ganar experiencia (XP), solo tienes que participar activamente en los canales de texto del servidor enviando mensajes de __texto, emojis, stickers__, etc. Todo lo referente a los canales de texto. Recuerda que el **Staff** y los usuarios con rol **Notable** no forman parte del Top\n\n*Si sales del Top 15, el rol se mantendrá contigo hasta que llegues al Top 25; si bajas otro nivel, lamentablemente perderás el rol, así que mantente activo!!!*', 
+                content: '**Top 15 usuarios con mas XP de Texto en el servidor!**\n\n:warning:  Recuerda que el **Staff** y los usuarios con rol **Notable** no forman parte del Top\nPara ganar experiencia (XP), solo tienes que participar activamente en los canales de texto del servidor enviando mensajes de __texto, emojis, stickers__, etc. Todo lo referente a los canales de texto.\n\n**Para mas información puedes usar los siguientes comandos**\n- \`/utilidades top xp\` Muestra el Top 15\n- \`/utilidades top rank\` Muestra tu posición en el Top 25 \n\n*Si sales del Top 15, el rol se mantendrá contigo hasta que llegues al Top 25; si bajas otro nivel, lamentablemente perderás el rol, así que mantente activo!!!*', 
                 embeds: [embed]
             }
         )

@@ -32,6 +32,7 @@ The last feature that has been added to the bot is a small user XP monitoring sy
 | /hardests | The most difficult levels completed in the whole country |
 | /vincular | Link your Geometry Dash profile to the bot to enhance the bot's functionality |
 | /utilidades top xp | Displays the leaderboard of the users with the most XP on the server (Top 15) |
+| /utilidades top rank | Show your position in the Top 25 |
 | /github | GitHub repository where the GDVenezuelaBot bot is located |
 
 ## Secret commands (Authorised personnel only)
