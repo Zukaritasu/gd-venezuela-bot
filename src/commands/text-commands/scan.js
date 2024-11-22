@@ -46,12 +46,13 @@ function isRoleAssignable(member) {
  * Users who have been assigned server staff roles or notable roles should have
  * their 'Stars' role removed as that is the policy.
  * 
- * @param {GuildMember} message
+ * @param {Collection<string, GuildMember>} guildMembers
+ * @param {GuildMember} _message
  * @param {string[]?} usersException 
  * @returns {Promise<number>} number of roles removed
  */
-async function debugUserRoles(message, usersException) {
-    const members = message.guild.members.cache.filter(member => member.roles.cache.has(STAR_ROLE_ID))
+async function debugUserRoles(guildMembers, _message, usersException) {
+    const members = guildMembers.filter(member => member.roles.cache.has(STAR_ROLE_ID))
 
     let rolesRemoved = 0
     for (let i = 0; i < members.size; i++) {
@@ -68,10 +69,11 @@ async function debugUserRoles(message, usersException) {
 
 /**
  * @param {Message} message 
- * @param {Collection<string, Message<boolean>>} messages
+ * @param {Collection<string, GuildMember>} guildMembers 
+ * @param {Collection<string, Message<boolean>>} _messages
  * @returns {{ id: string, position: number, assigned: boolean, xp: number }[]}
  */
-function getProBotTopUsers(_message, messages) {
+function getProBotTopUsers(guildMembers, _message, messages) {
     const result = messages.filter(message => message.author.bot && message.author.id === PROBOT_USER_ID)
     if (result.size === 0)
         throw new Error('No messages found for ProBot')
@@ -84,7 +86,7 @@ function getProBotTopUsers(_message, messages) {
                 if (!part.startsWith('**')) {
                     // line syntax #1 I <@!000000000000000> XP: `00000`\n
                     const userId = part.substring(part.indexOf('<@!') + '<@!'.length, part.indexOf('>'))
-                    const member = message.guild.members.cache.get(userId)
+                    const member = guildMembers.get(userId)
                     if (isRoleAssignable(member)) {
                         users.push(
                             {
@@ -107,14 +109,15 @@ function getProBotTopUsers(_message, messages) {
 /**
  * Users who are not in the top are removed from the role
  * 
+ * @param {Collection<string, GuildMember>} guildMembers
  * @param {{ id: string, position: number, assigned: boolean }[]} users 
  * @param {Message} message
  * @param {string[]?} usersException 
  * @returns {Promise<number>} number of roles removed
  */
-async function removeInvalidRolesFromUsers(users, message, usersException) {
+async function removeInvalidRolesFromUsers(guildMembers, users, message, usersException) {
     let invalidRoles = 0
-    message.guild.members.cache.filter(member => member.roles.cache.has(STAR_ROLE_ID))
+    guildMembers.filter(member => member.roles.cache.has(STAR_ROLE_ID))
         .forEach(async member => {
             if (users.findIndex(user => user.id === member.id) === -1) {
                 if (!usersException.some(value => value === member.id)) {
@@ -159,7 +162,7 @@ async function saveUsersListXP(database, message, users) {
         }
 
         if (!result.acknowledged)
-            throw new Error('Failed to save the list of users ')
+            throw new Error('Failed to save the list of users')
     } catch (e) {
         console.error(e)
         message.reply(`Error: ${e.message}`)
@@ -175,7 +178,12 @@ async function saveUsersListXP(database, message, users) {
  */
 async function scan(database, message, parameters) {
     try {
-        const users = getProBotTopUsers(message, await message.channel.messages.fetch({
+        if (!message.guild)
+            return
+        await message.guild.members.fetch();
+        const guildMembers = message.guild.members.cache;
+
+        const users = getProBotTopUsers(guildMembers, message, await message.channel.messages.fetch({
             limit: parameters.length >= 1 ? parseInt(parameters[0]) : 5
         }))
 
@@ -190,15 +198,15 @@ async function scan(database, message, parameters) {
             '555969393570611211' // jaeger
         ]
 
-        const rolesRemoved = await debugUserRoles(message, usersException)
+        const rolesRemoved = await debugUserRoles(guildMembers, message, usersException)
 
         users.splice(MAX_COUNT_USER_ROLES)
-        const InvalidRoles = await removeInvalidRolesFromUsers(users, message, usersException)
+        const InvalidRoles = await removeInvalidRolesFromUsers(guildMembers, users, message, usersException)
 
         let addedRoles = 0
 
         for (let i = 0; i < MAX_COUNT_USERS_TOP; i++) {
-            const member = message.guild.members.cache.get(users[i].id)
+            const member = guildMembers.get(users[i].id)
             if (member) {
                 if (!member.roles.cache.has(STAR_ROLE_ID)) {
                         await member.roles.add(STAR_ROLE_ID, 'Role assigned for being active');
@@ -207,7 +215,7 @@ async function scan(database, message, parameters) {
             }
         }
         
-        message.reply(` The user scan has been completed!\nNumber of roles removed as a member of (Staff/Notable): ${rolesRemoved}\nNumber of roles removed for having dropped out of the top: ${InvalidRoles}\nNumber of roles assigned for having entered the top: ${addedRoles}`)
+        await message.reply(`Users scan completed!\n- Users (Staff/Notable) rol removed: ${rolesRemoved}\n- Number of users who left the Top 25: ${InvalidRoles}\n- Number of users who entered the Top 15: ${addedRoles}`)
     } catch (e) {
         console.error(e)
         try {

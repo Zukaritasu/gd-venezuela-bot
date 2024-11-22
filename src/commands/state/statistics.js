@@ -65,6 +65,7 @@ async function getUserStadistic(database, userId, stadistic) {
  * @returns 
  */
 async function showStadistic(database, response, confirmation, interaction, collectorFilter, stadistic) {
+    await interaction.guild.members.fetch();
     const grinders = interaction.guild.members.cache.filter(member =>
         member.roles.cache.find(role => role.id === '1119804850620866600' /* vnzl role */) !== undefined &&
         member.roles.cache.find(role => role.id === confirmation.values[0] /* state role id*/) !== undefined &&
@@ -231,7 +232,8 @@ async function processStateStatistics(client, database, interaction, stadistic) 
             }
         }
     } catch (e) {
-        try { // try catch to ensure if a new exception occurs from the call to the 
+        try { 
+            // try catch to ensure if a new exception occurs from the call to the 
             // editReply method and the delete method
             if (e.message === ERROR_TIMEOUT_MESSAGE) {
                 if (response)

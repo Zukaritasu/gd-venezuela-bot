@@ -104,8 +104,8 @@ async function getStateInfo(database, interaction, roleId) {
     const creatorPtsRoleId = '1216234978673819798';
     const userCoinGdrRoleId = '1221273094035865771';
 
-    const members = interaction.guild.members.cache
-        .filter(member => member.roles.cache.has(roleId))
+    await interaction.guild.members.fetch()
+    const members = interaction.guild.members.cache.filter(member => member.roles.cache.has(roleId))
 
     info.players = members.size;
     info.starGdr = members.filter(member => member.roles.cache.has(starGdrRoleId)).size;
@@ -187,17 +187,6 @@ async function showStateInfo(database, response, confirmation, interaction, coll
             inline: false
         }
     )
-    /*} else {
-        embed.addFields(
-            { name: 'Hardest', value: `${info.hardest}`, inline: true },
-            { name: 'Vencedor', value: `${info.player}`, inline: true },
-            { name: 'Jugadores', value: `${info.players}`, inline: true },
-            { name: 'Star Grinders', value: `${info.starGdr}`, inline: false, index: 0 },
-            { name: 'Usuarios con Extreme Demons', value: `${info.extremeDms}`, inline: false, index: 1 },
-            { name: 'Moon Grinders', value: `${info.moonGdr}`, inline: false, index: 2 },
-            { name: 'Usuarios con Creator Point', value: `${info.creatorPts}`, inline: false, index: 3 }
-        )
-    }*/
 
     embed.setAuthor({
         name: 'Venezuela',
