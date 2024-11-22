@@ -36,6 +36,8 @@ async function updateLeaderboard(database, message) {
                 embeds: [embed]
             }
         )
+
+        await message.reply('Successfully updated!')
     } catch (error) {
         console.error(error)
         try {
@@ -88,7 +90,7 @@ module.exports = {
      */
     async execute(_client, database, message) {
         try {
-            if (!message.member.user.bot) {
+            if (message.member && !message.member.user.bot) {
                 if (message.content.startsWith('--scan')) {
                     if (hasUserPermissions(message.member)) {
                         await require('../commands/text-commands/scan').scan(database, message, getCommandParameters(message.content))
