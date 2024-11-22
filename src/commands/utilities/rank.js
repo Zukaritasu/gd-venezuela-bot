@@ -36,7 +36,7 @@ async function execute(database, interaction) {
         const user = top_xp.usersList.find(user => user.id === interaction.member.id)
         if (!user)
             return await interaction.editReply('Tu posición de existe dentro del Top 25 <:ani_chibiqiqipeek:1244839483581403138>')
-        return await interaction.editReply(`Tu posición actual es ${user.position} <:steamunga:1298001230790135939>`)
+        return await interaction.editReply(`Tu posición actual es **${user.position}** <:steamunga:1298001230790135939>`)
     } catch (error) {
         console.error(error)
         try {
