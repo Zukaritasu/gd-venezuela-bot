@@ -57,7 +57,7 @@ async function getResponseJSON(url) {
                 res.on('end', async () => {
                     try {
                         const jsonResponseData = JSON.parse(Buffer.concat(data).toString())
-                        await redisObject.setEx(key, 21600, JSON.stringify(jsonResponseData))
+                            await redisObject.set(key, 21600, JSON.stringify(jsonResponseData))
                         resolve(jsonResponseData)
                     } catch (error) {
                         resolve(error);
