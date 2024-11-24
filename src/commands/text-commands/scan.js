@@ -17,11 +17,10 @@
 
 const { Message, EmbedBuilder, Collection, GuildMember } = require("discord.js");
 const { Db } = require("mongodb");
+const topLimits = require("../../../.botconfig/top-limits.json")
 
 const STAR_ROLE_ID = '1302401396133466246'
 const PROBOT_USER_ID = '282859044593598464'
-const MAX_COUNT_USER_ROLES = 25
-const MAX_COUNT_USERS_TOP = 15
 
 /**
  * Roles of users who should not be assigned the role
@@ -121,7 +120,7 @@ async function removeInvalidRolesFromUsers(guildMembers, users, message, usersEx
         .forEach(async member => {
             if (users.findIndex(user => user.id === member.id) === -1) {
                 if (!usersException.some(value => value === member.id)) {
-                        await member.roles.remove(STAR_ROLE_ID, 'It has dropped out of the top 15 or 25')
+                        await member.roles.remove(STAR_ROLE_ID, `It has dropped out of the top ${topLimits.positions} or ${topLimits.limit}`)
                     invalidRoles++
                 }
             }
@@ -184,28 +183,24 @@ async function scan(database, message, parameters) {
         const guildMembers = message.guild.members.cache;
 
         const users = getProBotTopUsers(guildMembers, message, await message.channel.messages.fetch({
-            limit: parameters.length >= 1 ? parseInt(parameters[0]) : 5
+            limit: parameters.length >= 1 ? parseInt(parameters[0] + 1) : 5
         }))
 
         if (users.length === 0)
             return message.reply('An error has occurred, report it to zuka :)')
-        if (users.length < MAX_COUNT_USER_ROLES)
-            return message.reply(`${users.length} users have been found, ${MAX_COUNT_USER_ROLES - users.length} user(s) are missing. Insert another page`)
+        if (users.length < topLimits.limit)
+            return message.reply(`${users.length} users have been found, ${topLimits.limit - users.length} user(s) are missing. Insert another page`)
         if (!await saveUsersListXP(database, message, users))
             return
 
-        const usersException = [
-            '555969393570611211' // jaeger
-        ]
+        const rolesRemoved = await debugUserRoles(guildMembers, message, topLimits.usersException)
 
-        const rolesRemoved = await debugUserRoles(guildMembers, message, usersException)
-
-        users.splice(MAX_COUNT_USER_ROLES)
-        const InvalidRoles = await removeInvalidRolesFromUsers(guildMembers, users, message, usersException)
+        users.splice(topLimits.limit)
+        const InvalidRoles = await removeInvalidRolesFromUsers(guildMembers, users, message, topLimits.usersException)
 
         let addedRoles = 0
 
-        for (let i = 0; i < MAX_COUNT_USERS_TOP; i++) {
+        for (let i = 0; i < topLimits.positions; i++) {
             const member = guildMembers.get(users[i].id)
             if (member) {
                 if (!member.roles.cache.has(STAR_ROLE_ID)) {
@@ -215,7 +210,7 @@ async function scan(database, message, parameters) {
             }
         }
         
-        await message.reply(`Users scan completed!\n- Users (Staff/Notable) rol removed: ${rolesRemoved}\n- Number of users who left the Top 25: ${InvalidRoles}\n- Number of users who entered the Top 15: ${addedRoles}`)
+        await message.reply(`Users scan completed!\n- Users (Staff/Notable) rol removed: ${rolesRemoved}\n- Number of users who left the Top ${topLimits.limit}: ${InvalidRoles}\n- Number of users who entered the Top ${topLimits.positions}: ${addedRoles}`)
     } catch (e) {
         console.error(e)
         try {
