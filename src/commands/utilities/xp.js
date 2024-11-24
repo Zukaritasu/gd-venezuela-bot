@@ -30,7 +30,8 @@ async function getTop15XPEmbed(database, interaction) {
             type: 'top_xp'
         });
 
-    if (!top_xp) return null
+    if (!top_xp || !('usersList' in top_xp))
+        return null
         
     const embed = new EmbedBuilder()
     embed.setColor(0x2b2d31)

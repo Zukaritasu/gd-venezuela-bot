@@ -15,7 +15,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-const { ChatInputCommandInteraction, EmbedBuilder, Message } = require("discord.js")
+const { ChatInputCommandInteraction } = require("discord.js")
 const { Db } = require("mongodb")
 
 /**
@@ -31,7 +31,7 @@ async function execute(database, interaction) {
                 type: 'top_xp'
             });
     
-        if (!top_xp)
+        if (!top_xp || !('usersList' in top_xp))
             return await interaction.editReply('La lista de usuarios no está disponible <:ani_okitathinking:1244840221376512021>')
         const user = top_xp.usersList.find(user => user.id === interaction.member.id)
         if (!user)
