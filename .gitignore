@@ -133,3 +133,5 @@ dist
 .botconfig/token.json
 hashlist.json
 package-lock.json
+
+test
