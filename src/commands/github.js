@@ -30,9 +30,9 @@ async function execute(_client, _database, interaction) {
     } catch (e) {
         console.error(e);
         try {
-            await interaction.editReply('Ha ocurrido un error desconocido');
+            await interaction.channel?.send(`<@${interaction.member.id}> An unknown error has occurred [GitHub Link]`)
         } catch (error) {
-            
+            console.error('Failed to send error message:', error)
         }
     }
 }
