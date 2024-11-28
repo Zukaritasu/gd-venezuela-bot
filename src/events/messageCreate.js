@@ -67,6 +67,9 @@ module.exports = {
                 } else if (message.content.startsWith('--clean')) {
                     if (hasUserPermissions(message.member))
                         await require('../commands/text-commands/clean').clean(message)
+                } else if (message.content.startsWith('--blacklist')) {
+                    if (hasUserPermissions(message.member))
+                        await require('../commands/text-commands/topxp-blacklist').process(getCommandParameters(message.content), database, message)
                 }
             }
         } catch (e) {
