@@ -22,7 +22,7 @@ module.exports = {
     /**
      * @param {Db} database 
      * @param {Message} message 
-     * @returns 
+     * @returns {Promise<void>}
      */
     update: async (database, message) => {
         try {
@@ -38,7 +38,7 @@ module.exports = {
                 }
             )
 
-            await message.reply('Successfully updated!')
+            await message.react('✅')
         } catch (error) {
             console.error(error)
             try {
