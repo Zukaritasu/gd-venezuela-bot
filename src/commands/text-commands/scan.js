@@ -33,7 +33,6 @@ const roleIdsToCheck = [
 ];
 
 /**
- * 
  * @param {GuildMember} member
  * @returns {boolean} 
  */
@@ -67,42 +66,42 @@ async function debugUserRoles(guildMembers, _message, usersException) {
 }
 
 /**
- * @param {Message} message 
+ * @param {Message} _message 
  * @param {Collection<string, GuildMember>} guildMembers 
- * @param {Collection<string, Message<boolean>>} _messages
+ * @param {Collection<string, Message<boolean>>} messages
  * @returns {{ id: string, position: number, assigned: boolean, xp: number }[]}
  */
 function getProBotTopUsers(guildMembers, _message, messages) {
-    const result = messages.filter(message => message.author.bot && message.author.id === PROBOT_USER_ID)
-    if (result.size === 0)
-        throw new Error('No messages found for ProBot')
+    const result = messages.filter(message => message.author.bot && message.author.id === PROBOT_USER_ID);
+    if (result.size === 0) {
+        throw new Error('No messages found for ProBot');
+    }
 
-    const users = []
+    const users = new Map();
 
     result.forEach(message => {
-        if (message.embeds.length === 1 && message.embeds[0].author.name.indexOf('Guild Score Leaderboards') !== -1) {
+        if (message.embeds.length === 1 && message.embeds[0].author.name.indexOf('Guild Score Leaderboards') !== -1 
+                && message.embeds[0].title.indexOf('TEXT SCORE') != -1) {
             message.embeds[0].description.split('\n').forEach(part => {
                 if (!part.startsWith('**')) {
                     // line syntax #1 I <@!000000000000000> XP: `00000`\n
-                    const userId = part.substring(part.indexOf('<@!') + '<@!'.length, part.indexOf('>'))
-                    const member = guildMembers.get(userId)
-                    if (isRoleAssignable(member)) {
-                        users.push(
-                            {
-                                id: userId,
-                                position: parseInt(part.substring(part.indexOf('#') + '#'.length, part.indexOf('I')).trim()),
-                                xp: parseInt(part.substring(part.indexOf(':') + ':'.length).trim().replace('`', '')),
-                                assigned: false
-                            }
-                        )
+                    const userId = part.substring(part.indexOf('<@!') + '<@!'.length, part.indexOf('>'));
+                    const member = guildMembers.get(userId);
+                    if (isRoleAssignable(member) && !users.has(userId)) {
+                        users.set(userId, {
+                            id: userId,
+                            position: parseInt(part.substring(part.indexOf('#') + '#'.length, part.indexOf('I')).trim()),
+                            xp: parseInt(part.substring(part.indexOf(':') + ':'.length).trim().replace('`', '')),
+                            assigned: false
+                        });
                     }
                 }
-            })
+            });
         }
-    })
+    });
 
-    // Do not remove the sort!
-    return users.sort((a, b) => a.position - b.position)
+    // Convert the map to an array and sort
+    return Array.from(users.values()).sort((a, b) => a.position - b.position);
 }
 
 /**
@@ -110,24 +109,25 @@ function getProBotTopUsers(guildMembers, _message, messages) {
  * 
  * @param {Collection<string, GuildMember>} guildMembers
  * @param {{ id: string, position: number, assigned: boolean }[]} users 
- * @param {Message} message
+ * @param {Message} _message
  * @param {string[]?} usersException 
  * @returns {Promise<number>} number of roles removed
  */
-async function removeInvalidRolesFromUsers(guildMembers, users, message, usersException) {
-    let invalidRoles = 0
-    guildMembers.filter(member => member.roles.cache.has(STAR_ROLE_ID))
-        .forEach(async member => {
-            if (users.findIndex(user => user.id === member.id) === -1) {
-                if (!usersException.some(value => value === member.id)) {
-                        await member.roles.remove(STAR_ROLE_ID, `It has dropped out of the top ${topLimits.positions} or ${topLimits.limit}`)
-                    invalidRoles++
-                }
+async function removeInvalidRolesFromUsers(guildMembers, users, _message, usersException) {
+    let invalidRoles = 0;
+    const membersWithStarRole = guildMembers.filter(member => member.roles.cache.has(STAR_ROLE_ID));
+    for (const member of membersWithStarRole.values()) {
+        if (users.findIndex(user => user.id === member.id) === -1) {
+            if (!usersException.some(value => value === member.id)) {
+                    await member.roles.remove(STAR_ROLE_ID, `It has dropped out of the top ${topLimits.positions} or ${topLimits.limit}`);
+                invalidRoles++;
             }
-        })
+        }
+    }
 
-    return invalidRoles
+    return invalidRoles;
 }
+
 
 /**
  * 
@@ -183,19 +183,19 @@ async function scan(database, message, parameters) {
         const guildMembers = message.guild.members.cache;
 
         const users = getProBotTopUsers(guildMembers, message, await message.channel.messages.fetch({
-            limit: parameters.length >= 1 ? parseInt(parameters[0] + 1) : 5
+            limit: parameters.length >= 1 ? parseInt(parameters[0]) + 1 : 5
         }))
 
         if (users.length === 0)
             return message.reply('An error has occurred, report it to zuka :)')
         if (users.length < topLimits.limit)
             return message.reply(`${users.length} users have been found, ${topLimits.limit - users.length} user(s) are missing. Insert another page`)
+
+        users.splice(topLimits.limit)
         if (!await saveUsersListXP(database, message, users))
             return
 
         const rolesRemoved = await debugUserRoles(guildMembers, message, topLimits.usersException)
-
-        users.splice(topLimits.limit)
         const InvalidRoles = await removeInvalidRolesFromUsers(guildMembers, users, message, topLimits.usersException)
 
         let addedRoles = 0
