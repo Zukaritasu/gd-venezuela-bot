@@ -20,6 +20,7 @@ const botenv = require('./botenv')
 const { TOKEN, URI_DATABASE } = require('../.botconfig/token.json');
 const { Db, MongoClient } = require('mongodb');
 const redis = require('redis')
+const logger = require('./logger')
 
 //
 // +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
@@ -35,9 +36,9 @@ process.chdir(__dirname);
 	try {
 		database = (await (mongodb = new MongoClient(URI_DATABASE)).connect())
 			.db('gdvenezuela')
-		console.log('Database connection successful!');
+        logger.INF('Database connection successful!');
 	} catch (e) {
-		console.error(e);
+        logger.ERR(e)
 		return
 	}
 
@@ -48,11 +49,11 @@ process.chdir(__dirname);
 
     try {
         await redisClient.connect();
-        console.log('Redis client connected');
+        logger.INF('Redis client connected')
         
         modules.forEach(module => require(module).setRedisClientObject(redisClient))
-    } catch (error) {
-        console.error(error);
+    } catch (e) {
+        logger.ERR(e)
 		return
     }
 
@@ -89,9 +90,9 @@ process.chdir(__dirname);
 	})
     
     client.login(TOKEN).catch((error) => {
-        console.error(error);
+        logger.ERR(error)
     }).then(() => {
-        console.log("Time: ", new Date().getTime())
+        logger.INF('successfully logged!')
     });
 })()
 
