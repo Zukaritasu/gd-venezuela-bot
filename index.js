@@ -20,6 +20,7 @@ const fs = require('fs');
 const crypto = require('crypto');
 const path = require('path');
 const { exit } = require('process');
+const logger = require('./src/logger')
 
 //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
@@ -36,7 +37,10 @@ function generateSHA256(filePath) {
 async function execJSFileSynch(command) {
 	return !(await new Promise((resolve, reject) => {
 		fork(command).on('exit', (code) => {
-			console.log(`Subprocess is terminated with code ${code}`);
+            if (code != 0)
+                logger.ERR(`Subprocess is terminated with code ${code}`)
+            else 
+                logger.INF(`Subprocess is terminated with code 0`)
 			resolve(code != 0)
 		}).on('error', (error) => {
 			reject(true)
@@ -89,7 +93,7 @@ const writeHashlistFile = () => {
                 }
             }
         } catch (error) {
-            console.error(error)
+            logger.ERR(error)
             exit(1)
         }
     }
