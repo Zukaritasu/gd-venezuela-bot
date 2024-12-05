@@ -16,6 +16,7 @@
  */
 
 const { Events } = require('discord.js');
+const logger = require('../logger')
 
 module.exports = {
     name: Events.GuildMemberAdd,
@@ -23,9 +24,9 @@ module.exports = {
     async execute(_client, _database, member) {
         try {
             await member.guild.members.fetch(member.id);
-            console.log('The cache has been updated with the new member!')
+            logger.INF('The cache has been updated with the new member!')
         } catch (e) {
-            console.error(e)
+            logger.INF(e)
         }
     },
 };

@@ -16,20 +16,21 @@
  */
 
 const { Events } = require('discord.js');
+const logger = require('../logger')
 
 module.exports = {
 	name: Events.ClientReady,
 	once: true,
 	async execute(client, _database) {
-		console.log(`Ready! Logged in as ${client.user.tag}`);
+		logger.INF(`Ready! Logged in as ${client.user.tag}`)
 		// Load server members into the cache
 		const guild = client.guilds.cache.get('1119795689984102455' /* GD Venezuela server ID */)
 		if (guild !== undefined) {
 			try {
 				await guild.members.fetch();
-				console.log('All members have been loaded into the cache!');
+				logger.INF('All members have been loaded into the cache!')
 			} catch (e) {
-				console.log(e)
+				logger.ERR(e)
 			}
 		}
 	},

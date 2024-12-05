@@ -17,6 +17,7 @@
 
 const { Events, Client, ChatInputCommandInteraction } = require('discord.js');
 const { Db } = require('mongodb');
+const logger = require('../logger')
 
 module.exports = {
     name: Events.InteractionCreate,
@@ -28,19 +29,22 @@ module.exports = {
      * @param {ChatInputCommandInteraction} interaction 
      */
     async execute(client, database, interaction) {
-        if (interaction.isChatInputCommand()) {
-            if (interaction.guild) {
-                const command = interaction.client.commands.get(interaction.commandName);
-                if (command !== null)
-                    await command.execute(client, database, interaction);
-            } else {
-                console.error("Guild is null. The bot might not be in the server or lacks the necessary permissions.");
-                await interaction.reply(
-                    {
-                        content: 'Error al consultar la información del servidor'
-                    }
-                );
+        try {
+            if (interaction.isChatInputCommand()) {
+                if (interaction.guild) {
+                    await interaction.client.commands
+                        .get(interaction.commandName)
+                        ?.execute(client, database, interaction);
+                } else {
+                    logger.ERR('Guild is null. The bot might not be in the server or lacks the necessary permissions')
+                    await interaction.reply({
+                            content: 'Error al consultar la información del servidor'
+                        }
+                    );
+                }
             }
+        } catch (error) {
+            logger.ERR(error)
         }
     },
 };
