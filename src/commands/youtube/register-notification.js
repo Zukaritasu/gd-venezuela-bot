@@ -79,7 +79,7 @@ async function execute(db, _client, interaction) {
     try {
         if (!interaction.member)
             return;
-        if (utils.hasUserPermissions(interaction.member)) {
+        if (!utils.hasUserPermissions(interaction.member)) {
             await interaction.reply({ 
                 content: 'No tienes permisos para ejecutar este comando.', 
                 ephemeral: true 
