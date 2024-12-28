@@ -126,7 +126,7 @@ async function createEmbedProfile(client, database, interaction, playerId /* dem
         embed.addFields(
             {
                 name: 'Demonlist rank',
-                value: `${playerInfo.rank} ${getDemonIconByPosition(playerInfo.rank)}`,
+                value: playerInfo.rank === undefined ? 'None' : `${playerInfo.rank} ${getDemonIconByPosition(playerInfo.rank)}`,
                 inline: true
             },
             {
