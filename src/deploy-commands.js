@@ -18,6 +18,7 @@
 const { REST, Routes } = require('discord.js');
 const { TOKEN, CLIENT_ID } = require('../.botconfig/token.json');
 const botenv = require('./botenv')
+const logger = require('./logger')
 
 //
 // +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
@@ -29,16 +30,16 @@ const rest = new REST().setToken(TOKEN);
 (async () => {
     try {
         const commands = botenv.getCommandsCollection().map(value => value.data.toJSON())
-        console.log(`Started refreshing ${commands.length} application (/) commands.`);
+        logger.INF(`Started refreshing ${commands.length} application (/) commands.`)
 
         const data = await rest.put(
             Routes.applicationCommands(CLIENT_ID),
             { body: commands }
         );
 
-        console.log(`Successfully reloaded ${data.length} application (/) commands.`);
+        logger.INF(`Successfully reloaded ${data.length} application (/) commands.`)
     } catch (e) {
-        console.error(e);
+        logger.ERR(e)
         process.exit(1)
     }
 })();
