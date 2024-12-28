@@ -31,7 +31,7 @@ async function getNotificationInfo(interaction) {
     const description = interaction.options.getString('description');
     const channel = interaction.options.getString('channel');
 
-    if (!mentionRole || !user || !username || !description || !channel) {
+    if (!mentionRole || !username || !description || !channel) {
         await interaction.reply({ content: 'Todos los campos son obligatorios.', ephemeral: true });
         return;
     }
@@ -59,8 +59,8 @@ async function getNotificationInfo(interaction) {
             return;
         }
 
-        return { mentionRoleId: mentionRole.id, userId: user.id, username, description, 
-            channel, channelId, publishedAt: '' };
+        return { mentionRoleId: mentionRole.id, userId: user ? user.id : null, username, 
+            description, channel, channelId, publishedAt: '' };
     } catch (error) {
         logger.ERR(error.message);
         await interaction.reply({ content: 

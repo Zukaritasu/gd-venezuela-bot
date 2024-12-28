@@ -51,6 +51,9 @@ async function execJSFileSynch(command) {
 	}))
 }
 
+logger.INF('*'.repeat(50))
+logger.INF('Starting bot...')
+
 const commandsPath = path.join(__dirname, 'src/commands');
 let commands = []
 fs.readdirSync(commandsPath).filter(file => file.endsWith('.js')).forEach(file => {

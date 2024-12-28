@@ -54,8 +54,8 @@ async function getLastVideo(channelId) {
  */
 async function notifyLastVideo(db, client, channel, video) {
     const videoPublishedAt = new Date(video.snippet.publishedAt);
-    if (channel.publishedAt && channel.publishedAt.length > 0 
-                && videoPublishedAt > new Date(channel.publishedAt)) {
+    if (!channel.publishedAt || channel.publishedAt.length == 0 
+                || videoPublishedAt > new Date(channel.publishedAt)) {
         const result = await db.collection('youtube_channels').updateOne(
             { _id: channel._id },
             {
@@ -70,9 +70,11 @@ async function notifyLastVideo(db, client, channel, video) {
             const channelInfo = await client.channels.fetch(discordChannelInfo.channelId);
             if (channelInfo && channelInfo.type === ChannelType.GuildText) {
                 await channelInfo.send(channel.description
-                    .replace('{video}', `https://www.youtube.com/watch?v=${video.id.videoId}`)
-                    .replace('{role}', `<@&${channel.mentionRoleId}>`))
+                    .replace('{video}', `https://youtu.be/${video.id.videoId}`)
+                        .replace('{role}', `<@&${channel.mentionRoleId}>`)
                     .replace('{username}', channel.username)
+                    .replace('\\n', '\n')
+                )
             }
         }
     }

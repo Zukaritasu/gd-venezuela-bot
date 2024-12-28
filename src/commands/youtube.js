@@ -51,12 +51,6 @@ module.exports = {
                         .setDescription('Rol al que se notificará')
                         .setRequired(true)
                 )
-                .addUserOption(option =>
-                    option
-                        .setName('user')
-                        .setDescription('Usuario')
-                        .setRequired(true)
-                )
                 .addStringOption(option =>
                     option
                         .setName('username')
@@ -74,6 +68,12 @@ module.exports = {
                         .setName('channel')
                         .setDescription('Canal de YouTube')
                         .setRequired(true)
+                )
+                .addUserOption(option =>
+                    option
+                        .setName('user')
+                        .setDescription('Usuario')
+                        .setRequired(false)
                 )
             ),
     execute,
