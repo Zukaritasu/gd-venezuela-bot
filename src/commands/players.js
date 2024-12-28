@@ -34,9 +34,11 @@ async function execute(client, database, interaction) {
 
     if (subcommandGroup === 'demonlist') {
         if (subcommand === 'retirados') {
-            await require('./players/demonlist-player-removed').execute(client, database, interaction)
+            await require('./players/demonlist-players-removed').execute(client, database, interaction)
         } else if (subcommand === 'activos') {
             await require('./players/demonlist-players').execute(client, database, interaction)
+        } else if (subcommand === 'estadisticas') {
+            await require('./players/demonlist-players-statistics').execute(database, interaction)
         }
     }
 
@@ -70,6 +72,10 @@ module.exports = {
                     subcommand
                         .setName('activos')
                         .setDescription('Lista de Jugadores activos de la Demonlist'))
+                .addSubcommand(subcommand =>
+                    subcommand
+                        .setName('estadisticas')
+                        .setDescription('Estadisticas de los Jugadores de la Demonlist'))
         ),
     execute,
 };
