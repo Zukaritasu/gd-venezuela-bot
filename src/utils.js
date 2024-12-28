@@ -104,6 +104,16 @@ function escapeDiscordSpecialChars(input) {
 }
 
 /**
+ * @param {GuildMember} member 
+ * @returns {boolean}
+ */
+function hasUserPermissions(member) {
+    return member.roles.cache.has('1119804656923709512') || // Dictador
+           member.roles.cache.has('1119804806521946155') || // Tribunal supremo
+           member.roles.cache.has('1121221914254397592')    // Ministerio
+}
+
+/**
  * 
  * @param {GuildMember} member 
  * @returns {boolean}
@@ -117,5 +127,6 @@ module.exports = {
     getYouTubeThumbnail,
     isAdministrator,
     isValidPointercrateUrl,
-    escapeDiscordSpecialChars
+    escapeDiscordSpecialChars,
+    hasUserPermissions
 }
