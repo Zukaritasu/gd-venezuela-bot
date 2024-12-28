@@ -81,7 +81,7 @@ async function getVenezuelaLeaderboard() {
 async function createEmbedLeaderboard(database, interaction) {
     const players = await getVenezuelaLeaderboard()
     if (players.length === 0) {
-        interaction.editReply({ content: 'No se encontraron jugadores de este pais' })
+        await interaction.editReply({ content: 'No se encontraron jugadores de este pais' })
         return 
     }
 
