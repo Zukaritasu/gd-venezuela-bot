@@ -33,6 +33,12 @@ async function execute(client, database, interaction) {
 
     if (subcommand === 'notification') {
         await require('./youtube/register-notification').execute(database, client, interaction)
+    } else if (subcommand === 'help') {
+        await require('./youtube/help').execute(client, database, interaction)
+    } else if (subcommand === 'list') {
+        await require('./youtube/list').execute(database, interaction)
+    } else if (subcommand === 'remove') {
+        await require('./youtube/remove-notification').execute(database, interaction)
     }
 }
 
@@ -40,7 +46,7 @@ module.exports = {
     data: new SlashCommandBuilder()
         .setName('youtube')
         .setDescription('Comandos relacionados con YouTube')
-    
+
         .addSubcommand(subcommand =>
             subcommand
                 .setName('notification')
@@ -75,6 +81,33 @@ module.exports = {
                         .setDescription('Usuario')
                         .setRequired(false)
                 )
-            ),
-    execute,
+        )
+        .addSubcommand(subcommand => 
+            subcommand
+                .setName('help')
+                .setDescription('Muestra el mensaje de ayuda')
+        )
+        .addSubcommand(subcommand =>
+            subcommand
+                .setName('list')
+                .setDescription('Muestra la lista de canales de YouTube registrados')
+        )
+        .addSubcommand(subcommand =>
+            subcommand
+                .setName('remove')
+                .setDescription('Quita un canal de YouTube de la lista')
+                .addStringOption(option =>
+                    option
+                        .setName('username')
+                        .setDescription('Nombre de usuario')
+                        .setRequired(true)
+                )
+                .addStringOption(option =>
+                    option
+                        .setName('channel_id')
+                        .setDescription('Canal de YouTube')
+                        .setRequired(true)
+                )
+        ),
+    execute
 };
