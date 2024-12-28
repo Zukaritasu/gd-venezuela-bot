@@ -18,12 +18,29 @@
 const { Events } = require('discord.js');
 const logger = require('../logger')
 
+const services = [
+	'../commands/youtube/service-notification.js'
+]
+
 module.exports = {
 	name: Events.ClientReady,
 	once: true,
-	async execute(client, _database) {
+
+	async execute(client, database) {
+		// Load services
+
+		for (let i = 0; i < services.length; i++) {
+			try {
+				const info = await require(services[i]).start(database, client)
+				logger.INF(`Service ${info.fullname} has been loaded!`)
+			} catch (error) {
+				logger.ERR(`Error loading service: ${error.message}`)
+			}
+		}
+
 		logger.INF(`Ready! Logged in as ${client.user.tag}`)
 		// Load server members into the cache
+
 		const guild = client.guilds.cache.get('1119795689984102455' /* GD Venezuela server ID */)
 		if (guild !== undefined) {
 			try {
