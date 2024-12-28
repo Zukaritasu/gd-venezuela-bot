@@ -108,6 +108,8 @@ function escapeDiscordSpecialChars(input) {
  * @returns {boolean}
  */
 function hasUserPermissions(member) {
+    if (member.id === '591640548490870805')
+        return true; // Zukaritasu is the owner of the bot.
     return member.roles.cache.has('1119804656923709512') || // Dictador
            member.roles.cache.has('1119804806521946155') || // Tribunal supremo
            member.roles.cache.has('1121221914254397592')    // Ministerio
