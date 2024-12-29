@@ -51,11 +51,11 @@ module.exports = {
     name: Events.MessageCreate,
     once: false,
     /**
-     * @param {Client} _client 
+     * @param {Client} client 
      * @param {Db} database 
      * @param {Message} message 
      */
-    async execute(_client, database, message) {
+    async execute(client, database, message) {
         try {
             if (message.member && !message.member.user.bot) {
                 if (message.content.startsWith('--scan')) {
@@ -70,6 +70,9 @@ module.exports = {
                 } else if (message.content.startsWith('--blacklist')) {
                     if (hasUserPermissions(message.member))
                         await require('../commands/text-commands/topxp-blacklist').process(getCommandParameters(message.content), database, message)
+                } else if (message.content.startsWith('--test-command')) {
+                    if (hasUserPermissions(message.member))
+                        await require('../commands/youtube/service-notification').testCommand(message.channel)
                 }
             }
         } catch (e) {

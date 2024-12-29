@@ -15,9 +15,57 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-const { SlashCommandBuilder, ChatInputCommandInteraction, EmbedBuilder } = require('discord.js');
+const { SlashCommandBuilder, ChatInputCommandInteraction, EmbedBuilder, Component, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
 const { Db } = require('mongodb');
 const logger = require('../../logger');
+
+const MAX_FIELDS = 8; // Max fields per embed
+const ERROR_TIMEOUT_MESSAGE = 'Collector received no interactions before ending with reason: time'
+
+async function getEmbedFields(channels, begin) {
+    const fields = [];
+    for (let i = begin; i < channels.length && i < begin + MAX_FIELDS; i++) {
+        fields.push({
+            name: channels[i].username,
+            value: `<https://youtube.com/channel/${channels[i].channelId}>`
+        });
+    }
+
+    const embed = new EmbedBuilder()
+    embed.setTitle('Canales de YouTube Registrados')
+    embed.setColor(0x2b2d31)
+    embed.setTimestamp();
+    embed.setFooter({ text: `GD Venezuela` })
+    embed.setAuthor({
+        name: 'Venezuela',
+        iconURL: 'https://flagcdn.com/w640/ve.png'
+    })
+
+
+    embed.addFields(...fields);
+
+    return {
+        embeds: [embed],
+        components: [
+            new ActionRowBuilder().addComponents(
+                new ButtonBuilder()
+                    .setEmoji('<:retroceder:1320736997941317715>')
+                    .setCustomId('previous')
+                    .setStyle(ButtonStyle.Primary)
+                    .setDisabled(begin === 0),
+                new ButtonBuilder()
+                    .setEmoji('<:siguiente:1320749783505178725>')
+                    .setCustomId('next')
+                    .setStyle(ButtonStyle.Primary)
+                    .setDisabled(begin + MAX_FIELDS >= channels.length),
+                new ButtonBuilder()
+                    .setEmoji('<:close:1320737181358227551>')
+                    .setCustomId('close')
+                    .setStyle(ButtonStyle.Danger)
+            )
+        ]
+    };
+}
 
 /**
  * @param {Db} database 
@@ -28,36 +76,61 @@ async function execute(database, interaction) {
     try {
         const channels = await database.collection('youtube_channels').find().toArray();
         if (channels.length === 0) {
-            await interaction.reply({ 
-                content: 'No hay canales registrados.', 
+            await interaction.reply({
+                content: 'No hay canales registrados.',
                 ephemeral: true
             });
             return;
         }
 
-        const embed = new EmbedBuilder()
-        embed.setTitle('Canales de YouTube Registrados')
-        embed.setColor(0x2b2d31)
-        embed.setTimestamp();
-        embed.setFooter({ text: `GD Venezuela` })
-        embed.setAuthor({
-            name: 'Venezuela',
-            iconURL: 'https://flagcdn.com/w640/ve.png'
-        })
+        await interaction.deferReply();
 
-        channels.forEach(channel => {
-            embed.addFields({
-                name: channel.username,
-                value: `<https://youtube.com/channel/${channel.channelId}>`
-            });
-        });
+        let begin = 0, confirmation = interaction, message = null;
+        const collectorFilter = i => i.user.id === interaction.user.id;
 
-        await interaction.reply({ embeds: [embed] });
+        try {
+            while (true) {
+                const funcReply = confirmation instanceof ChatInputCommandInteraction ? interaction.editReply.bind(interaction) : 
+                    confirmation.update.bind(confirmation)
+                confirmation = await (await funcReply(message = await getEmbedFields(channels, begin)))
+                    .awaitMessageComponent(
+                        {
+                            filter: collectorFilter,
+                            time: 120000 // 2 minutes
+                        }
+                    )
+
+                if (confirmation.customId === 'previous') {
+                    begin -= MAX_FIELDS
+                } else if (confirmation.customId === 'next') {
+                    begin += MAX_FIELDS
+                } else { // close
+                    await interaction.deleteReply(); break
+                }
+            }
+        } catch (error) {
+            try {
+                if (error.message !== ERROR_TIMEOUT_MESSAGE) {
+                    logger.ERR(error)
+                    await interaction.editReply({
+                        content: 'Ocurrió un error al ejecutar el comando.',
+                        ephemeral: true
+                    });
+                } else {
+                    if (message) {
+                        message.components.at(0).components.forEach(button => button.setDisabled(true))
+                        await interaction.editReply(message)
+                    }
+                }
+            } catch (err) {
+                logger.ERR(err)
+            }
+        }
     } catch (error) {
         logger.ERR(error);
-        await interaction.reply({ 
-            content: 'Ocurrió un error al ejecutar el comando.', 
-            ephemeral: true 
+        await interaction.reply({
+            content: 'Ocurrió un error al ejecutar el comando.',
+            ephemeral: true
         });
     }
 }

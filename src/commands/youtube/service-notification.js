@@ -54,8 +54,8 @@ async function getLastVideo(channelId) {
  */
 async function notifyLastVideo(db, client, channel, video) {
     const videoPublishedAt = new Date(video.snippet.publishedAt);
-    if (!channel.publishedAt || channel.publishedAt.length == 0 
-                || videoPublishedAt > new Date(channel.publishedAt)) {
+    const lastIsNull = !channel.publishedAt || channel.publishedAt.length == 0
+    if (lastIsNull || videoPublishedAt > new Date(channel.publishedAt)) {
         const result = await db.collection('youtube_channels').updateOne(
             { _id: channel._id },
             {
@@ -66,17 +66,32 @@ async function notifyLastVideo(db, client, channel, video) {
 
         // Notify the video in the Discord channel
         // if the video was published in the last 24 hours
-        if (result.modifiedCount > 0 && ((new Date() - videoPublishedAt) / (1000 * 60 * 60)) <= 24) {
+        if (result.modifiedCount > 0 && ((new Date() - videoPublishedAt) / (1000 * 60 * 60)) <= 24 && !lastIsNull) {
             const channelInfo = await client.channels.fetch(discordChannelInfo.channelId);
-            if (channelInfo && channelInfo.type === ChannelType.GuildText) {
+            if (channelInfo && channelInfo.type === ChannelType.GuildText || channel.type === ChannelType.GuildAnnouncement) {
                 await channelInfo.send(channel.description
                     .replace('{video}', `https://youtu.be/${video.id.videoId}`)
-                        .replace('{role}', `<@&${channel.mentionRoleId}>`)
+                    .replace('{role}', `<@&${channel.mentionRoleId}>`)
                     .replace('{username}', channel.username)
                     .replace('\\n', '\n')
                 )
             }
         }
+    }
+}
+
+async function testCommand(channel) {
+    try {
+        const description = '{role}\\nNuevo vídeo de **{username}** {video}'
+        if (channel && channel.type === ChannelType.GuildText || channel.type === ChannelType.GuildAnnouncement) {
+            await channel.send(description
+                .replace('{video}', `https://youtu.be/9fsZ014qB3s`)
+                .replace('{username}', 'Zoink')
+                .replace('\\n', '\n')
+            )
+        }
+    } catch (error) {
+        logger.DBG(error)
     }
 }
 
@@ -98,7 +113,7 @@ async function service(db, client) {
         } catch (error) {
             logger.ERR(error);
         }
-    }, 60000 /* 1 minute */);
+    }, 600000 /* 10 minutes */);
 
     return {
         stop: () => clearInterval(timeout),
@@ -110,5 +125,6 @@ async function service(db, client) {
 }
 
 module.exports = {
-    start: service
+    start: service,
+    testCommand
 }
