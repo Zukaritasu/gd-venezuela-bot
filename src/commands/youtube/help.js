@@ -35,7 +35,7 @@ async function execute(_client, _database, interaction) {
         embed.addFields(
             {
                 name: '/youtube notification (solo personal autorizado)',
-                value: 'Con este comando puedes agregar o editar un canal de YouTube para recibir notificaciones de nuevos vídeos. Si el bot se queda desconectado (se fue la luz), cuando se restablezca la conexión notificará de los nuevos vídeos publicados en las últimas 24 horas. Solo el personal autorizado puede utilizar este comando.\n\nParametros:\n- `role`: Rol al que se notificará\n- `username`: Nombre de usuario\n- `description`: El mensaje de la notificación\n- `channel`: Canal de YouTube\n- `user`: Dueño del canal de YouTube (opcional)',
+                value: 'Con este comando puedes agregar o editar un canal de YouTube para recibir notificaciones de nuevos vídeos. Si el bot se queda desconectado (se fue la luz), cuando se restablezca la conexión notificará de los nuevos vídeos publicados en las últimas 24 horas. Solo el personal autorizado puede utilizar este comando.\n\nParametros:\n- `role`: Rol al que se notificará\n- `username`: Nombre de usuario\n- `description`: El mensaje de la notificación\n- `channel`: Canal de YouTube\n- `user`: Dueño del canal de YouTube (opcional)\n\n*El bot puede tardar hasta 10 minutos para notificar*',
             },
             {
                 name: '/youtube help',
