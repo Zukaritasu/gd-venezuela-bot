@@ -50,7 +50,7 @@ module.exports = {
         .addSubcommand(subcommand =>
             subcommand
                 .setName('notification')
-                .setDescription('Configura notificaciones de nuevos videos de un canal de YouTube')
+                .setDescription('Configura notificaciones de nuevos videos de un canal de YouTube (solo personal autorizado)')
                 .addRoleOption(option =>
                     option
                         .setName('role')
@@ -95,7 +95,7 @@ module.exports = {
         .addSubcommand(subcommand =>
             subcommand
                 .setName('remove')
-                .setDescription('Quita un canal de YouTube de la lista')
+                .setDescription('Quita un canal de YouTube de la lista (solo personal autorizado)')
                 .addStringOption(option =>
                     option
                         .setName('username')
