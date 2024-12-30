@@ -18,8 +18,9 @@
 const { SlashCommandBuilder, ChatInputCommandInteraction, EmbedBuilder, Component, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
 const { Db } = require('mongodb');
 const logger = require('../../logger');
+const utils = require('../../utils');
 
-const MAX_FIELDS = 8; // Max fields per embed
+const MAX_FIELDS = 6; // Max fields per embed
 const ERROR_TIMEOUT_MESSAGE = 'Collector received no interactions before ending with reason: time'
 
 async function getEmbedFields(channels, begin) {
@@ -27,7 +28,7 @@ async function getEmbedFields(channels, begin) {
     for (let i = begin; i < channels.length && i < begin + MAX_FIELDS; i++) {
         fields.push({
             name: channels[i].username,
-            value: `<https://youtube.com/channel/${channels[i].channelId}>`
+            value: `- <@&${channels[i].mentionRoleId}> - [YouTube Canal](https://youtube.com/channel/${channels[i].channelId})\n- Descripción: ${utils.escapeDiscordSpecialChars(channels[i].description)}`
         });
     }
 
