@@ -17,6 +17,8 @@
 
 const { Events, Client, ChatInputCommandInteraction, Message, GuildMember } = require('discord.js');
 const { Db } = require('mongodb');
+const logger = require('../logger');
+const utils = require('../utils');
 
 ///////////////////////////////////////////////////////////
 
@@ -36,17 +38,6 @@ function getCommandParameters(content) {
     return []
 }
 
-/**
- * @param {GuildMember} member 
- * @returns {boolean}
- */
-function hasUserPermissions(member) {
-    return member.roles.cache.has('1119804656923709512') || // Dictador
-           member.roles.cache.has('1119804806521946155') || // Tribunal supremo
-           member.roles.cache.has('1121221914254397592')    // Ministerio
-}
-
-
 module.exports = {
     name: Events.MessageCreate,
     once: false,
@@ -59,19 +50,19 @@ module.exports = {
         try {
             if (message.member && !message.member.user.bot) {
                 if (message.content.startsWith('--scan')) {
-                    if (hasUserPermissions(message.member))
+                    if (utils.hasUserPermissions(message.member))
                         await require('../commands/text-commands/scan').scan(database, message, getCommandParameters(message.content))
                 } else if (message.content.startsWith('--update')) {
-                    if (hasUserPermissions(message.member))
+                    if (utils.hasUserPermissions(message.member))
                         await require('../commands/text-commands/update-leaderboard').update(database, message)
                 } else if (message.content.startsWith('--clean')) {
-                    if (hasUserPermissions(message.member))
+                    if (utils.hasUserPermissions(message.member))
                         await require('../commands/text-commands/clean').clean(message)
                 } else if (message.content.startsWith('--blacklist')) {
-                    if (hasUserPermissions(message.member))
+                    if (utils.hasUserPermissions(message.member))
                         await require('../commands/text-commands/topxp-blacklist').process(getCommandParameters(message.content), database, message)
                 } else if (message.content.startsWith('--test-command')) {
-                    if (hasUserPermissions(message.member))
+                    if (utils.hasUserPermissions(message.member))
                         await require('../commands/youtube/service-notification').testCommand(message.channel)
                 }
             }
