@@ -18,6 +18,7 @@
 const { ChatInputCommandInteraction, Client, ChannelType } = require('discord.js');
 const { Db } = require('mongodb');
 const logger = require('../../logger');
+const axios = require('axios');
 const { YOUTUBE_API_KEY } = require('../../../.botconfig/token.json');
 
 /**
@@ -31,6 +32,9 @@ const discordChannelInfo = {
     guildId: '1037758697029513308',
 }
 
+/**  */
+let requestCount = 0
+
 /**
  * @param {string} channelId 
  * @returns 
@@ -43,6 +47,43 @@ async function getLastVideo(channelId) {
             return json.items[0];
         }
     }
+    return null;
+}
+
+/**
+ * @param {string} channelId 
+ * @returns 
+ */
+async function axios_getLastVideo(channelId) {
+    const response = await axios.get('https://www.googleapis.com/youtube/v3/search', {
+        params: {
+            key: YOUTUBE_API_KEY,
+            channelId: channelId,
+            part: 'snippet,id',
+            order: 'date',
+            maxResults: 1
+        }
+    });
+
+    if (!('error' in response.data) && response.data.items
+            && response.data.items.length > 0)
+        return response.data.items[0];
+    return null;
+}
+
+async function axios_getLastVideoId2(channelId) {
+    const response = await axios.get('https://www.googleapis.com/youtube/v3/search', {
+        params: {
+            key: YOUTUBE_API_KEY,
+            channelId: channelId,
+            part: 'id',
+            order: 'date',
+            maxResults: 1
+        }
+    });
+
+    if (response.data.items && response.data.items.length > 0)
+        return response.data.items[0].id.videoId;
     return null;
 }
 
@@ -102,16 +143,22 @@ async function testCommand(channel) {
 async function service(db, client) {
     const timeout = setInterval(async () => {
         try {
-            const channels = await db.collection('youtube_channels').find({}).toArray();
+            /*const channels = await db.collection('youtube_channels').find({}).toArray();
             for (let i = 0; i < channels.length; i++) {
-                const lastVideo = await getLastVideo(channels[i].channelId);
+                const lastVideo = await axios_getLastVideo(channels[i].channelId);
+                requestCount++
                 if (lastVideo !== null) {
                     await notifyLastVideo(db, client, channels[i],
                         lastVideo);
                 }
             }
+
+            logger.DBG(`Requests count: ${requestCount}`)
+            if (requestCount >= 10000)
+                requestCount = 0*/
         } catch (error) {
-            logger.ERR(error);
+            if (error.message !== 'AxiosError: Request failed with status code 403')
+                logger.ERR(error);
         }
     }, 600000 /* 10 minutes */);
 
