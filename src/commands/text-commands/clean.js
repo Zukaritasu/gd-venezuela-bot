@@ -15,7 +15,8 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-const { Message } = require("discord.js");
+const { Message, TextChannel } = require("discord.js");
+const logger = require("../../logger");
 
 module.exports = {
     /** @param {Message} message */
@@ -24,10 +25,12 @@ module.exports = {
         if (channel.id !== '1303235564274712586') {
             await message.reply('Comando solo disponible en <#1303235564274712586>')
         } else {
+            /** @param {TextChannel} channel */
             async function clearChannel(channel) {
                 const fetched = await channel.messages.fetch({ limit: 100 });
                 if (fetched.size > 0) {
-                        await channel.bulkDelete(fetched, true).catch(console.error);
+                    for (let i = fetched.size - 1; i >= 0; i--)
+                        await fetched.at(i).delete().catch(logger.ERR);
                     clearChannel(channel);
                 }
             }
