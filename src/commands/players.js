@@ -39,6 +39,8 @@ async function execute(client, database, interaction) {
             await require('./players/demonlist-players').execute(client, database, interaction)
         } else if (subcommand === 'estadisticas') {
             await require('./players/demonlist-players-statistics').execute(database, interaction)
+        } else if (subcommand === 'puntuaciones') {
+            await require('./players/demonlist-players-scores').execute(interaction)
         }
     }
 
@@ -76,6 +78,10 @@ module.exports = {
                     subcommand
                         .setName('estadisticas')
                         .setDescription('Estadisticas de los Jugadores de la Demonlist'))
+                .addSubcommand(subcommand =>
+                    subcommand
+                        .setName('puntuaciones')
+                        .setDescription('Listado de puntuaciones de los jugadores'))
         ),
     execute,
 };
