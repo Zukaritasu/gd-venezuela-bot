@@ -23,6 +23,7 @@ The last feature that has been added to the bot is a small user XP monitoring sy
 | /jugadores cantidad | Number of players per State of the country |
 | /jugadores cp | List of players with creator points |
 | /jugadores demonlist activos | List of active players on the Demonlist |
+| /jugadores demonlist puntuacion | List of scores of Venezuelan players on the Demonlist |
 | /jugadores demonlist retirados | List of players removed from the Demonlist |
 | /staff estado hardest | Defines the most difficult level completed in a State of the country |
 | /staff hardest | Define the hardest in the country |
@@ -39,9 +40,10 @@ The last feature that has been added to the bot is a small user XP monitoring sy
 
 | Command | Description |
 | --- | --- |
-| --scan | Scan the Embeds sent by the ProBot bot to extract the leaderboard. Receives a parameter of type number indicating how many embeds to scan |
+| --scan | Scans the Embeds sent by the ProBot bot to extract the leaderboard. It receives a parameter of type number that indicates how many embeds to scan, by default the parameter is 5. |
 | --clean | Cleans a specific channel |
 | --update | Update Top 15 in the category Assets |
+| --blacklist | Add/Remove a user from the blacklist. The list is used to ban users from entering the (Top 15 XP text). The first command parameter can be either “add” or “remove” and the second parameter is the user's ID |
 
 ## Contribution
 
