@@ -23,7 +23,7 @@ The last feature that has been added to the bot is a small user XP monitoring sy
 | /jugadores cantidad | Number of players per State of the country |
 | /jugadores cp | List of players with creator points |
 | /jugadores demonlist activos | List of active players on the Demonlist |
-| /jugadores demonlist puntuacion | List of scores of Venezuelan players on the Demonlist |
+| /jugadores demonlist puntuaciones | List of scores of Venezuelan players on the Demonlist |
 | /jugadores demonlist retirados | List of players removed from the Demonlist |
 | /staff estado hardest | Defines the most difficult level completed in a State of the country |
 | /staff hardest | Define the hardest in the country |
