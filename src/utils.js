@@ -16,6 +16,8 @@
  */
 
 const { PermissionsBitField, GuildMember } = require("discord.js");
+const { YOUTUBE_API_KEY } = require('../.botconfig/token.json')
+const logger = require('./logger')
 
 //
 // +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
@@ -75,18 +77,18 @@ async function getYouTubeThumbnail(videoUrl) {
         throw new Error('Invalid YouTube URL');
     }
 
-    const maxresUrl = `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`;
-    const sdUrl = `https://img.youtube.com/vi/${videoId}/sddefault.jpg`;
-
     try {
-        const response = await fetch(maxresUrl);
-        if (response.ok) {
-            return maxresUrl;
-        } else {
-            return sdUrl;
+        const response = await fetch(`https://www.googleapis.com/youtube/v3/videos?id=${videoId}&key=${YOUTUBE_API_KEY}&part=snippet`);
+        if (!response.ok) {
+            throw new Error('Failed to fetch video data')
         }
+
+        const thumbnails = (await response.json()).items[0].snippet.thumbnails;
+        return thumbnails.maxres?.url || thumbnails.standard?.url
+            || thumbnails.medium?.url || thumbnails.default?.url;
     } catch (error) {
-        return sdUrl;
+        logger.ERR(error.message)
+        return 'https://media.discordapp.net/attachments/1037758697990000672/1295422400145395823/video-not-available.png';
     }
 }
 
