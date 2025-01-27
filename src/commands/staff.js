@@ -33,7 +33,7 @@ async function execute(client, database, interaction) {
     const subcommand = interaction.options.getSubcommand();
 
     if (subcommandGroup === 'jugador') {
-        if (subcommand === 'cp') {
+        if (subcommand === 'creatorpoints') {
             await require('./staff/save-cp-player').execute(client, database, interaction)
         }
     } else if (subcommandGroup === 'estado') {
@@ -58,7 +58,7 @@ module.exports = {
                 .setDescription('Configurar un jugador')
                 .addSubcommand(subcommand =>
                     subcommand
-                        .setName('cp')
+                        .setName('creatorpoints')
                         .setDescription('Guarda un jugador con puntos de creador (solo personal autorizado)')
                         .addUserOption(option =>
                             option.setName('user')
