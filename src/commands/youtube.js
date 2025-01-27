@@ -16,6 +16,7 @@
  */
 
 const { SlashCommandBuilder, ChatInputCommandInteraction } = require('discord.js');
+const logger = require('../logger');
 
 
 //
@@ -29,9 +30,14 @@ const { SlashCommandBuilder, ChatInputCommandInteraction } = require('discord.js
  * @param {ChatInputCommandInteraction} interaction 
  */
 async function execute(client, database, interaction) {
-    const subcommand = interaction.options.getSubcommand();
+    try {
+        await interaction.reply('Este comando está deshabilitado temporalmente')
+    } catch (err) {
+        logger.ERR(err)
+    }
+    //const subcommand = interaction.options.getSubcommand();
 
-    if (subcommand === 'notification') {
+    /*if (subcommand === 'notification') {
         await require('./youtube/register-notification').execute(database, client, interaction)
     } else if (subcommand === 'help') {
         await require('./youtube/help').execute(client, database, interaction)
@@ -39,7 +45,7 @@ async function execute(client, database, interaction) {
         await require('./youtube/list').execute(database, interaction)
     } else if (subcommand === 'remove') {
         await require('./youtube/remove-notification').execute(database, interaction)
-    }
+    }*/
 }
 
 module.exports = {
@@ -50,7 +56,7 @@ module.exports = {
         .addSubcommand(subcommand =>
             subcommand
                 .setName('notification')
-                .setDescription('Configura notificaciones de nuevos videos de un canal de YouTube (solo personal autorizado)')
+                .setDescription('Configura notificaciones de nuevos videos de un canal de YouTube (Desuso)')
                 .addRoleOption(option =>
                     option
                         .setName('role')
@@ -85,17 +91,17 @@ module.exports = {
         .addSubcommand(subcommand => 
             subcommand
                 .setName('help')
-                .setDescription('Muestra el mensaje de ayuda')
+                .setDescription('Muestra el mensaje de ayuda (Desuso)')
         )
         .addSubcommand(subcommand =>
             subcommand
                 .setName('list')
-                .setDescription('Muestra la lista de canales de YouTube registrados')
+                .setDescription('Muestra la lista de canales de YouTube registrados (Desuso)')
         )
         .addSubcommand(subcommand =>
             subcommand
                 .setName('remove')
-                .setDescription('Quita un canal de YouTube de la lista (solo personal autorizado)')
+                .setDescription('Quita un canal de YouTube de la lista (Desuso)')
                 .addStringOption(option =>
                     option
                         .setName('username')
