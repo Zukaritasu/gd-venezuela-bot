@@ -46,7 +46,7 @@ async function execute(client, database, interaction) {
 
     else if (subcommand === 'cantidad') {
         await require('./players/count-players').execute(client, database, interaction)
-    } else if (subcommand === 'cp') {
+    } else if (subcommand === 'creatorpoints') {
         await require('./players/creator-point-players').execute(client, database, interaction)
     }
 }
@@ -61,7 +61,7 @@ module.exports = {
                 .setDescription('Cantidad de jugadores por estado del país'))
         .addSubcommand(subcommand =>
             subcommand
-                .setName('cp')
+                .setName('creatorpoints')
                 .setDescription('Lista de Jugadores con puntos de creador'))
         .addSubcommandGroup(subCommandGroup =>
             subCommandGroup.setName('demonlist')
