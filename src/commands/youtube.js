@@ -31,7 +31,10 @@ const logger = require('../logger');
  */
 async function execute(client, database, interaction) {
     try {
-        await interaction.reply('Este comando está deshabilitado temporalmente')
+        await interaction.reply({
+            content: 'Este comando está deshabilitado temporalmente',
+            ephemeral: true
+        })
     } catch (err) {
         logger.ERR(err)
     }
