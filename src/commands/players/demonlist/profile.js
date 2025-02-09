@@ -19,6 +19,8 @@ const { SlashCommandBuilder, EmbedBuilder, ChatInputCommandInteraction, ActionRo
     ButtonBuilder, ButtonStyle,
     Client } = require('discord.js');
 
+const logger = require('../../../logger');
+
 const apipcrate = require('../../../apipcrate');
 const demonsTrophy = require('../../../../resources/demon_trophy.json');
 
@@ -141,7 +143,7 @@ async function createEmbedProfile(client, database, interaction, playerId /* dem
             },
             {
                 name: 'Hardest demon',
-                value: `**${demonsInfo.hardest.name} (Top #${demonsInfo.hardest.position})**`,
+                value: demonsInfo.hardest.position == 32767 ? 'None' : `**${demonsInfo.hardest.name} (Top #${demonsInfo.hardest.position})**`,
                 inline: true
             },
             {
@@ -176,7 +178,7 @@ async function createEmbedProfile(client, database, interaction, playerId /* dem
 
         return embed
     } catch (error) {
-        console.error(error)
+        logger.ERR('Error creating embed profile: ', error);
     }
 
     return null
