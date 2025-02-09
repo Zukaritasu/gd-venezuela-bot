@@ -25,6 +25,7 @@ const playerProfile = require('./demonlist/profile')
 const { Db } = require('mongodb');
 
 const EMBED_COLOR = 0x2b2d31 /** Black */
+const ERROR_TIMEOUT_MESSAGE = 'Collector received no interactions before ending with reason: time'
 
 /**
  * 
