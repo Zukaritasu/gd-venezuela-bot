@@ -32,7 +32,7 @@ const staffRolesID = [
     {
         id: '1119804806521946155',
         emoji: '<:tribunal:1302032213231272018>'
-    }, /* PSUV */
+    }, /* Tribunal Supremo */
     {
         id: '1121221914254397592',
         emoji: '<:ministerio:1297551381690843136>'
@@ -57,7 +57,7 @@ async function execute(_client, database, interaction) {
         const collection = interaction.guild.members.cache.filter(member => 
                     member.roles.cache.find(role => role.id === staffRole.id) !== undefined)
         collection.forEach(member => {
-            if (added.indexOf(member.id) === -1) {
+            if (member.id !== '953136140452495411' && added.indexOf(member.id) === -1) {
                 added.push(member.id)
                 category.value = category.value.concat(`- ${member.user.username}\n`)
             }
