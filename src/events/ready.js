@@ -27,6 +27,9 @@ module.exports = {
 	once: true,
 
 	async execute(client, database) {
+		// disconect afk users
+		await require('./voiceStateUpdate').scanAndDisconnectUsers(client)
+
 		// Load services
 
 		for (let i = 0; i < services.length; i++) {
