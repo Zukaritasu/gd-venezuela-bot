@@ -17,6 +17,7 @@
 
 const { ChatInputCommandInteraction, EmbedBuilder, Message } = require("discord.js")
 const { Db } = require("mongodb")
+const logger = require('../../logger')
 
 /**
  * 
@@ -57,8 +58,17 @@ async function getTop15XPEmbed(database, interaction) {
     }
 
     for (let i = 0; i < top_xp.usersList.length && i < 15; i++) {
-        description += `<:estrella2:1303859148877987880> ${formatNumber(position++)} <@${top_xp.usersList[i].id}> | XP: \`${top_xp.usersList[i].xp}\` ${top_xp.usersList[i].id === interaction.member.id ? '**<**' : ''}\n`
+        const member = await interaction.guild.members.fetch(top_xp.usersList[i].id)
+        let userName = '';
+        if (!member) {
+            userName = '<Usuario desconocido>';
+        } else {
+            userName = `[${member.user.username}](${member.user.displayAvatarURL({ dynamic: true })})`;
+        }
+        description += `<:estrella2:1303859148877987880> ${formatNumber(position++)} ${userName} | XP: \`${top_xp.usersList[i].xp}\` ${top_xp.usersList[i].id === interaction.member.id ? '**<**' : ''}\n`
     }
+
+    logger.DBG(description.length)
 
     embed.setDescription(description)
     return embed
