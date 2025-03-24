@@ -47,7 +47,7 @@ async function welcomeMessageMember(member) {
             ctx.drawImage(background, 0, 0, canvas.width, canvas.height);
 
             let avatarImage = member.user.avatarURL({ extension: 'png' }) || member.user.defaultAvatarURL;
-            logger.DBG(avatarImage)
+            //logger.DBG(avatarImage)
 
             const avatar = await Canvas.loadImage(avatarImage);
 
