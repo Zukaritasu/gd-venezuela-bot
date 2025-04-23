@@ -53,6 +53,7 @@ module.exports = {
     async execute(client, database, message) {
         try {
             if (message.member && !message.member.user.bot) {
+                //await require('./voiceStateUpdate').resetTimeout(client, message.member)
                 if (message.content.startsWith('--scan')) {
                     if (utils.hasUserPermissions(message.member))
                         await require('../commands/text-commands/scan').scan(database, message, getCommandParameters(message.content))
