@@ -17,6 +17,7 @@
 
 const { SlashCommandBuilder, ChatInputCommandInteraction, EmbedBuilder } = require('discord.js');
 const { Db } = require('mongodb');
+const logger = require('../logger');
 
 //
 // +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
@@ -50,8 +51,9 @@ async function createEmbedList(database) {
                     inline: true
                 })
         }
+
     } catch (e) {
-        console.error(e)
+        logger.ERR(e);
         return { content: 'An error occurred while querying the database information' };
     }
 
