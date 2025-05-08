@@ -42,7 +42,13 @@ module.exports = {
                         }
                     );
                 }
+            } else if (interaction.isAutocomplete()) {
+                const command = client.commands.get(interaction.commandName);
+                if (!command || !command.autocomplete) 
+                    return;
+                await command.autocomplete(interaction);
             }
+
         } catch (error) {
             logger.ERR(error)
         }
