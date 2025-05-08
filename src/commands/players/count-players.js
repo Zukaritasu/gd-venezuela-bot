@@ -54,6 +54,12 @@ async function embedNumberPlayers(_client, _database, interaction) {
         }
     }
 
+    fields.sort((a, b) => {
+        const aValue = a.value === 'unknown' ? 0 : parseInt(a.value, 10);
+        const bValue = b.value === 'unknown' ? 0 : parseInt(b.value, 10);
+        return bValue - aValue;
+    });
+
     return {
         content: '',
         embeds: [
