@@ -64,7 +64,7 @@ Comentario: ${comment ?? ""}
         await channel.send(stringJson);
         await interaction.editReply('Tu progreso ha sido enviado para su revisión');
     } catch (e) {
-        console.error(e)
+        logger.ERR('Error in submit command:', e);
         await interaction.editReply('An unknown error has occurred');
     }
 }

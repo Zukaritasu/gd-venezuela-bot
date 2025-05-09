@@ -32,7 +32,7 @@ const logger = require('../logger');
 async function execute(client, database, interaction) {
     const subcommand = interaction.options.getSubcommand();
 
-    if (subcommand === 'sumit') {
+    if (subcommand === 'submit') {
         await require('./records/submit').execute(client, database, interaction)
     }
 }
@@ -72,10 +72,10 @@ module.exports = {
 
         try {
             const levels = await aredlapi.getLevels();
-            logger.DBG('Levels:', levels);
             const filteredLevels = levels
-                .filter(level => level.name.toLowerCase().includes(focusedValue.toLowerCase()))
-                .map(level => ({ name: level.name, value: level.name }));
+            .filter(level => level.name.toLowerCase().includes(focusedValue.toLowerCase()))
+            .map(level => ({ name: level.name, value: level.name }))
+            .slice(0, 25);
 
             await interaction.respond(filteredLevels);
         } catch (error) {
