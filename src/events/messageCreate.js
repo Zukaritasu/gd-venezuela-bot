@@ -22,6 +22,8 @@ const Canvas = require('canvas');
 const utils = require('../utils');
 const path = require('path');
 
+const submit = require('../commands/records/submit');
+
 ///////////////////////////////////////////////////////////
 
 Canvas.registerFont(path.join(__dirname, '../../fonts/MakroTrial-Bold.otf'), { family: 'MakroTrial' });
@@ -69,6 +71,12 @@ module.exports = {
                 } else if (message.content.startsWith('--test-command')) {
                     if (utils.hasUserPermissions(message.member))
                         await require('../commands/youtube/service-notification').testCommand(message.channel)
+                } else if (message.content.startsWith('--aceptar') && message.channel.id === /*'1294668385950498846'*/ '1369858143122886769') {
+                    if (utils.hasUserPermissions(message.member))
+                        await require('../commands/records/record').accept(message)
+                }  else if (message.content.startsWith('--rechazar') && message.channel.id === /*'1294668385950498846'*/ '1369858143122886769') {
+                    if (utils.hasUserPermissions(message.member))
+                        await require('../commands/records/record').decline(message)
                 } else if (message.content.startsWith('--test-welcome')) {
                     if (utils.hasUserPermissions(message.member)) {
                         const member = message.member;
@@ -134,7 +142,23 @@ module.exports = {
                             }
                         );
                     }
-                }
+                } else if (message.channel.id === '1369415419093586070') {
+                    if (message.member.roles.cache.has('1119804850620866600')) {
+                        const command = message.content.split('\n');
+                        if (command.length >= 3) {
+                            await submit.processSubmitRecord(message, command);
+                        } else {
+                            await message.react('❌');
+                        }
+                    }
+                }/* else if (message.channel.id === '1294668385950498846' && message.author.id === '591640548490870805') {
+                    const command = message.content.split('\n');
+                    if (command.length >= 3) {
+                        await submit.processSubmitRecord(message, command);
+                    } else {
+                        await message.react('❌');
+                    }
+                }*/
             }
         } catch (e) {
             logger.ERR(e)

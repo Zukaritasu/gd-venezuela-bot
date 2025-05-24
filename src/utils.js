@@ -18,6 +18,7 @@
 const { PermissionsBitField, GuildMember } = require("discord.js");
 const { YOUTUBE_API_KEY } = require('../.botconfig/token.json')
 const logger = require('./logger')
+const { states } = require('../.botconfig/country-states.json');
 
 //
 // +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
@@ -107,6 +108,25 @@ function escapeDiscordSpecialChars(input) {
 
 /**
  * @param {GuildMember} member 
+ * @returns {string}
+ */
+function getUserFlagState(member) {
+    const length = member.roles.cache.size;
+    for (let i = 0; i < length; i++) {
+        const role = member.roles.cache.at(i);
+        if (role) {
+            const state = states.find(state => state.roleId === role.id);
+            if (state) {
+                return state.flagUrl.substring(state.flagUrl.lastIndexOf('/') + 1, state.flagUrl.lastIndexOf('.'));
+            }
+        }
+    }
+
+    return null
+}
+
+/**
+ * @param {GuildMember} member 
  * @returns {boolean}
  */
 function hasUserPermissions(member) {
@@ -138,5 +158,6 @@ module.exports = {
     isAdministrator,
     isValidPointercrateUrl,
     escapeDiscordSpecialChars,
-    hasUserPermissions
+    hasUserPermissions,
+    getUserFlagState
 }

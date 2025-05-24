@@ -32,8 +32,10 @@ const logger = require('../logger');
 async function execute(client, database, interaction) {
     const subcommand = interaction.options.getSubcommand();
 
-    if (subcommand === 'submit') {
+    if (subcommand === 'enviar') {
         await require('./records/submit').execute(client, database, interaction)
+    } else if (subcommand === 'ayuda') {
+        await require('./records/help').execute(client, database, interaction)
     }
 }
 
@@ -43,7 +45,7 @@ module.exports = {
         .setDescription('Tus niveles completados')
         .addSubcommand(subcommand =>
             subcommand
-                .setName('submit')
+                .setName('enviar')
                 .setDescription('Envia tu progreso en el nivel')
                 .addStringOption(option =>
                     option.setName('player')
@@ -65,7 +67,11 @@ module.exports = {
                 .addBooleanOption(option =>
                     option.setName('mobile')
                         .setDescription('Juegas en movil?')
-                        .setRequired(false))),
+                        .setRequired(false)))
+        .addSubcommand(subcommand =>
+            subcommand
+                .setName('ayuda')
+                .setDescription('Ayuda para enviar tu progreso')),
 
     async autocomplete(interaction) {
         const focusedValue = interaction.options.getFocused();

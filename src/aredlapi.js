@@ -15,6 +15,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+const { get } = require('http');
 const https = require('https');
 
 //
@@ -72,5 +73,11 @@ async function getResponseJSON(url) {
 
 module.exports = {
     setRedisClientObject: (redisObj) => redisObject = redisObj,
-    getLevels: () => getResponseJSON('api/aredl/levels')
+    /**
+     * 
+     * @returns {Promise<{id: number, name: string}[]>}
+     */
+    getLevels: () => getResponseJSON('api/aredl/levels'),
+    getLevelCreators: (level_id) => getResponseJSON(`v2/api/aredl/levels/${level_id}/creators`),
+    getLevel: (level_id) => getResponseJSON(`v2/api/aredl/levels/${level_id}`),
 }
