@@ -80,4 +80,5 @@ module.exports = {
     getLevels: () => getResponseJSON('api/aredl/levels'),
     getLevelCreators: (level_id) => getResponseJSON(`v2/api/aredl/levels/${level_id}/creators`),
     getLevel: (level_id) => getResponseJSON(`v2/api/aredl/levels/${level_id}`),
+    getLevelInfo: (level_id) => getResponseJSON(`api/aredl/levels/${level_id}?two_player=false&records=false&creators=true&verification=false&packs=false`),
 }
