@@ -100,7 +100,6 @@ async function getBotMessage(message) {
 }
 
 /**
- * 
  * @param {Message} message 
  * @param {string} fileName 
  * @param {string} levelName 
@@ -111,9 +110,9 @@ async function getBotMessage(message) {
 async function createRecordFile(message, fileName, levelName, jsonInfo, userId) {
     const levels = await aredlapi.getLevels();
     const matchingLevels = levels.filter(lvl => lvl.name === levelName)[0];
-    const creators = await aredlapi.getLevelCreators(matchingLevels.level_id);
-    const levelInfo = await aredlapi.getLevel(matchingLevels.level_id);
-
+    const levelInfo = await aredlapi.getLevelInfo(matchingLevels.level_id);
+    const creators = levelInfo.creators;
+    
     const fileContent = {
         id: matchingLevels.level_id,
         name: matchingLevels.name,
@@ -151,27 +150,22 @@ async function createRecordFile(message, fileName, levelName, jsonInfo, userId) 
 
     const levelLists = listRespose.content;
     if (!levelLists.includes(fileName)) {
-        let ok = false;
+        let insertIndex = levelLists.length;
         const levelIndex = levels.findIndex(lvl => lvl.name === levelName);
-        for (let i = 0; i < levels.length; i++) {
-            const fileNameIndex = getFileName(levels[i].name);
-            let _index = levelLists.indexOf(fileNameIndex)
-            if (_index !== -1) {
-                if (levelIndex < i) {
-                    --_index
-                    if (_index < 0)
-                        _index = 0;
-                    levelLists.splice(_index, 0, fileName);
-                    ok = true;
+
+        for (let i = 0; i < levelLists.length; i++) {
+            const currentLevelName = levels.find(lvl => getFileName(lvl.name) === levelLists[i])?.name;
+            if (currentLevelName) {
+                const currentIndex = levels.findIndex(lvl => lvl.name === currentLevelName);
+                if (levelIndex < currentIndex) {
+                    insertIndex = i;
                     break;
                 }
             }
         }
 
-        if (!ok) {
-            levelLists.push(fileName);
-        }
-
+        levelLists.splice(insertIndex, 0, fileName);
+    
         const fileEditedList = Buffer.from(JSON.stringify(levelLists, null, 4)).toString("base64");
         await axios.put(`https://api.github.com/repos/Abuigsito/gdvzla/contents/data/_list.json`, {
             message: `Updated _list.json by ${message.author.username}`,
