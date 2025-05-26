@@ -142,8 +142,8 @@ module.exports = {
                             }
                         );
                     }
-                } else if (message.channel.id === '1369415419093586070') {
-                    if (message.member.roles.cache.has('1119804850620866600')) {
+                } else if (message.channel.id === '1368411272965525684') {
+                    if (message.member.roles.cache.has('1119804850620866600') /* rol venezolado id */) {
                         const command = message.content.split('\n');
                         if (command.length >= 3) {
                             await submit.processSubmitRecord(message, command);
