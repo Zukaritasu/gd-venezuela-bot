@@ -160,7 +160,7 @@ async function getVideoLink(interaction, videoLink) {
 async function execute(_client, _database, interaction) {
     try {
         await interaction.deferReply({ ephemeral: true });
-
+        
         const channel = await interaction.client.channels.fetch('1369858143122886769');
         if (!channel) {
             await interaction.editReply('No se ha podido encontrar el canal submits');
@@ -190,7 +190,7 @@ async function execute(_client, _database, interaction) {
         }
 
         if (!stateName) {
-            await interaction.editReply('No se ha podido encontrar el estado');
+            await interaction.editReply('No se ha podido encontrar el estado. Pide tu rol de estado en el canal <#1216237948664549426>');
             return;
         }
 
@@ -279,7 +279,7 @@ async function processSubmitRecord(message, parts) {
         }
 
         if (!stateName) {
-            await sendErrorDM(message, 'No se ha podido encontrar el estado');
+            await sendErrorDM(message, 'No se ha podido encontrar el estado. Pide tu rol de estado en el canal <#1216237948664549426>');
             return;
         }
 
