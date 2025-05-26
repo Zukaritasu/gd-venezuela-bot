@@ -15,7 +15,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-const { SlashCommandBuilder, ChatInputCommandInteraction, Message, Guild } = require('discord.js');
+const { SlashCommandBuilder, ChatInputCommandInteraction, Message, Guild, GuildMember } = require('discord.js');
 const logger = require('../../logger');
 const aredlapi = require('../../aredlapi');
 const path = require("path");
@@ -112,7 +112,7 @@ async function createRecordFile(message, fileName, levelName, jsonInfo, userId) 
     const matchingLevels = levels.filter(lvl => lvl.name === levelName)[0];
     const levelInfo = await aredlapi.getLevelInfo(matchingLevels.level_id);
     const creators = levelInfo.creators;
-    
+
     const fileContent = {
         id: matchingLevels.level_id,
         name: matchingLevels.name,
@@ -165,7 +165,7 @@ async function createRecordFile(message, fileName, levelName, jsonInfo, userId) 
         }
 
         levelLists.splice(insertIndex, 0, fileName);
-    
+
         const fileEditedList = Buffer.from(JSON.stringify(levelLists, null, 4)).toString("base64");
         await axios.put(`https://api.github.com/repos/Abuigsito/gdvzla/contents/data/_list.json`, {
             message: `Updated _list.json by ${message.author.username}`,
@@ -181,6 +181,14 @@ async function createRecordFile(message, fileName, levelName, jsonInfo, userId) 
 
     // Add the user to the _playerStates.json file
 
+    await addPlayerToStateList(message, jsonInfo);
+}
+
+/**
+ * @param {Message} message 
+ * @param {object} jsonInfo 
+ */
+async function addPlayerToStateList(message, jsonInfo) {
     /**
      * @type {{sha: string, content: {player: string, estado: string}[]}}
      */
@@ -229,6 +237,34 @@ async function addRecord(message, file, jsonInfo, fileName, isMobile) {
             Authorization: `token ${GITHUB_TOKEN}`
         }
     });
+
+    await addPlayerToStateList(message, jsonInfo);
+}
+
+/**
+ * @param {Message} message 
+ * @param {GuildMember} member 
+ * @param {string} content 
+ */
+async function sendMessageToUser(message, member, content) {
+    try {
+        await member.send(content);
+    } catch (error) {
+        try {
+            if (error.message === 'Cannot send messages to this user') {
+                await message.react('📧');
+                const channel = await message.guild.channels.fetch('1119803120994750536'); // 🔧・bot
+                if (!channel)
+                    return await message.reply('No se ha podido enviar el mensaje al usuario. El canal de bots no existe.');
+                await channel.send(`<@${member.user.id}> ${content}`);
+            } else {
+                await message.reply(`No se ha podido enviar el mensaje al usuario: ${error.message}`);
+                throw error; // Re-throw the error to be handled by the caller
+            }
+        } catch (err) {
+            logger.ERR(err);
+        }
+    }
 }
 
 /**
@@ -268,20 +304,11 @@ async function handleProgress(message, isAccept) {
                 await addRecord(message, file, jsonInfo, fileName, isMobile)
             }
 
-            try {
-                await user.send(`Tu progreso en el nivel **${levelName}** ha sido aceptado :white_check_mark:\n**Verificado por:** ${message.author.username}`);
-            } catch (error) {
-                if (error.message === 'Cannot send messages to this user') {
-                    await message.react('📧');
-                } else {
-                    await message.reply(`No se ha podido enviar el mensaje al usuario: ${error.message}`);
-                }
-            }
+            await sendMessageToUser(message, user, `Tu progreso en el nivel **${levelName}** ha sido aceptado :white_check_mark:\n**Verificado por:** ${message.author.username}`);
             await botRecord.react('✅');
 
         } else {
-            const reason = message.content.substring(11).trim();
-            await user.send(`Tu progreso en el nivel **${levelName}** ha sido rechazado :x:\n**Razón:** ${reason}`);
+            await sendMessageToUser(message, user, `Tu progreso en el nivel **${levelName}** ha sido rechazado :x:\n**Razón:** ${message.content.substring(11).trim()}`);
             await botRecord.react('❌');
         }
         await message.react('✅');
