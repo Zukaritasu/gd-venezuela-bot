@@ -35,6 +35,8 @@ The last feature that has been added to the bot is a small user XP monitoring sy
 | /utilidades top xp | Displays the leaderboard of the users with the most XP on the server (Top 15) |
 | /utilidades top rank | Show your position in the Top 25 |
 | /github | GitHub repository where the GDVenezuelaBot bot is located |
+| /records enviar | Submit your record for staff review. You will receive a message to the DM if your completion was accepted or rejected |
+| /records ayuda| Displays a help message specifying the functions of each command related to sending a completion |
 
 ## Secret commands (Authorised personnel only)
 
@@ -44,6 +46,9 @@ The last feature that has been added to the bot is a small user XP monitoring sy
 | --clean | Cleans a specific channel |
 | --update | Update Top 15 in the category Assets |
 | --blacklist | Add/Remove a user from the blacklist. The list is used to ban users from entering the (Top 15 XP text). The first command parameter can be either “add” or “remove” and the second parameter is the user's ID |
+| --rechazar | Rejects a submitted completion. You can leave a comment to let the user know that their submission was rejected. Example: --rechazar you have hacked |
+| --aceptar | Accepts a completion sent by the user. To define if the level was completed in mobile the argument “mobile” must be left after the command. Example --aceptar mobile |
+
 
 ## Contribution
 
