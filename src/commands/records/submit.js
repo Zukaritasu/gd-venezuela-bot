@@ -15,7 +15,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-const { SlashCommandBuilder, ChatInputCommandInteraction, Message } = require('discord.js');
+const { SlashCommandBuilder, ChatInputCommandInteraction, Message, Client } = require('discord.js');
 const { states } = require('../../../.botconfig/country-states.json');
 const { Db } = require('mongodb');
 const utils = require('../../utils')
@@ -24,9 +24,41 @@ const aredlapi = require('../../aredlapi');
 
 ///////////////////////////////////////////////////////////
 
+
 /**
  * @param {ChatInputCommandInteraction | Message} interaction 
- * @param {string} player
+ * @param {Db} db 
+ * @param {string} username 
+ * 
+ * @returns {Promise<{_id: string, userId: string, username: string, state: string} | null>} Returns the profile object if found, otherwise null.
+ */
+async function getProfile(interaction, db, username) {
+    try {
+        const result = await db.collection('profiles').findOne({ username: username })
+        if (result) return result;
+
+        if (interaction instanceof Message)
+            await sendErrorDM(interaction, 'Usuario no encontrado. Verifica e intenta nuevamente. Si el usuario no existe, puedes crear uno con el comando `/records perfil crear`.');
+        else if (interaction instanceof ChatInputCommandInteraction)
+            await interaction.editReply('Usuario no encontrado. Verifica e intenta nuevamente. Si el usuario no existe, puedes crear uno con el comando `/records perfil crear`.');
+        return null;
+    } catch (error) {
+        logger.ERR('Error fetching profile:', error);
+        try {
+            if (interaction instanceof Message)
+                await sendErrorDM(interaction, 'Ha ocurrido un error al intentar obtener el perfil del usuario.');
+            else if (interaction instanceof ChatInputCommandInteraction)
+                await interaction.editReply('Ha ocurrido un error al intentar obtener el perfil del usuario.');
+        } catch {
+
+        }
+        return null;
+    }
+}
+
+/**
+ * @param {ChatInputCommandInteraction | Message} interaction 
+ * @param {string} player username
  */
 async function getPlayerName(interaction, player) {
     const playerPart = player.trim();
@@ -141,7 +173,7 @@ async function getVideoLink(interaction, videoLink) {
             }
         }
     } catch {
-        
+
     }
 
     if (interaction instanceof Message)
@@ -153,14 +185,14 @@ async function getVideoLink(interaction, videoLink) {
 
 /**
  * 
- * @param {*} _client 
- * @param {*} _database 
+ * @param {Client} _client 
+ * @param {Db} database 
  * @param {ChatInputCommandInteraction} interaction 
  */
-async function execute(_client, _database, interaction) {
+async function execute(_client, database, interaction) {
     try {
         await interaction.deferReply({ ephemeral: true });
-        
+
         const channel = await interaction.client.channels.fetch('1369858143122886769');
         if (!channel) {
             await interaction.editReply('No se ha podido encontrar el canal submits');
@@ -168,6 +200,9 @@ async function execute(_client, _database, interaction) {
         }
         const player = await getPlayerName(interaction, interaction.options.getString('player'));
         if (!player) return;
+        const profile = await getProfile(interaction, database, player);
+        if (!profile) return;
+
         const level = interaction.options.getString('level');
 
         const ytvideo = await getVideoLink(interaction, interaction.options.getString('ytvideo'));
@@ -176,7 +211,7 @@ async function execute(_client, _database, interaction) {
         const comment = interaction.options.getString('comment');
         const mobile = interaction.options.getBoolean('mobile') || false;
 
-        let stateName = null;
+        /*let stateName = null;
         const length = interaction.member.roles.cache.size;
         for (let i = 0; i < length; i++) {
             const role = interaction.member.roles.cache.at(i);
@@ -192,21 +227,21 @@ async function execute(_client, _database, interaction) {
         if (!stateName) {
             await interaction.editReply('No se ha podido encontrar el estado. Pide tu rol de estado en el canal <#1216237948664549426>');
             return;
-        }
+        }*/
 
         const stringJson =
             `
-        User ID: ${interaction.user.id}
+        User ID: ${profile.userId}
         Level: ${level}
 Video: ${ytvideo}
 Comentario: ${comment ?? ""}
         \`\`\`json
 {
-    "user": "${player}",
+    "user": "${profile.username}",
     "link": "${ytvideo}",
     "percent": 100,
     "mobile": ${mobile},
-    "flag": "/assets/flags/${stateName}.png"
+    "flag": "/assets/flags/${profile.state}.png"
 }
 \`\`\``;
 
@@ -233,7 +268,11 @@ async function sendErrorDM(message, errorMessage) {
             return;
         }
 
-        await user.send(errorMessage);
+        try {
+            await user.send(errorMessage);
+        } catch (error) {
+            
+        }
         await message.react('❌');
     } catch (e) {
         logger.ERR('Error sending DM to user:', e);
@@ -241,18 +280,18 @@ async function sendErrorDM(message, errorMessage) {
 }
 
 /**
- * 
+ * @param {Db} database 
  * @param {Message} message 
  * @param {string[]} parts 
  * @returns 
  */
-async function processSubmitRecord(message, parts) {
+async function processSubmitRecord(database, message, parts) {
     try {
         let channel = null;
         /*if (message.author.id === '591640548490870805')
             channel = await message.client.channels.fetch('1294668385950498846');
         else*/
-            channel = await message.client.channels.fetch('1369858143122886769');
+        channel = await message.client.channels.fetch('1369858143122886769');
         if (!channel) {
             await sendErrorDM(message, 'Error interno. No se ha podido encontrar el canal submits');
             return;
@@ -262,10 +301,12 @@ async function processSubmitRecord(message, parts) {
         if (!level) return;
         const player = await getPlayerName(message, parts[1]);
         if (!player) return;
+        const profile = await getProfile(message, database, player);
+        if (!profile) return;
         const ytvideo = await getVideoLink(message, parts[2]);
         if (!ytvideo) return;
-
-        let stateName = null;
+        
+        /*let stateName = null;
         const length = message.member.roles.cache.size;
         for (let i = 0; i < length; i++) {
             const role = message.member.roles.cache.at(i);
@@ -281,21 +322,21 @@ async function processSubmitRecord(message, parts) {
         if (!stateName) {
             await sendErrorDM(message, 'No se ha podido encontrar el estado. Pide tu rol de estado en el canal <#1216237948664549426>');
             return;
-        }
+        }*/
 
         const stringJson =
             `
-User ID: ${message.author.id}
+User ID: ${profile.userId}
 Level: ${level}
 Video: ${ytvideo}
 Comentario: ${parts.length > 2 ? parts.slice(3).join(' ') : parts[3].trim()}
         \`\`\`json
 {
-    "user": "${player}",
+    "user": "${profile.username}",
     "link": "${ytvideo}",
     "percent": 100,
     "mobile": false,
-    "flag": "/assets/flags/${stateName}.png"
+    "flag": "/assets/flags/${profile.state}.png"
 }
 \`\`\``;
 

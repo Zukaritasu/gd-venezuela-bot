@@ -18,7 +18,7 @@ module.exports = {
             if (newMessage.channelId == '1369415419093586070') {
                 const command = newMessage.content.split('\n');
                 if (command.length >= 3) {
-                    await submit.processSubmitRecord(newMessage, command);
+                    await submit.processSubmitRecord(database, newMessage, command);
                 } else {
                     const existingReaction = newMessage.reactions.cache.get('❌');
                     if (!existingReaction || !existingReaction.me) {

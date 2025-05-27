@@ -31,6 +31,15 @@ const logger = require('../logger');
  */
 async function execute(client, database, interaction) {
     const subcommand = interaction.options.getSubcommand();
+    const subcommandGroup = interaction.options.getSubcommandGroup();
+
+    if (subcommandGroup === 'perfil') {
+        if (subcommand === 'crear')
+            await require('./records/profile-create').execute(client, database, interaction);
+        else if (subcommand === 'info')
+            await require('./records/profile-info').execute(client, database, interaction);
+        return;
+    }
 
     if (subcommand === 'enviar') {
         await require('./records/submit').execute(client, database, interaction)
@@ -71,7 +80,33 @@ module.exports = {
         .addSubcommand(subcommand =>
             subcommand
                 .setName('ayuda')
-                .setDescription('Ayuda para enviar tu progreso')),
+                .setDescription('Ayuda para enviar tu progreso'))
+        .addSubcommandGroup(group =>
+            group
+                .setName('perfil')
+                .setDescription('Gestionar tu perfil')
+                .addSubcommand(subcommand =>
+                    subcommand
+                        .setName('crear')
+                        .setDescription('Crea tu perfil')
+                        .addUserOption(option =>
+                            option.setName('user')
+                                .setDescription('Usuario del perfil')
+                                .setRequired(true))
+                        .addStringOption(option =>
+                            option.setName('username')
+                                .setDescription('Nombre de usuario')
+                                .setRequired(true))
+                )
+                .addSubcommand(subcommand =>
+                    subcommand
+                        .setName('info')
+                        .setDescription('Informacion de tu perfil')
+                        .addUserOption(option =>
+                            option.setName('user')
+                                .setDescription('Usuario del perfil')
+                                .setRequired(false)))
+                ),
 
     async autocomplete(interaction) {
         const focusedValue = interaction.options.getFocused();
@@ -79,16 +114,19 @@ module.exports = {
         try {
             const levels = await aredlapi.getLevels();
             const filteredLevels = levels
-            .filter(level => level.name.toLowerCase().includes(focusedValue.toLowerCase()))
-            .map(level => ({ name: level.name, value: level.name }))
-            .slice(0, 25);
+                .filter(level => level.name.toLowerCase().includes(focusedValue.toLowerCase()))
+                .map(level => ({ name: level.name, value: level.name }))
+                .slice(0, 25);
 
             await interaction.respond(filteredLevels);
         } catch (error) {
             logger.ERR('Error al cargar niveles:', error);
-            await interaction.respond([{ name: 'Error al cargar niveles', value: 'error' }]);
+            await interaction.respond([{ 
+                name: 'Error al cargar niveles', 
+                value: 'error' 
+            }]);
         }
     },
-                    
+
     execute,
 };

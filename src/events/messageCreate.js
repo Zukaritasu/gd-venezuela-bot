@@ -146,7 +146,7 @@ module.exports = {
                     if (message.member.roles.cache.has('1119804850620866600') /* rol venezolado id */) {
                         const command = message.content.split('\n');
                         if (command.length >= 3) {
-                            await submit.processSubmitRecord(message, command);
+                            await submit.processSubmitRecord(database, message, command);
                         } else {
                             await message.react('❌');
                         }
