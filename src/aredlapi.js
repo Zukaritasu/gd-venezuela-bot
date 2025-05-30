@@ -58,7 +58,7 @@ async function getResponseJSON(url) {
                 res.on('end', async () => {
                     try {
                         const jsonResponseData = JSON.parse(Buffer.concat(data).toString())
-                            await redisObject.set(key, JSON.stringify(jsonResponseData), { EX: 21600 })
+                        await redisObject.set(key, JSON.stringify(jsonResponseData), { EX: 21600 })
                         resolve(jsonResponseData)
                     } catch (error) {
                         resolve(error);
@@ -77,8 +77,23 @@ module.exports = {
      * 
      * @returns {Promise<{id: number, name: string}[]>}
      */
-    getLevels: () => getResponseJSON('api/aredl/levels'),
+    getLevels: () => getResponseJSON('v2/api/aredl/levels'),
     getLevelCreators: (level_id) => getResponseJSON(`v2/api/aredl/levels/${level_id}/creators`),
     getLevel: (level_id) => getResponseJSON(`v2/api/aredl/levels/${level_id}`),
-    getLevelInfo: (level_id) => getResponseJSON(`api/aredl/levels/${level_id}?two_player=false&records=false&creators=true&verification=false&packs=false`),
+    getLevelInfo: async (level_id) => {
+        const [json, creatorsArray] = await Promise.all(
+            [
+                getResponseJSON(`v2/api/aredl/levels/${level_id}`),
+                getResponseJSON(`v2/api/aredl/levels/${level_id}/creators`)
+            ]
+        );
+
+        if (!json) 
+            throw new Error('Error fetching level information');
+        if (!Array.isArray(creatorsArray)) 
+            throw new Error('Error fetching creators');
+
+        json['creators'] = creatorsArray.length > 0 ? creatorsArray : [json.publisher];
+        return json;
+    },
 }
