@@ -81,6 +81,7 @@ module.exports = {
     getLevelCreators: (level_id) => getResponseJSON(`v2/api/aredl/levels/${level_id}/creators`),
     getLevel: (level_id) => getResponseJSON(`v2/api/aredl/levels/${level_id}`),
     getLevelInfo: async (level_id) => {
+        // json and creatorsArray never tend to be null because the function always returns a non-null value.
         const [json, creatorsArray] = await Promise.all(
             [
                 getResponseJSON(`v2/api/aredl/levels/${level_id}`),
@@ -88,8 +89,10 @@ module.exports = {
             ]
         );
 
-        if (!json) 
-            throw new Error('Error fetching level information');
+        if (json instanceof Error) 
+            throw json;
+        if (creatorsArray instanceof Error)
+            throw creatorsArray;
         if (!Array.isArray(creatorsArray)) 
             throw new Error('Error fetching creators');
 
