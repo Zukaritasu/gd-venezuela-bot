@@ -59,7 +59,23 @@ function isValidPointercrateUrl(url) {
 }
 
 /**
+ * @param {String} url
+ * @returns {String} Normalized YouTube link
  * 
+ * This function normalizes YouTube links to a standard format.
+ * It converts various YouTube URL formats to the standard "https://www.youtube.com/watch?v=VIDEO_ID" format.
+ * If the URL does not match any known YouTube format, it returns the original URL.
+ */
+function normalizeYoutubeLink(url) {
+    const youtubeRegex = /(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/(?:[^\/\s]+\/S+\/|(?:v|e(?:mbed)?|shorts|live)\/|.*[?&]v=)|youtu\.be\/)([a-zA-Z0-9_-]{11})/;
+    const match = url.match(youtubeRegex);
+    
+    if (match && match[1])
+        return `https://www.youtube.com/watch?v=${match[1]}`;
+    return url;
+}
+
+/**
  * @param {*} videoUrl 
  * @returns 
  */
@@ -159,5 +175,6 @@ module.exports = {
     isValidPointercrateUrl,
     escapeDiscordSpecialChars,
     hasUserPermissions,
-    getUserFlagState
+    getUserFlagState,
+    normalizeYoutubeLink
 }

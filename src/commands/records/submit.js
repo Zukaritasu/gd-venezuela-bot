@@ -100,59 +100,6 @@ async function getLevelName(message, level) {
 }
 
 /**
- * Normalizes a YouTube link to a standard format.
- * 
- * @param {URL} url 
- * @returns {string | null}
- */
-async function normalizeYoutubeLink(url) {
-    try {
-        const youtubeHosts = ['www.youtube.com', 'youtube.com', 'm.youtube.com', 'youtu.be'];
-        if (!youtubeHosts.includes(url.hostname)) {
-            return url.toString(); // Not a YouTube link, return as is
-        }
-
-        // Handle youtu.be short links
-        if (url.hostname === 'youtu.be') {
-            const videoId = url.pathname.slice(1).split('/')[0];
-            if (videoId) {
-                return `https://www.youtube.com/watch?v=${videoId}`;
-            }
-            return null;
-        }
-
-        // Handle /watch?v=... links
-        if (url.pathname === '/watch' && url.searchParams.has('v')) {
-            return `https://www.youtube.com/watch?v=${url.searchParams.get('v')}`;
-        }
-
-        // Handle /shorts/... links
-        if (url.pathname.startsWith('/shorts/')) {
-            const videoId = url.pathname.split('/')[2];
-            if (videoId) {
-                return `https://www.youtube.com/watch?v=${videoId}`;
-            }
-            return null;
-        }
-
-        // Handle /embed/... links
-        if (url.pathname.startsWith('/embed/')) {
-            const videoId = url.pathname.split('/')[2];
-            if (videoId) {
-                return `https://www.youtube.com/watch?v=${videoId}`;
-            }
-            return null;
-        }
-
-        // Optionally, handle playlist links or other formats if needed
-
-        return null;
-    } catch {
-        return null;
-    }
-}
-
-/**
  * @param {ChatInputCommandInteraction | Message} interaction 
  * @param {string} videoLink 
  * @returns 
@@ -162,12 +109,12 @@ async function getVideoLink(interaction, videoLink) {
     try {
         if (interaction instanceof ChatInputCommandInteraction) {
             new URL(link);
-            return link;
+            return utils.normalizeYoutubeLink(link);
         } else if (link.toLowerCase().startsWith('video:') || link.toLowerCase().startsWith('vídeo:')) {
             link = link.substring(6).trim();
             try {
                 new URL(link);
-                return link;
+                return utils.normalizeYoutubeLink(link);
             } catch {
 
             }
@@ -211,28 +158,10 @@ async function execute(_client, database, interaction) {
         const comment = interaction.options.getString('comment');
         const mobile = interaction.options.getBoolean('mobile') || false;
 
-        /*let stateName = null;
-        const length = interaction.member.roles.cache.size;
-        for (let i = 0; i < length; i++) {
-            const role = interaction.member.roles.cache.at(i);
-            if (role) {
-                const state = states.find(state => state.roleId === role.id);
-                if (state) {
-                    stateName = state.flagUrl.substring(state.flagUrl.lastIndexOf('/') + 1, state.flagUrl.lastIndexOf('.'));
-                    break;
-                }
-            }
-        }
-
-        if (!stateName) {
-            await interaction.editReply('No se ha podido encontrar el estado. Pide tu rol de estado en el canal <#1216237948664549426>');
-            return;
-        }*/
-
         const stringJson =
             `
-        User ID: ${profile.userId}
-        Level: ${level}
+User ID: ${profile.userId}
+Level: ${level}
 Video: ${ytvideo}
 Comentario: ${comment ?? ""}
         \`\`\`json
@@ -288,9 +217,6 @@ async function sendErrorDM(message, errorMessage) {
 async function processSubmitRecord(database, message, parts) {
     try {
         let channel = null;
-        /*if (message.author.id === '591640548490870805')
-            channel = await message.client.channels.fetch('1294668385950498846');
-        else*/
         channel = await message.client.channels.fetch('1369858143122886769');
         if (!channel) {
             await sendErrorDM(message, 'Error interno. No se ha podido encontrar el canal submits');
@@ -306,24 +232,6 @@ async function processSubmitRecord(database, message, parts) {
         const ytvideo = await getVideoLink(message, parts[2]);
         if (!ytvideo) return;
         
-        /*let stateName = null;
-        const length = message.member.roles.cache.size;
-        for (let i = 0; i < length; i++) {
-            const role = message.member.roles.cache.at(i);
-            if (role) {
-                const state = states.find(state => state.roleId === role.id);
-                if (state) {
-                    stateName = state.flagUrl.substring(state.flagUrl.lastIndexOf('/') + 1, state.flagUrl.lastIndexOf('.'));
-                    break;
-                }
-            }
-        }
-
-        if (!stateName) {
-            await sendErrorDM(message, 'No se ha podido encontrar el estado. Pide tu rol de estado en el canal <#1216237948664549426>');
-            return;
-        }*/
-
         const stringJson =
             `
 User ID: ${profile.userId}
