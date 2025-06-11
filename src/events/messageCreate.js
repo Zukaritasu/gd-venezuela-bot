@@ -80,10 +80,10 @@ module.exports = {
                     if (utils.hasUserPermissions(message.member))
                         await require('../commands/youtube/service-notification').testCommand(message.channel)
                 } else if (message.content.startsWith('--aceptar') && message.channel.id === /*'1294668385950498846'*/ '1369858143122886769') {
-                    if (utils.hasUserPermissions(message.member) || usersWhitelist.includes(message.author.id))
+                    if (utils.hasUserPermissions(message.member) || usersWhitelist.includes(message.member.id))
                         await require('../commands/records/record').accept(message)
                 }  else if (message.content.startsWith('--rechazar') && message.channel.id === /*'1294668385950498846'*/ '1369858143122886769') {
-                    if (utils.hasUserPermissions(message.member) || usersWhitelist.includes(message.author.id))
+                    if (utils.hasUserPermissions(message.member) || usersWhitelist.includes(message.member.id))
                         await require('../commands/records/record').decline(message)
                 } else if (message.content.startsWith('--test-welcome')) {
                     if (utils.hasUserPermissions(message.member)) {
