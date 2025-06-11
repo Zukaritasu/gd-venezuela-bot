@@ -79,6 +79,7 @@ async function getBotMessage(message) {
 
     const content = repliedMessage.content;
     content.split('\n').forEach(line => {
+        line = line.trim();
         if (line.startsWith('User ID:')) {
             userId = line.split(':')[1].trim();
         } else if (line.startsWith('Level:')) {
