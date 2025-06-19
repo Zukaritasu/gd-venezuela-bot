@@ -305,7 +305,7 @@ async function handleProgress(message, isAccept) {
                 await addRecord(message, file, jsonInfo, fileName, isMobile)
             }
 
-            await sendMessageToUser(message, user, `Tu progreso en el nivel **${levelName}** ha sido aceptado :white_check_mark:\n**Verificado por:** ${message.author.username}`);
+            await sendMessageToUser(message, user, `Tu progreso en el nivel **${levelName}** ha sido aceptado :white_check_mark:. ¡Felicidades!`);
             await botRecord.react('✅');
 
         } else {
