@@ -13,7 +13,7 @@ module.exports = {
      */
     async execute(client, database, oldMessage, newMessage) {
         try {
-            if (newMessage.content == oldMessage.content) 
+            if (newMessage.content == oldMessage.content || newMessage.embeds.length > oldMessage.embeds.length) 
                 return;
             if (newMessage.channelId == '1369415419093586070') {
                 const command = newMessage.content.split('\n');
@@ -27,7 +27,7 @@ module.exports = {
                 }
             }
         } catch (error) {
-            console.error(error);
+            logger.ERR(error)
         }
     }
 };
