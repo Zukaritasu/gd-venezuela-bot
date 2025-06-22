@@ -206,7 +206,7 @@ async function scan(database, message, parameters) {
             return
         await message.guild.members.fetch();
         const guildMembers = message.guild.members.cache;
-        const blacklist = getBlacklistMembers(database)
+        const blacklist = await getBlacklistMembers(database)
 
         const users = getProBotTopUsers(blacklist, guildMembers, message, await message.channel.messages.fetch({
             limit: parameters.length >= 1 ? parseInt(parameters[0]) + 1 : 5
