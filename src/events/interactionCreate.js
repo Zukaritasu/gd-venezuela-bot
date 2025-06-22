@@ -36,9 +36,8 @@ module.exports = {
                         .get(interaction.commandName)
                         ?.execute(client, database, interaction);
                 } else {
-                    logger.ERR('Guild is null. The bot might not be in the server or lacks the necessary permissions')
                     await interaction.reply({
-                            content: 'Error al consultar la información del servidor'
+                            content: 'Este comando no se puede usar por mensaje directo. Intenta ejecutarlo en GD Venezuela.'
                         }
                     );
                 }
