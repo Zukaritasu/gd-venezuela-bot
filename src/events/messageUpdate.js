@@ -6,12 +6,12 @@ module.exports = {
     name: Events.MessageUpdate,
     once: false,
     /**
-     * @param {Client} client 
+     * @param {Client} _client 
      * @param {Db} database 
      * @param {Message} oldMessage 
      * @param {Message} newMessage 
      */
-    async execute(client, database, oldMessage, newMessage) {
+    async execute(_client, database, oldMessage, newMessage) {
         try {
             if (newMessage.content == oldMessage.content || newMessage.embeds.length > oldMessage.embeds.length) 
                 return;
