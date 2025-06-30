@@ -68,8 +68,6 @@ async function getTop15XPEmbed(database, interaction) {
         description += `<:estrella2:1303859148877987880> ${formatNumber(position++)} ${userName} | XP: \`${top_xp.usersList[i].xp}\` ${top_xp.usersList[i].id === interaction.member.id ? '**<**' : ''}\n`
     }
 
-    logger.DBG(description.length)
-
     embed.setDescription(description)
     return embed
 }
