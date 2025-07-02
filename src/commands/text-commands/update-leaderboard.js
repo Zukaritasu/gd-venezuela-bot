@@ -144,7 +144,7 @@ module.exports = {
             await cleanChannelTop15(channel);
             await channel.send('**TOP 15 USUARIOS CON MAS XP DE TEXTO EN EL SERVIDOR!**\n\n:warning:  Recuerda que el **Staff** y los usuarios con rol **Notable** no forman parte del Top\nPara ganar experiencia (XP), solo tienes que participar activamente en los canales de texto del servidor enviando mensajes de __texto, emojis, stickers__, etc. Todo lo referente a los canales de texto.\n\n**Para mas información puedes usar los siguientes comandos**\n- `/utilidades top xp` Muestra el Top 15\n- `/utilidades top rank` Muestra tu posición en el Top 25 \n\n*Si sales del Top 15, el rol se mantendrá contigo hasta que llegues al Top 25; si bajas otro nivel, lamentablemente perderás el rol, así que mantente activo!!!*');
 
-            for (let i = 0; i < top_xp.usersList.length && i < 5; i++) {
+            for (let i = 0; i < top_xp.usersList.length && i < 15; i++) {
                 const member = await message.guild.members.fetch(top_xp.usersList[i].id).catch(() => null);
                 if (member) {
                     await sendImage(channel, member, top_xp.usersList[i], i + 1);
@@ -153,10 +153,10 @@ module.exports = {
 
             await message.react('✅')
         } catch (error) {
-            console.error(error)
+            logger.ERR(error);
             try {
                 await message.reply({
-                    content: 'Ups! Ha ocurrido un error. Intenta mas tarde... <:birthday2:1249345278566465617>'
+                    content: 'Se ha producido un error al actualizar el Top 15. ' + error.message,
                 })
             } catch (e) {
 
