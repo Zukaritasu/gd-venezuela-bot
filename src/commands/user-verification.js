@@ -53,16 +53,13 @@ async function isUserInsideServer(client, interaction) {
  * @param {ChatInputCommandInteraction} interaction 
  */
 async function execute(client, _database, interaction) {
-    await interaction.reply({
-        content: 'Comando no disponible',
-        ephemeral: true
-    });
-
     try {
+        await interaction.deferReply({ ephemeral: true });
         // Check if the user is inside the server
         if (await isUserInsideServer(client, interaction)) {
             await interaction.editReply({
-                content: 'Ya te encuentras dentro del servidor. No es necesario solicitar verificación.',
+                content: '**[Español]** Ya te encuentras dentro del servidor. No es necesario solicitar verificación.\n' +
+                         '**[English]** You are already inside the server. No need to request verification.',
                 ephemeral: true
             });
             return;
@@ -84,16 +81,17 @@ async function execute(client, _database, interaction) {
             throw new Error('Channel not found');
         }
 
-        await channel.send(`El usuario ${interaction.user.tag}#(${interaction.user.id}) ha solicitado ser verificado.`);
-        await interaction.reply({
-            content: 'Tu solicitud de verificación ha sido enviada al staff. ¡Gracias!',
+        await channel.send(`El usuario ${interaction.user.tag} (${interaction.user.id}) ha solicitado ser verificado.`);
+        await interaction.editReply({
+            content: '**[Español]** Tu solicitud de verificación ha sido enviada al staff. ¡Gracias!\n' +
+                     '**[English]** Your verification request has been sent to the staff. Thank you!',
             ephemeral: true
         });
     } catch (e) {
         logger.ERR(e);
 
         try {
-            await interaction.reply(
+            await interaction.editReply(
                 {
                     content: 'Ocurrió un error al procesar tu solicitud. Intenta nuevamente más tarde.',
                     ephemeral: true
