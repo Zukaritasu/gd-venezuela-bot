@@ -182,8 +182,8 @@ async function checkUserAccountAge(guild, database, member) {
     if (accountAgeMs < sevenDaysMs && !(await verifyMemberInWhiteList(database, member))) {
         try {
             await member.send(
-                '**[Español]** Hola! No puedes ingresar al servidor porque tu cuenta de Discord no cumple con la antigüedad mínima requerida. Utiliza el comando /verify para que el Staff pueda verificar tu cuenta y permitirte el acceso al servidor. Si quieres enviar un mensaje al Staff escribe el prefijo --message y luego el comentario\n\n' + 
-                '**[English]** Hello! You cannot join the server because your Discord account does not meet the minimum age requirement. Use the /verify command so that the Staff can verify your account and allow you access to the server. If you want to send a message to the Staff, write the prefix --message and then the comment.'
+                '**[Español]** Hola! No puedes ingresar al servidor porque tu cuenta de Discord no cumple con la antigüedad mínima requerida. Utiliza el comando /verify para que el Staff pueda verificar tu cuenta y permitirte el acceso al servidor.\n\n' + 
+                '**[English]** Hello! You cannot join the server because your Discord account does not meet the minimum age requirement. Use the /verify command so that the Staff can verify your account and allow you access to the server.'
             );
         } catch (e) {
             if (e.message === 'Cannot send messages to this user')
@@ -227,7 +227,7 @@ module.exports = {
      */
     async execute(_client, database, member) {
         try {
-            if (await checkUserAccountAge(database, member)) {
+            if (await checkUserAccountAge(member.guild, database, member)) {
                 await updateCache(member);
                 await welcomeMessageMember(member);
             }

@@ -115,7 +115,7 @@ async function execute(client, _database, interaction) {
  * @param {string[]} messageParts 
  * @param {Message} message 
  */
-async function denyUser(client, messageParts, message) {
+async function denyUser(client, message, messageParts) {
     try {
         const userId = messageParts[0]; // User ID to be denied
         if (await isUserInsideServer(client, userId)) {
@@ -164,7 +164,7 @@ async function denyUser(client, messageParts, message) {
     }
 }
 
-async function approveUser(client, database, messageParts, message) {
+async function approveUser(client, database, message, messageParts) {
     try {
         const userId = messageParts[0];
         if (await isUserInsideServer(client, userId)) {
