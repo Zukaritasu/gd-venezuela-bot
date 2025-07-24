@@ -152,14 +152,14 @@ async function executeModerationAction(guild, member, action) {
         let actionText = '';
         if (action === ModerationAction.KICK) {
             await member.kick('Account too new');
-            actionText = 'kicked';
+            actionText = 'expulsado';
         } else if (action === ModerationAction.BAN) {
             await member.ban({ reason: 'Account too new' });
-            actionText = 'banned';
+            actionText = 'baneado';
         }
         if (reportChannel && actionText) {
             reportChannel.send(
-                `User ${member.user.tag} (${member.user.id}) has been **${actionText}** automatically for having an account that is too new.`
+                `El usuario ${member.user.tag} (${member.user.id}) ha sido **${actionText}** automáticamente por tener una cuenta demasiado nueva.`
             );
         }
     } catch (e) {
