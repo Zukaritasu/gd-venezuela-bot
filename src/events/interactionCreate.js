@@ -35,6 +35,8 @@ module.exports = {
                     await interaction.client.commands
                         .get(interaction.commandName)
                         ?.execute(client, database, interaction);
+                } else if (interaction.commandName === 'verify') {
+                    await require('../commands/user-verification').execute(client, database, interaction);
                 } else {
                     await interaction.reply({
                             content: 'Este comando no se puede usar por mensaje directo. Intenta ejecutarlo en GD Venezuela.'
