@@ -19,13 +19,19 @@ const { Events, Client, Guild, GuildMember, AttachmentBuilder } = require('disco
 const logger = require('../logger')
 const Canvas = require('canvas');
 const path = require('path');
+const { Db } = require('mongodb');
+
+const ModerationAction = {
+    KICK: 'active',
+    BAN: 'banned'
+};
 
 async function updateCache(member) {
     try {
         await member.guild.members.fetch(member.id);
         logger.INF('The cache has been updated with the new member!')
     } catch (e) {
-        logger.INF(e)
+        logger.ERR(e)
     }
 }
 
@@ -88,7 +94,7 @@ async function welcomeMessageMember(member) {
             ctx.fillText('BIENVENID@', x, y + radius + 60);
 
             ctx.font = '36px MakroTrial';
-            ctx.fillText(member.user.username, x, y + radius + 106);
+            ctx.fillText(sanitizeUsername(member.user.username), x, y + radius + 106);
 
             const attachment = new AttachmentBuilder(canvas.toBuffer(), { name: 'welcome-image.png' });
 
@@ -104,15 +110,130 @@ async function welcomeMessageMember(member) {
     }
 }
 
+/**
+ * Check if the member is in the whitelist
+ * @param {Db} database
+ * @param {GuildMember} member
+ * @returns {Promise<boolean>} true if the member is in the whitelist, false otherwise
+ */
+async function verifyMemberInWhiteList(database, member) {
+    const config = database.collection('config');
+    let whiteListMembers = await config.findOne(
+        {
+            type: 'white_list_new_users'
+        }
+    );
+
+    if (!whiteListMembers || !whiteListMembers.users) {
+        // If it doesn't exist, create it with an empty array of users
+        await config.insertOne(whiteListMembers = {
+            type: 'white_list_new_users',
+            users: []
+        });
+    }
+
+    if (!Array.isArray(whiteListMembers.users)) {
+        whiteListMembers.users = [];
+    }
+
+    // Check if the user is already in the whitelist
+    return whiteListMembers.users.includes(member.user.id);
+}
+
+/** * Execute a moderation action on the member
+ * @param {Guild} guild
+ * @param {GuildMember} member
+ * @param {ModerationAction} action
+ * @returns {Promise<boolean>} false if the action was taken, true otherwise
+ */
+async function executeModerationAction(guild, member, action) {
+    try {
+        let reportChannel = guild.channels.cache.get('1119807234076049428'); // moderation channel
+        let actionText = '';
+        if (action === ModerationAction.KICK) {
+            await member.kick('Account too new');
+            actionText = 'kicked';
+        } else if (action === ModerationAction.BAN) {
+            await member.ban({ reason: 'Account too new' });
+            actionText = 'banned';
+        }
+        if (reportChannel && actionText) {
+            reportChannel.send(
+                `User ${member.user.tag} (${member.user.id}) has been **${actionText}** automatically for having an account that is too new.`
+            );
+        }
+    } catch (e) {
+        logger.ERR(`Error executing moderation action on ${member.user.tag}: ${e.message}`);
+    }
+
+    return false; // Return false to indicate the action was taken
+}
+
+/**
+ * Check if the user account is older than 21 days
+ * @param {Guild} guild
+ * @param {Db} database
+ * @param {GuildMember} member 
+ * @returns {Promise<boolean>} true if the account is older than 21 days, false otherwise
+ */
+async function checkUserAccountAge(guild, database, member) {
+    const accountAgeMs = Date.now() - member.user.createdAt.getTime();
+    const sevenDaysMs = 21 * 24 * 60 * 60 * 1000; // 21 days in milliseconds
+    if (accountAgeMs < sevenDaysMs && !(await verifyMemberInWhiteList(database, member))) {
+        try {
+            await member.send(
+                '**[Español]** Hola! No puedes ingresar al servidor porque tu cuenta de Discord no cumple con la antigüedad mínima requerida. Utiliza el comando /verify para que el Staff pueda verificar tu cuenta y permitirte el acceso al servidor. Si quieres enviar un mensaje al Staff escribe el prefijo --message y luego el comentario\n\n' + 
+                '**[English]** Hello! You cannot join the server because your Discord account does not meet the minimum age requirement. Use the /verify command so that the Staff can verify your account and allow you access to the server. If you want to send a message to the Staff, write the prefix --message and then the comment.'
+            );
+        } catch (e) {
+            if (e.message === 'Cannot send messages to this user')
+                return await executeModerationAction(guild, member, ModerationAction.BAN);
+            logger.WAR(`Unable to send message via DM to ${member.user.tag}: ${e}`);
+        }
+        return await executeModerationAction(guild, member, ModerationAction.KICK);
+    }
+    return true;
+}
+
+/**
+ * Check all users account age in the guild
+ * @param {Guild} guild 
+ * @param {Db} database
+ */
+async function checkAllUsersAccountAge(guild, database) {
+    const members = await guild.members.fetch();
+    for (const member of members.values()) {
+        try {
+            if (member.user.bot)
+                continue; // Skip bots
+            await checkUserAccountAge(guild, database, member);
+        } catch (e) {
+            logger.ERR(`Error checking account age for ${member.user.tag}: ${e.message}`);
+        }
+    }
+}
+
+function sanitizeUsername(username) {
+    return username.replace(/@/g, '@\u200b');
+}
+
 module.exports = {
     name: Events.GuildMemberAdd,
     once: false,
-    async execute(_client, _database, member) {
+    /**
+     * @param {Client} _client
+     * @param {Db} database
+     * @param {GuildMember} member
+     */
+    async execute(_client, database, member) {
         try {
-            await updateCache(member);
-            await welcomeMessageMember(member);
+            if (await checkUserAccountAge(database, member)) {
+                await updateCache(member);
+                await welcomeMessageMember(member);
+            }
         } catch (e) {
-            logger.INF(e)
+            logger.ERR(e)
         }
     },
+    checkAllUsersAccountAge
 };

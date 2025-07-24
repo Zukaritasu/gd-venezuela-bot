@@ -15,7 +15,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-const { Events, Client, ChatInputCommandInteraction, Message, GuildMember, AttachmentBuilder } = require('discord.js');
+const { Events, Client, ChatInputCommandInteraction, Message, GuildMember, AttachmentBuilder, ChannelType } = require('discord.js');
 const { Db } = require('mongodb');
 const logger = require('../logger');
 const Canvas = require('canvas');
@@ -63,6 +63,11 @@ module.exports = {
     async execute(client, database, message) {
         try {
             if (message.member && !message.member.user.bot) {
+                if (message.channel.type === ChannelType.DM) {
+                    // Handle direct messages here if needed
+                    return
+                }
+
                 //await require('./voiceStateUpdate').resetTimeout(client, message.member)
                 if (message.content.startsWith('--scan')) {
                     if (utils.hasUserPermissions(message.member))
@@ -85,6 +90,12 @@ module.exports = {
                 }  else if (message.content.startsWith('--rechazar') && message.channel.id === /*'1294668385950498846'*/ '1369858143122886769') {
                     if (utils.hasUserPermissions(message.member) || usersWhitelist.includes(message.member.id))
                         await require('../commands/records/record').decline(message)
+                }  else if (message.content.startsWith('--denegar') && message.channel.id === /*'1119807234076049428'*/ '1119807234076049428') {
+                    if (utils.hasUserPermissions(message.member))
+                        await require('../commands/user-verification').denyUser(client, message, getCommandParameters(message.content))
+                }  else if (message.content.startsWith('--aprobar') && message.channel.id === /*'1119807234076049428'*/ '1119807234076049428') {
+                    if (utils.hasUserPermissions(message.member))
+                        await require('../commands/user-verification').approveUser(client, database, message, getCommandParameters(message.content))
                 } else if (message.content.startsWith('--test-welcome')) {
                     if (utils.hasUserPermissions(message.member)) {
                         const member = message.member;

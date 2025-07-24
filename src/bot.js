@@ -64,10 +64,14 @@ process.chdir(__dirname);
             [
                 GatewayIntentBits.Guilds,
                 GatewayIntentBits.GuildMessages,
+                GatewayIntentBits.DirectMessages,
                 GatewayIntentBits.MessageContent,
                 GatewayIntentBits.GuildMembers,
                 GatewayIntentBits.GuildVoiceStates,
             ],
+        partials: [
+            'CHANNEL'
+        ],
         presence: {
             activities: [
                 {
