@@ -15,7 +15,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-const { SlashCommandBuilder, ChatInputCommandInteraction, Message, Guild, GuildMember } = require('discord.js');
+const { SlashCommandBuilder, ChatInputCommandInteraction, Message, Guild, GuildMember, TextChannel } = require('discord.js');
 const logger = require('../../logger');
 const aredlapi = require('../../aredlapi');
 const path = require("path");
@@ -106,7 +106,8 @@ async function getBotMessage(message) {
  * @param {string} levelName 
  * @param {Object} jsonInfo 
  * @param {string} userId 
- * @returns 
+ * @returns {Promise<{levelNameUp: string|null, levelNameDown: string|null, levelInserted: string|null, 
+ * indexInserted: number, levelLegacy: string|null, levelExtended: string|null}>}
  */
 async function createRecordFile(message, fileName, levelName, jsonInfo, userId) {
     const levels = await aredlapi.getLevels();
@@ -124,6 +125,15 @@ async function createRecordFile(message, fileName, levelName, jsonInfo, userId) 
         verification: jsonInfo.link,
         percentToQualify: 100,
         records: []
+    }
+
+    let changes = {
+        levelNameUp: null,
+        levelNameDown: null,
+        levelInserted: null,
+        indexInserted: -1,
+        levelLegacy: null,
+        levelExtended: null
     }
 
     // Create new record file
@@ -167,6 +177,22 @@ async function createRecordFile(message, fileName, levelName, jsonInfo, userId) 
 
         levelLists.splice(insertIndex, 0, fileName);
 
+        changes.levelInserted = levelName;
+        changes.indexInserted = insertIndex;
+
+        if (insertIndex - 1 >= 0)
+            changes.levelNameUp = 
+        levels.find(lvl => getFileName(lvl.name) === levelLists[insertIndex - 1])?.name || null;
+        if (insertIndex + 1 < levelLists.length)
+            changes.levelNameDown = 
+        levels.find(lvl => getFileName(lvl.name) === levelLists[insertIndex + 1])?.name || null;
+        if (levelLists.length > 150)
+            changes.levelLegacy = 
+        levels.find(lvl => getFileName(lvl.name) === levelLists[150])?.name || null;
+        if (insertIndex < 75)
+            changes.levelExtended = 
+        levels.find(lvl => getFileName(lvl.name) === levelLists[75])?.name || null;
+
         const fileEditedList = Buffer.from(JSON.stringify(levelLists, null, 4)).toString("base64");
         await axios.put(`https://api.github.com/repos/Abuigsito/gdvzla/contents/data/_list.json`, {
             message: `Updated _list.json by ${message.author.username}`,
@@ -183,6 +209,35 @@ async function createRecordFile(message, fileName, levelName, jsonInfo, userId) 
     // Add the user to the _playerStates.json file
 
     await addPlayerToStateList(message, jsonInfo);
+
+    return changes;
+}
+
+/** * Prints the changes made to the record file.
+ * @param {{levelNameUp: string|null, levelNameDown: string|null, levelInserted: string|null, indexInserted: number, 
+ * levelLegacy: string|null, levelExtended: string|null}} changes
+ * - The changes made to the record file.
+ * @param {Guild} guild - The Discord guild where the changes occurred.
+ * @returns {Promise<void>}
+ */
+async function printChanges(changes, guild) {
+    const message = `**${changes.levelInserted}** ha sido agregado al top #${changes.indexInserted + 1}, ${changes.levelNameUp ? 
+        `por encima de ${changes.levelNameDown} y por debajo de ${changes.levelNameUp}` : `por encima de ${changes.levelNameDown}`}.` +
+        `\n${changes.levelExtended ? `Este cambio empuja a ${changes.levelExtended} a la extended list y a ${changes.levelLegacy} a la legacy list` 
+        : `Este cambio empuja a ${changes.levelLegacy} a la legacy list`}.`
+
+    /** @type {TextChannel} */
+    const channel = await guild.channels.fetch('1368412078775468093'); // lista-cambios
+    if (!channel) {
+        logger.ERR('The lista-cambios channel does not exist.');
+        return;
+    }
+
+    const messageSent = await channel.send(message);
+    await messageSent.react('👍');
+    await messageSent.react('👎');
+
+    await channel.send('<@&1376586957735465111>') // Notificaciones Lista
 }
 
 /**
@@ -286,8 +341,9 @@ async function handleProgress(message, isAccept) {
             const fileName = getFileName(levelName);
             let file = await getGitHubFile(fileName);
             if (!file) { // File doesn't exist, create it
-                await createRecordFile(message, fileName, levelName, jsonInfo, userId);
+                const changes = await createRecordFile(message, fileName, levelName, jsonInfo, userId);
                 await message.reply(`El archivo **${fileName}.json** no existe, por lo que se ha creado uno nuevo.`);
+                await printChanges(changes, message.guild);
             } else if (file.content.verifier === jsonInfo.user || file.content.records.some(record => record.user === jsonInfo.user)) {
                 await botRecord.react('✅');
                 await message.react('⚠️');
