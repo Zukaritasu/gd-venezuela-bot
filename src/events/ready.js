@@ -20,7 +20,7 @@ const logger = require('../logger')
 
 const services = [
 	'../commands/youtube/service-notification.js',
-	'../commands/gdvzla-list/service-levels.js'
+	//'../commands/gdvzla-list/service-levels.js'
 ]
 
 module.exports = {
@@ -51,6 +51,8 @@ module.exports = {
 			try {
 				await guild.members.fetch();
 				logger.INF('All members have been loaded into the cache!')
+				// Check all users account age
+				await require('./guildMemberAdd').checkAllUsersAccountAge(guild, database);
 			} catch (e) {
 				logger.ERR(e)
 			}
