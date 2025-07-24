@@ -176,5 +176,6 @@ module.exports = {
     escapeDiscordSpecialChars,
     hasUserPermissions,
     getUserFlagState,
-    normalizeYoutubeLink
+    normalizeYoutubeLink,
+    GD_VENEZUELA_SERVER_ID: '1119795689984102455',
 }
