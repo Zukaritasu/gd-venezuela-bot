@@ -18,7 +18,7 @@
 const { Message, GuildChannel } = require('discord.js');
 const { Db } = require('mongodb');
 const Canvas = require('canvas');
-const StackBlur = require('stackblur-canvas'); // Asegúrate de instalarlo: npm i stackblur-canvas
+const StackBlur = require('stackblur-canvas');
 const logger = require('../../logger');
 
 /**
@@ -159,7 +159,7 @@ module.exports = {
                     content: 'Se ha producido un error al actualizar el Top 15. ' + error.message,
                 })
             } catch (e) {
-
+                logger.ERR(e);
             }
         }
     }
