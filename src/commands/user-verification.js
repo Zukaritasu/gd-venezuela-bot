@@ -110,10 +110,11 @@ async function execute(client, _database, interaction) {
  * and does not proceed with the ban.
  * 
  * @param {Client} client 
+ * @param {Db} database
  * @param {string[]} messageParts 
  * @param {Message} message 
  */
-async function denyUser(client, message, messageParts) {
+async function denyUser(client, database, message, messageParts) {
     try {
         const userId = messageParts[0]; // User ID to be denied
         if (await isUserInsideServer(client, userId)) {
