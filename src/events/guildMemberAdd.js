@@ -186,9 +186,9 @@ async function checkUserAccountAge(guild, database, member) {
                 '**[English]** Hello! You cannot join the server because your Discord account does not meet the minimum age requirement. Use the /verify command so that the Staff can verify your account and allow you access to the server.'
             );
         } catch (e) {
-            if (e.message === 'Cannot send messages to this user')
+            if (e.code === 50007) // Cannot send messages to this user
                 return await executeModerationAction(guild, member, ModerationAction.BAN);
-            logger.WAR(`Unable to send message via DM to ${member.user.tag}: ${e}`);
+            logger.ERR(`Unable to send message via DM to ${member.user.tag}: ${e}`);
         }
         return await executeModerationAction(guild, member, ModerationAction.KICK);
     }
