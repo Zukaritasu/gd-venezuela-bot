@@ -92,7 +92,7 @@ module.exports = {
                         await require('../commands/records/record').decline(message)
                 }  else if (message.content.startsWith('--denegar') && message.channel.id === /*'1119807234076049428'*/ '1119807234076049428') {
                     if (utils.hasUserPermissions(message.member))
-                        await require('../commands/user-verification').denyUser(client, message, getCommandParameters(message.content))
+                        await require('../commands/user-verification').denyUser(client, database, message, getCommandParameters(message.content))
                 }  else if (message.content.startsWith('--aprobar') && message.channel.id === /*'1119807234076049428'*/ '1119807234076049428') {
                     if (utils.hasUserPermissions(message.member))
                         await require('../commands/user-verification').approveUser(client, database, message, getCommandParameters(message.content))
