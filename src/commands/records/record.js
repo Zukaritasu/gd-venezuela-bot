@@ -54,7 +54,7 @@ async function getGitHubFile(fileName) {
             content: JSON.parse(Buffer.from(response.data.content, "base64").toString())
         };
     } catch (error) {
-        logger.ERR(error);
+        logger.ERR(`getGitHubFile: ${error.message}`);
         if (!(error.response && error.response.status === 404)) {
             throw new Error(`Error al obtener el archivo de GitHub: ${error.message}`);
         } else {
