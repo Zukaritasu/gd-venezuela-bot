@@ -18,6 +18,7 @@
 const { Message, EmbedBuilder, Collection, GuildMember } = require("discord.js");
 const { Db } = require("mongodb");
 const topLimits = require("../../../.botconfig/top-limits.json")
+const logger = require("../../logger.js");
 
 const STAR_ROLE_ID = '1302401396133466246'
 const PROBOT_USER_ID = '282859044593598464'
@@ -47,7 +48,7 @@ function isRoleAssignable(blMembers, member) {
  * Returns the list of members (ID) within the blacklist
  * 
  * @param {Db} database 
- * @returns {string[]}
+ * @returns {Promise<string[]>}
  */
 async function getBlacklistMembers(database) {
 	const config = await database.collection('config').findOne(
@@ -155,7 +156,7 @@ async function removeInvalidRolesFromUsers(guildMembers, users, _message, usersE
 
 
 /**
- * 
+ * Saves the list of users with their XP to the database.
  * @param {Db} database 
  * @param {Message} message
  * @param {{ id: string, position: number, assigned: boolean, xp: number }[]} users 
@@ -163,36 +164,18 @@ async function removeInvalidRolesFromUsers(guildMembers, users, _message, usersE
  */
 async function saveUsersListXP(database, message, users) {
     try {
-        const top_xp = await database.collection('config').findOne(
-            {
-                type: 'top_xp'
-            });
-
-        let result;
-        if (!top_xp) {
-            result = await database.collection('config').insertOne(
-                {
-                    type: 'top_xp',
-                    usersList: users
-                });
-        } else {
-            result = await database.collection('config').updateOne(
-                { _id: top_xp._id },
-                {
-                    $set: {
-                        usersList: users
-                    }
-                });
-        }
-
-        if (!result.acknowledged)
-            throw new Error('Failed to save the list of users')
+        const config = await database.collection('config').findOne({ type: 'top_xp' });
+        const op = config
+            ? await database.collection('config').updateOne({ _id: config._id }, { $set: { usersList: users } })
+            : await database.collection('config').insertOne({ type: 'top_xp', usersList: users });
+        if (!op.acknowledged)
+            throw new Error('Failed to save the list of users');
+        return true;
     } catch (e) {
-        console.error(e)
-        message.reply(`Error: ${e.message}`)
-        return false
+        logger.ERR(e);
+        try { message.reply(`Error: ${e.message}`); } catch {}
+        return false;
     }
-    return true
 }
 
 /**
@@ -238,11 +221,11 @@ async function scan(database, message, parameters) {
 
         await message.reply(`Users scan completed!\n- Users (Staff/Notable) rol removed: ${rolesRemoved}\n- Number of users who left the Top ${topLimits.limit}: ${InvalidRoles}\n- Number of users who entered the Top ${topLimits.positions}: ${addedRoles}`)
     } catch (e) {
-        console.error(e)
+        logger.ERR(e)
         try {
             message.reply(`Error: ${e.message}`)
         } catch (err) {
-
+            logger.ERR(err)
         }
     }
 }
