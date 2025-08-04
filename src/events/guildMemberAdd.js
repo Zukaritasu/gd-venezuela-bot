@@ -15,11 +15,12 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-const { Events, Client, Guild, GuildMember, AttachmentBuilder } = require('discord.js');
+const { Events, Client, Guild, GuildMember, AttachmentBuilder, EmbedBuilder } = require('discord.js');
 const logger = require('../logger')
 const Canvas = require('canvas');
 const path = require('path');
 const { Db } = require('mongodb');
+const utils = require('../utils');
 
 const ModerationAction = {
     KICK: 'active',
@@ -140,6 +141,32 @@ async function verifyMemberInWhiteList(database, member) {
     return whiteListMembers.users.includes(member.user.id);
 }
 
+/**
+ * Create an embed report for the moderation action
+ * @param {GuildMember} member
+ * @param {string} actionText
+ * @returns {EmbedBuilder} The embed report
+ */
+function createEmbedReport(member, actionText) {
+    return new EmbedBuilder()
+        .setColor(0x2b2d31)
+        .setTitle(member.user.tag)
+        .setDescription(`Ha sido **${actionText}** automáticamente por tener una cuenta nueva.`)
+        .setThumbnail(member.user.displayAvatarURL({ size: 128, extension: 'png' }))
+        .setFields(
+            {
+                name: 'User ID',
+                value: member.user.id,
+                inline: true
+            },
+            {
+                name: 'Joined Discord',
+                value: utils.formatDate(member.user.createdAt),
+                inline: true
+            }
+        )
+}
+
 /** * Execute a moderation action on the member
  * @param {Guild} guild
  * @param {GuildMember} member
@@ -158,9 +185,7 @@ async function executeModerationAction(guild, member, action) {
             actionText = 'baneado';
         }
         if (reportChannel && actionText) {
-            reportChannel.send(
-                `El usuario ${member.user.tag} (${member.user.id}) ha sido **${actionText}** automáticamente por tener una cuenta demasiado nueva.`
-            );
+            await reportChannel.send({ embeds: [createEmbedReport(member, actionText)] });
         }
     } catch (e) {
         logger.ERR(`Error executing moderation action on ${member.user.tag}: ${e.message}`);
@@ -182,7 +207,7 @@ async function checkUserAccountAge(guild, database, member) {
     if (accountAgeMs < sevenDaysMs && !(await verifyMemberInWhiteList(database, member))) {
         try {
             await member.send(
-                '**[Español]** Hola! No puedes ingresar al servidor porque tu cuenta de Discord no cumple con la antigüedad mínima requerida. Utiliza el comando /verify para que el Staff pueda verificar tu cuenta y permitirte el acceso al servidor.\n\n' + 
+                '**[Español]** Hola! No puedes ingresar al servidor porque tu cuenta de Discord no cumple con la antigüedad mínima requerida. Utiliza el comando /verify para que el Staff pueda verificar tu cuenta y permitirte el acceso al servidor.\n\n' +
                 '**[English]** Hello! You cannot join the server because your Discord account does not meet the minimum age requirement. Use the /verify command so that the Staff can verify your account and allow you access to the server.'
             );
         } catch (e) {
