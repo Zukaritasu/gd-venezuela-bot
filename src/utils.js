@@ -168,6 +168,17 @@ function isAdministrator(member) {
     return member.permissions.has(PermissionsBitField.Flags.Administrator)
 }
 
+function formatDate(date) {
+    const months = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio',
+                   'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
+    const day = date.getDate().toString().padStart(2, '0');
+    const month = months[date.getMonth()];
+    const year = date.getFullYear();
+    const hour = date.getHours().toString().padStart(2, '0');
+    const minute = date.getMinutes().toString().padStart(2, '0');
+    return `${day} de ${month} de ${year} ${hour}:${minute}`;
+}
+
 module.exports = {
     isValidYouTubeUrl,
     getYouTubeThumbnail,
@@ -178,4 +189,5 @@ module.exports = {
     getUserFlagState,
     normalizeYoutubeLink,
     GD_VENEZUELA_SERVER_ID: '1119795689984102455',
+    formatDate
 }
