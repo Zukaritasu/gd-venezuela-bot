@@ -52,7 +52,7 @@ module.exports = {
 				await guild.members.fetch();
 				logger.INF('All members have been loaded into the cache!')
 				// Check all users account age
-				await require('./guildMemberAdd').checkAllUsersAccountAge(guild, database);
+				await require('../checkAccounts').checkAllUsersAccountAge(guild, database);
 			} catch (e) {
 				logger.ERR(e)
 			}
