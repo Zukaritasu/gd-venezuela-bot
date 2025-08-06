@@ -139,6 +139,7 @@ async function denyUser(client, database, message, messageParts) {
                 );
             } catch (err) {
                 if (err.code === 50007) { // Cannot send messages to this user
+                    logger.ERR(err);
                     dbClose = true;
                 } else {
                     throw err; // Rethrow other errors
@@ -188,6 +189,7 @@ async function approveUser(client, database, message, messageParts) {
                 );
             } catch (err) {
                 if (err.code === 50007) { // Cannot send messages to this user
+                    logger.ERR(err);
                     dbClose = true;
                 } else {
                     throw err; // Rethrow other errors
