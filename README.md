@@ -37,6 +37,8 @@ The last feature that has been added to the bot is a small user XP monitoring sy
 | /github | GitHub repository where the GDVenezuelaBot bot is located |
 | /records enviar | Submit your record for staff review. You will receive a message to the DM if your completion was accepted or rejected |
 | /records ayuda| Displays a help message specifying the functions of each command related to sending a completion |
+| /records perfil crear | Create a new profile for GD Venezuela List
+| /records perfil info | The bot displays your GD Venezuela List profile information. Normally, it only shows your user ID, username, and state of country |
 
 ## Secret commands (Authorised personnel only)
 
@@ -48,6 +50,8 @@ The last feature that has been added to the bot is a small user XP monitoring sy
 | --blacklist | Add/Remove a user from the blacklist. The list is used to ban users from entering the (Top 15 XP text). The first command parameter can be either “add” or “remove” and the second parameter is the user's ID |
 | --rechazar | Rejects a submitted completion. You can leave a comment to let the user know that their submission was rejected. Example: --rechazar you have hacked |
 | --aceptar | Accepts a completion sent by the user. To define if the level was completed in mobile the argument “mobile” must be left after the command. Example --aceptar mobile |
+| --aprobar | The bot adds the user ID to the whitelist to grant access to the server if the user has a new account |
+| --denegar | The bot adds the user ID to the blacklist that prohibits access to the server, which results in the user being banned from the server even if they are not a member of the server. |
 
 
 ## Contribution
