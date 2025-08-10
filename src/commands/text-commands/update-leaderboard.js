@@ -20,6 +20,7 @@ const { Db } = require('mongodb');
 const Canvas = require('canvas');
 const StackBlur = require('stackblur-canvas');
 const logger = require('../../logger');
+const channels = require('../../../.botconfig/channels.json');
 
 /**
  * Cleans the top 15 channel by deleting the last 100 messages.
@@ -135,7 +136,7 @@ module.exports = {
             }
 
             //const channel = await message.guild.channels.fetch('1294668385950498846')
-            const channel = await message.guild.channels.fetch('1304937321107423283')
+            const channel = await message.guild.channels.fetch(channels.TOP_15)
             if (!channel || !(channel instanceof GuildChannel)) {
                 await message.reply('The Top 15 XP channel was not found. Try again later...');
                 return;

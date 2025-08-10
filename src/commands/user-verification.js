@@ -19,8 +19,7 @@ const { SlashCommandBuilder, ChatInputCommandInteraction, Client, Guild, Message
 const { Db } = require("mongodb");
 const logger = require('../logger');
 const { GD_VENEZUELA_SERVER_ID } = require('../utils');
-
-const CHANNEL_MODERATION_ID = '1119807234076049428'; // Channel ID for moderation requests
+const channels = require('../../.botconfig/channels.json');
 
 /**
  * Checks if the user is inside the server
@@ -76,7 +75,7 @@ async function execute(client, _database, interaction) {
         }
 
         const channel = (await client.guilds.fetch(GD_VENEZUELA_SERVER_ID))
-                .channels.cache.get(CHANNEL_MODERATION_ID);
+                .channels.cache.get(channels.MODERATION);
         if (!channel) {
             throw new Error('Channel not found');
         }

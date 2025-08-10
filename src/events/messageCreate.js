@@ -21,7 +21,7 @@ const logger = require('../logger');
 const Canvas = require('canvas');
 const utils = require('../utils');
 const path = require('path');
-
+const channels = require('../../.botconfig/channels.json');
 const submit = require('../commands/records/submit');
 
 ///////////////////////////////////////////////////////////
@@ -84,16 +84,16 @@ module.exports = {
                 } else if (message.content.startsWith('--test-command')) {
                     if (utils.hasUserPermissions(message.member))
                         await require('../commands/youtube/service-notification').testCommand(message.channel)
-                } else if (message.content.startsWith('--aceptar') && message.channel.id === /*'1294668385950498846'*/ '1369858143122886769') {
+                } else if (message.content.startsWith('--aceptar') && message.channel.id === /*'1294668385950498846'*/ channels.SUBMITS) {
                     if (utils.hasUserPermissions(message.member) || usersWhitelist.includes(message.member.id))
                         await require('../commands/records/record').accept(message)
-                }  else if (message.content.startsWith('--rechazar') && message.channel.id === /*'1294668385950498846'*/ '1369858143122886769') {
+                }  else if (message.content.startsWith('--rechazar') && message.channel.id === /*'1294668385950498846'*/ channels.SUBMITS) {
                     if (utils.hasUserPermissions(message.member) || usersWhitelist.includes(message.member.id))
                         await require('../commands/records/record').decline(message)
-                }  else if (message.content.startsWith('--denegar') && message.channel.id === /*'1119807234076049428'*/ '1119807234076049428') {
+                }  else if (message.content.startsWith('--denegar') && message.channel.id === /*'1119807234076049428'*/ channels.MODERATION) {
                     if (utils.hasUserPermissions(message.member))
                         await require('../commands/user-verification').denyUser(client, database, message, getCommandParameters(message.content))
-                }  else if (message.content.startsWith('--aprobar') && message.channel.id === /*'1119807234076049428'*/ '1119807234076049428') {
+                }  else if (message.content.startsWith('--aprobar') && message.channel.id === /*'1119807234076049428'*/ channels.MODERATION) {
                     if (utils.hasUserPermissions(message.member))
                         await require('../commands/user-verification').approveUser(client, database, message, getCommandParameters(message.content))
                 } else if (message.content.startsWith('--test-welcome')) {
@@ -161,7 +161,7 @@ module.exports = {
                             }
                         );
                     }
-                } else if (message.channel.id === '1368411272965525684') {
+                } else if (message.channel.id === channels.SEND_RECORD) {
                     if (message.member.roles.cache.has('1119804850620866600') /* rol venezolado id */) {
                         const command = message.content.split('\n');
                         if (command.length >= 3) {

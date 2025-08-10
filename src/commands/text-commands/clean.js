@@ -17,13 +17,14 @@
 
 const { Message, TextChannel } = require("discord.js");
 const logger = require("../../logger");
+const channels = require("../../../.botconfig/channels.json");
 
 module.exports = {
     /** @param {Message} message */
     clean: async (message) => {
         const channel = message.channel
-        if (channel.id !== '1303235564274712586') {
-            await message.reply('Comando solo disponible en <#1303235564274712586>')
+        if (channel.id !== channels.BOT_MODERATION) {
+            await message.reply(`Comando solo disponible en <#${channels.BOT_MODERATION}>.`)
         } else {
             /** @param {TextChannel} channel */
             async function clearChannel(channel) {

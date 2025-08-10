@@ -21,6 +21,7 @@ const aredlapi = require('../../aredlapi');
 const path = require("path");
 const GITHUB_TOKEN = require('../../../.botconfig/token.json').GITHUB_TOKEN;
 const axios = require('axios');
+const channels = require('../../../.botconfig/channels.json');
 
 //
 // +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
@@ -227,7 +228,7 @@ async function printChanges(changes, guild) {
         : `Este cambio empuja a ${changes.levelLegacy} a la legacy list`}.`
 
     /** @type {TextChannel} */
-    const channel = await guild.channels.fetch('1368412078775468093'); // lista-cambios
+    const channel = await guild.channels.fetch(channels.LIST_CHANGES); // lista-cambios
     if (!channel) {
         logger.ERR('The lista-cambios channel does not exist.');
         return;
@@ -309,7 +310,7 @@ async function sendMessageToUser(message, member, content) {
         try {
             if (error.message === 'Cannot send messages to this user') {
                 await message.react('📧');
-                const channel = await message.guild.channels.fetch('1119803120994750536'); // 🔧・bot
+                const channel = await message.guild.channels.fetch(channels.BOT); // 🔧・bot
                 if (!channel)
                     return await message.reply('No se ha podido enviar el mensaje al usuario. El canal de bots no existe.');
                 await channel.send(`<@${member.user.id}> ${content}`);

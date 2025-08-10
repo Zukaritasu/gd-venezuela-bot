@@ -19,6 +19,7 @@ const { Guild, GuildMember, EmbedBuilder } = require("discord.js");
 const { Db } = require("mongodb");
 const logger = require('./logger');
 const utils = require('./utils');
+const channels = require('../.botconfig/channels.json');
 
 const ModerationAction = {
     KICK: 'active',
@@ -92,7 +93,7 @@ function createEmbedReport(member, actionText) {
  */
 async function executeModerationAction(guild, member, action) {
 	try {
-		let reportChannel = guild.channels.cache.get('1119807234076049428'); // moderation channel
+		let reportChannel = guild.channels.cache.get(channels.MODERATION); // moderation channel
 		let actionText = '';
 		if (action === ModerationAction.KICK) {
 			await member.kick('Account too new');

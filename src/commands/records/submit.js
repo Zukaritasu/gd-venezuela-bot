@@ -21,6 +21,7 @@ const { Db } = require('mongodb');
 const utils = require('../../utils')
 const logger = require('../../logger');
 const aredlapi = require('../../aredlapi');
+const channels = require('../../../.botconfig/channels.json');
 
 ///////////////////////////////////////////////////////////
 
@@ -140,7 +141,7 @@ async function execute(_client, database, interaction) {
     try {
         await interaction.deferReply({ ephemeral: true });
 
-        const channel = await interaction.client.channels.fetch('1369858143122886769');
+        const channel = await interaction.client.channels.fetch(channels.SUBMITS);
         if (!channel) {
             await interaction.editReply('No se ha podido encontrar el canal submits');
             return;
@@ -217,7 +218,7 @@ async function sendErrorDM(message, errorMessage) {
 async function processSubmitRecord(database, message, parts) {
     try {
         let channel = null;
-        channel = await message.client.channels.fetch('1369858143122886769');
+        channel = await message.client.channels.fetch(channels.SUBMITS);
         if (!channel) {
             await sendErrorDM(message, 'Error interno. No se ha podido encontrar el canal submits');
             return;

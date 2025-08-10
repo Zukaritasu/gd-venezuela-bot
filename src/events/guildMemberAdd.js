@@ -21,6 +21,7 @@ const Canvas = require('canvas');
 const path = require('path');
 const { Db } = require('mongodb');
 const checkAccounts = require('../checkAccounts');
+const channels = require('../../.botconfig/channels.json');
 
 /**
  * Updates the cache for the member in the guild.
@@ -44,7 +45,7 @@ async function updateCache(member) {
  */
 async function welcomeMessageMember(member) {
     try {
-        const channel = member.guild.channels.cache.get('1119795691234017462');
+        const channel = member.guild.channels.cache.get(channels.WELCOME);
         if (channel) {
             const guild = member.guild;
             const count = guild.memberCount;

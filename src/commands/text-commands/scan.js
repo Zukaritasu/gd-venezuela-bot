@@ -19,6 +19,7 @@ const { Message, EmbedBuilder, Collection, GuildMember } = require("discord.js")
 const { Db } = require("mongodb");
 const topLimits = require("../../../.botconfig/top-limits.json")
 const logger = require("../../logger.js");
+const channels = require("../../../.botconfig/channels.json");
 
 const STAR_ROLE_ID = '1302401396133466246'
 const PROBOT_USER_ID = '282859044593598464'
@@ -187,6 +188,11 @@ async function scan(database, message, parameters) {
     try {
         if (!message.guild)
             return
+
+        if (message.channel.id !== channels.BOT_MODERATION) {
+            return message.reply(`Comando de uso exclusivo en <#${channels.BOT_MODERATION}>`);
+        }
+
         await message.guild.members.fetch();
         const guildMembers = message.guild.members.cache;
         const blacklist = await getBlacklistMembers(database)
