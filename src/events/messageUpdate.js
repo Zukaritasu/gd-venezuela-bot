@@ -15,7 +15,8 @@ module.exports = {
         try {
             if (newMessage.content == oldMessage.content || newMessage.embeds.length > oldMessage.embeds.length) 
                 return;
-            if (newMessage.channelId == '1369415419093586070') {
+            // This block of code will be disabled since the message correction function is not required
+            /*if (newMessage.channelId == '1369415419093586070') {
                 const command = newMessage.content.split('\n');
                 if (command.length >= 3) {
                     await submit.processSubmitRecord(database, newMessage, command);
@@ -25,7 +26,7 @@ module.exports = {
                         await newMessage.react('❌');
                     }
                 }
-            }
+            }*/
         } catch (error) {
             logger.ERR(error)
         }
