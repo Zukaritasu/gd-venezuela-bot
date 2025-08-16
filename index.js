@@ -21,6 +21,7 @@ const crypto = require('crypto');
 const path = require('path');
 const { exit } = require('process');
 const logger = require('./src/logger')
+const botenv = require('./src/botenv')
 
 //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
@@ -31,46 +32,37 @@ process.chdir(__dirname);
 //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 function generateSHA256(filePath) {
-	return crypto.createHash('sha256').update(JSON.stringify(require(filePath))).digest('hex')
+    return crypto.createHash('sha256').update(JSON.stringify(require(filePath))).digest('hex')
 }
 
 async function execJSFileSynch(command) {
-	return !(await new Promise((resolve, reject) => {
-		fork(command).on('exit', (code) => {
+    return !(await new Promise((resolve, reject) => {
+        fork(command).on('exit', (code) => {
             if (code != 0)
                 logger.ERR(`Subprocess is terminated with code ${code}`)
-            else 
+            else
                 logger.INF(`Subprocess is terminated with code 0`)
-			resolve(code != 0)
-		}).on('error', (error) => {
-			reject(true)
-			console.log(`${error}`);
-		}).on('message', (message) => {
-			console.log(`${message}`);
-		})
-	}))
+            resolve(code != 0)
+        }).on('error', (error) => {
+            reject(true)
+            console.log(`${error}`);
+        }).on('message', (message) => {
+            console.log(`${message}`);
+        })
+    }))
 }
 
 logger.INF('*'.repeat(50))
 logger.INF('Starting bot...')
 
-const commandsPath = path.join(__dirname, 'src/commands');
-let commands = []
-fs.readdirSync(commandsPath).filter(file => file.endsWith('.js')).forEach(file => {
-	commands.push(
-        {
-            name: file,
-            absolutePath: path.join(commandsPath, file)
-        }
-    )
-});
+let commands = botenv.getAbsolutePathCommands()
 
 const writeHashlistFile = () => {
     let new_haslist = []
     commands.forEach(command => new_haslist.push({
-                name: command.name,
-            hash: generateSHA256(command.absolutePath)
-        }
+        name: command.name,
+        hash: generateSHA256(command.absolutePath)
+    }
     ))
 
     fs.writeFileSync(HASHLIST_FILENAME, JSON.stringify(new_haslist, null, 2))
@@ -84,14 +76,20 @@ const writeHashlistFile = () => {
                 if (!(await execJSFileSynch('./src/deploy-commands.js')))
                     exit(1)
             } else {
-                let hl = require(HASHLIST_FILENAME)
-                for (let i = 0; i < commands.length; i++) {
-                    const data = hl.find(data => data.name === commands[i].name)
-                    if (data === undefined || generateSHA256(commands[i].absolutePath) !== data.hash) {
-                        writeHashlistFile()
-                        if (!(await execJSFileSynch('./src/deploy-commands.js')))
-                            exit(1)
-                        break;
+                const hashlist = require(HASHLIST_FILENAME)
+                if (hashlist.length !== commands.length) {
+                    writeHashlistFile()
+                    if (!(await execJSFileSynch('./src/deploy-commands.js')))
+                        exit(1)
+                } else {
+                    for (let i = 0; i < commands.length; i++) {
+                        const data = hashlist.find(data => data.name === commands[i].name)
+                        if (data === undefined || generateSHA256(commands[i].absolutePath) !== data.hash) {
+                            writeHashlistFile()
+                            if (!(await execJSFileSynch('./src/deploy-commands.js')))
+                                exit(1)
+                            break;
+                        }
                     }
                 }
             }
@@ -100,9 +98,9 @@ const writeHashlistFile = () => {
             exit(1)
         }
     }
-    
+
     while (true) {
         await execJSFileSynch('./src/bot.js')
-        setTimeout(() => {}, 5000);
+        setTimeout(() => { }, 5000);
     }
 })()

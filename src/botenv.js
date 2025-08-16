@@ -23,16 +23,36 @@ const fs = require('fs');
 // +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 //
 
+const commandFileList = [
+    'all-hardests.js',
+    'github.js',
+    'hardest.js',
+    'players.js',
+    'records.js',
+    'register.js',
+    'staff.js',
+    'state.js',
+    'user-verification.js',
+    'utilities.js',
+]
+
 function getCommandsCollection() {
-    const commandsPath = path.join(__dirname, './commands');
     let commands = new Collection()
-    fs.readdirSync(commandsPath)
-        .filter(file => file.endsWith('.js')/* && !file.startsWith('_')*/)
-        .forEach(file => {
-            const command = require(path.join(commandsPath, file));
-            commands.set(command.data.name, command);
-        });
+
+    // Load commands from the predefined list
+    commandFileList.forEach(file => {
+        const command = require(path.join(path.join(__dirname, './commands'), file));
+        commands.set(command.data.name, command);
+    });
+    
     return commands
+}
+
+function getAbsolutePathCommands() {
+    return commandFileList.map(file => ({
+        name: file,
+        absolutePath: path.join(__dirname, './commands', file)
+    }));
 }
 
 function getEventsCollection() {
@@ -43,5 +63,6 @@ function getEventsCollection() {
 
 module.exports = {
     getCommandsCollection,
-    getEventsCollection
+    getEventsCollection,
+    getAbsolutePathCommands
 }
