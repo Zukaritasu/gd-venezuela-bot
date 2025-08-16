@@ -117,6 +117,32 @@ async function executeModerationAction(guild, member, action) {
 }
 
 /**
+ * Generate an invitation to the alternate server from a specific channel
+ * 
+ * @param {Client} client Discord client instance
+ * @returns {Promise<string>} The invite URL
+ */
+async function generateAltServerInvite(client) {
+	const altGuildId = '1405680731199508480';
+	const altChannelId = '1405680732235370620';
+
+	const altGuild = await client.guilds.fetch(altGuildId);
+	const channel = await altGuild.channels.fetch(altChannelId);
+
+	if (!channel || channel.type !== 0)
+		throw new Error('The channel is not text-based or was not found');
+
+	const invite = await channel.createInvite({
+		maxAge: 0,
+		maxUses: 1,
+		unique: true,
+		reason: 'Invitation to verify new account'
+	});
+
+	return `https://discord.gg/${invite.code}`;
+}
+
+/**
  * Check if the user account is older than 21 days
  * @param {Guild} guild
  * @param {Db} database
@@ -125,13 +151,11 @@ async function executeModerationAction(guild, member, action) {
  */
 async function checkUserAccountAge(guild, database, member) {
 	const accountAgeMs = Date.now() - member.user.createdAt.getTime();
-	const sevenDaysMs = 21 * 24 * 60 * 60 * 1000; // 21 days in milliseconds
-	if (accountAgeMs < sevenDaysMs && !(await verifyMemberInWhiteList(database, member))) {
+	const daysMs = 21 * 24 * 60 * 60 * 1000; // 21 days in milliseconds
+	if (accountAgeMs < daysMs && !(await verifyMemberInWhiteList(database, member))) {
 		try {
-			await member.send(
-				'**[Español]** Hola! No puedes ingresar al servidor porque tu cuenta de Discord no cumple con la antigüedad mínima requerida. Utiliza el comando /verify para que el Staff pueda verificar tu cuenta y permitirte el acceso al servidor.\n\n' +
-				'**[English]** Hello! You cannot join the server because your Discord account does not meet the minimum age requirement. Use the /verify command so that the Staff can verify your account and allow you access to the server.'
-			);
+			const inviteUrl = await generateAltServerInvite(guild.client);
+			await member.send(`Hola! Tu cuenta de Discord no cumple con la antigüedad mínima requerida para ingresar directamente al servidor **GD Venezuela**.\n\nPara verificar tu acceso, únete al siguiente servidor alternativo: ${inviteUrl}\n\nEsto permitirá que el bot y tú compartan un servidor en común y puedas ejecutar el comando /verify por mensaje directo. Un moderador revisará tu solicitud, y si es aprobada, recibirás el enlace al servidor principal, de lo contrario serás baneado del servidor. ***Este proceso puede tardar unas pocas horas o un día***\n\nGracias por tu comprensión.`);
 		} catch (e) {
 			logger.ERR(`Unable to send message via DM to ${member.user.tag}: ${e}`);
 			if (e.code === 50007) { // Cannot send messages to this user

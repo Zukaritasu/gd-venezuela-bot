@@ -15,10 +15,10 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-const { SlashCommandBuilder, ChatInputCommandInteraction, Client, Guild, Message } = require("discord.js");
+const { SlashCommandBuilder, ChatInputCommandInteraction, Client, Guild, Message, EmbedBuilder } = require("discord.js");
 const { Db } = require("mongodb");
 const logger = require('../logger');
-const { GD_VENEZUELA_SERVER_ID } = require('../utils');
+const utils = require('../utils');
 const channels = require('../../.botconfig/channels.json');
 
 /**
@@ -28,7 +28,7 @@ const channels = require('../../.botconfig/channels.json');
  * @returns {Promise<boolean>} True if the user is inside the server, false otherwise
  */
 async function isUserInsideServer(client, interaction) {
-    const guild = await client.guilds.fetch(GD_VENEZUELA_SERVER_ID);
+    const guild = await client.guilds.fetch(utils.GD_VENEZUELA_SERVER_ID);
     let member;
     try {
         member = await guild.members.fetch(typeof interaction === 'string' ? interaction : interaction.user.id);
@@ -57,8 +57,7 @@ async function execute(client, _database, interaction) {
         // Check if the user is inside the server
         if (await isUserInsideServer(client, interaction)) {
             await interaction.editReply({
-                content: '**[Español]** Ya te encuentras dentro del servidor. No es necesario solicitar verificación.\n' +
-                         '**[English]** You are already inside the server. No need to request verification.',
+                content: 'Ya te encuentras dentro del servidor. No es necesario solicitar verificación.',
                 ephemeral: true
             });
             return;
@@ -74,16 +73,33 @@ async function execute(client, _database, interaction) {
             return;
         }
 
-        const channel = (await client.guilds.fetch(GD_VENEZUELA_SERVER_ID))
+        const channel = (await client.guilds.fetch(utils.GD_VENEZUELA_SERVER_ID))
                 .channels.cache.get(channels.MODERATION);
         if (!channel) {
             throw new Error('Channel not found');
         }
 
-        await channel.send(`El usuario ${interaction.user.tag} (${interaction.user.id}) ha solicitado ser verificado.`);
+        const embed = new EmbedBuilder()
+        embed.setColor(0x2b2d31)
+        embed.setTitle(interaction.user.tag)
+        embed.setDescription(`El usuario ha solicitado ser verificado.`)
+        embed.setThumbnail(interaction.user.displayAvatarURL({ size: 128, extension: 'png' }))
+        embed.setFields(
+            {
+                name: 'User ID',
+                value: interaction.user.id,
+                inline: true
+            },
+            {
+                name: 'Joined Discord',
+                value: utils.formatDate(interaction.user.createdAt),
+                inline: true
+            }
+        )
+
+        await channel.send({ embeds: [embed] });
         await interaction.editReply({
-            content: '**[Español]** Tu solicitud de verificación ha sido enviada al staff. ¡Gracias!\n' +
-                     '**[English]** Your verification request has been sent to the staff. Thank you!',
+            content: 'Tu solicitud de verificación ha sido enviada al staff. ¡Gracias!',
             ephemeral: true
         });
     } catch (e) {
@@ -133,9 +149,13 @@ async function denyUser(client, database, message, messageParts) {
         if (user) {
             try {
                 await user.send(
-                    '**[Español]** Tu cuenta ha sido baneada del servidor.\n\n' +
-                    '**[English]** Your account has been banned from the server.'
+                    'Tu cuenta ha sido baneada del servidor'
                 );
+                try {
+                    await (await client.guilds.fetch('1405680731199508480')).members.kick(userId, 'Denied user');
+                } catch (err) {
+                    logger.ERR(`Error kicking user ${userId} from the alt server: ${err}`);
+                }
             } catch (err) {
                 if (err.code === 50007) { // Cannot send messages to this user
                     logger.ERR(err);
@@ -146,7 +166,7 @@ async function denyUser(client, database, message, messageParts) {
             }
         }
         // Ban the user from the guild
-        await (await client.guilds.fetch(GD_VENEZUELA_SERVER_ID)).bans.create(userId, { 
+        await (await client.guilds.fetch(utils.GD_VENEZUELA_SERVER_ID)).bans.create(userId, { 
             reason: 'Solicitud de verificación denegada' 
         });
         await message.react('✅');
@@ -163,6 +183,16 @@ async function denyUser(client, database, message, messageParts) {
     }
 }
 
+/**
+ * Welcomes a new member to the server with a custom image.
+ * This function creates a welcome image using the member's avatar,
+ * draws it on a canvas, and sends it to the welcome channel.
+ * 
+ * @param {Client} client 
+ * @param {Db} database The database instance.
+ * @param {Message} message 
+ * @param {string[]} messageParts
+ */
 async function approveUser(client, database, message, messageParts) {
     try {
         const userId = messageParts[0];
@@ -183,9 +213,13 @@ async function approveUser(client, database, message, messageParts) {
         if (user) {
             try {
                 await user.send(
-                    '**[Español]** ¡Has sido aprobado para entrar al servidor!\n' +
-                    '**[English]** You have been approved to join the server!\n\nhttps://discord.gg/gdvenezuela'
+                    '¡Has sido aprobado para entrar al servidor!\n\nhttps://discord.gg/gdvenezuela'
                 );
+                try {
+                    await (await client.guilds.fetch('1405680731199508480')).members.kick(userId, 'Approved user');
+                } catch (err) {
+                    logger.ERR(`Error kicking user ${userId} from the alt server: ${err}`);
+                }
             } catch (err) {
                 if (err.code === 50007) { // Cannot send messages to this user
                     logger.ERR(err);
