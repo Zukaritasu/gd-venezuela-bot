@@ -168,6 +168,13 @@ function isAdministrator(member) {
     return member.permissions.has(PermissionsBitField.Flags.Administrator)
 }
 
+/**
+ * Formats a date to a human-readable string in Spanish.
+ * 
+ * @param {Date} date The date to format.
+ * @returns {string} The formatted date string.
+ * This function formats the date to "DD de MMMM de YYYY HH:mm" in Spanish.
+ */
 function formatDate(date) {
     const months = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio',
                    'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
