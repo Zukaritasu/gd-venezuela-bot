@@ -53,12 +53,11 @@ async function isUserInsideServer(client, interaction) {
  */
 async function execute(client, _database, interaction) {
     try {
-        await interaction.deferReply({ ephemeral: true });
+        await interaction.deferReply();
         // Check if the user is inside the server
         if (await isUserInsideServer(client, interaction)) {
             await interaction.editReply({
-                content: 'Ya te encuentras dentro del servidor. No es necesario solicitar verificación.',
-                ephemeral: true
+                content: 'Ya te encuentras dentro del servidor. No es necesario solicitar verificación.'
             });
             return;
         }
@@ -67,8 +66,7 @@ async function execute(client, _database, interaction) {
         const blacklist = await _database.collection('config').findOne({ type: 'black_list_new_users' });
         if (blacklist && Array.isArray(blacklist.users) && blacklist.users.includes(interaction.user.id)) {
             await interaction.editReply({
-                content: '¡Acción denegada! / Action denied!',
-                ephemeral: true
+                content: '¡Acción denegada! / Action denied!'
             });
             return;
         }
@@ -99,8 +97,7 @@ async function execute(client, _database, interaction) {
 
         await channel.send({ embeds: [embed] });
         await interaction.editReply({
-            content: 'Tu solicitud de verificación ha sido enviada al staff. ¡Gracias!',
-            ephemeral: true
+            content: 'Tu solicitud de verificación ha sido enviada al staff. ¡Gracias!'
         });
     } catch (e) {
         logger.ERR(e);
@@ -108,8 +105,7 @@ async function execute(client, _database, interaction) {
         try {
             await interaction.editReply(
                 {
-                    content: 'Ocurrió un error al procesar tu solicitud. Intenta nuevamente más tarde.',
-                    ephemeral: true
+                    content: 'Ocurrió un error al procesar tu solicitud. Intenta nuevamente más tarde.'
                 }
             );
         } catch (err) {
