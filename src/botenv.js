@@ -33,7 +33,7 @@ const commandFileList = [
     'staff.js',
     'state.js',
     'user-verification.js',
-    'utilities.js',
+    'text-xp.js',
 ]
 
 function getCommandsCollection() {

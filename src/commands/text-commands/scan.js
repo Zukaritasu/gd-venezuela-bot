@@ -28,10 +28,11 @@ const PROBOT_USER_ID = '282859044593598464'
  * Roles of users who should not be assigned the role
  */
 const roleIdsToCheck = [
-    '1119804656923709512', // Dictador
-    '1119804806521946155', // Tribunal supremo
-    '1121221914254397592', // Ministerio
-    '1216132476674773142'  // Notable
+    //'1119804656923709512', // Dictador
+    //'1119804806521946155', // Tribunal supremo
+    //'1121221914254397592', // Ministerio
+    //'1216132476674773142', // Notable
+    //'1250599220960825364'  // Corazon rojo
 ];
 
 /**
@@ -225,7 +226,7 @@ async function scan(database, message, parameters) {
             }
         }
 
-        await message.reply(`Users scan completed!\n- Users (Staff/Notable) rol removed: ${rolesRemoved}\n- Number of users who left the Top ${topLimits.limit}: ${InvalidRoles}\n- Number of users who entered the Top ${topLimits.positions}: ${addedRoles}`)
+        await message.reply(`Users scan completed!\n- Users Staff rol removed: ${rolesRemoved}\n- Number of users who left the Top ${topLimits.limit}: ${InvalidRoles}\n- Number of users who entered the Top ${topLimits.positions}: ${addedRoles}`)
     } catch (e) {
         logger.ERR(e)
         try {

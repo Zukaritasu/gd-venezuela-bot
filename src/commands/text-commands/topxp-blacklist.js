@@ -18,6 +18,7 @@
 const { Message } = require("discord.js");
 const { Db } = require("mongodb");
 const topLimits = require("../../../.botconfig/top-limits.json")
+const logger = require("../../logger");
 
 /**
  * @param {string} userId
@@ -29,14 +30,14 @@ async function removeRole(userId, message) {
         const member = await message.guild.members.fetch(userId)
         if (!member)
                 return await message.reply('User not found. Failed to remove user role')
-            await member.roles.remove(topLimits.starsRoleID, 'User added to Top 15 blacklist')
+            await member.roles.remove(topLimits.starsRoleID, `User added to Top ${topLimits.positions} blacklist`)
         await message.reply('Role removed successfully!')
     } catch (e) {
         try {
-            console.error(e)
-                await message.reply('Oops! An error has occurred [removeRole] <:birthday2:1249345278566465617>');
+            logger.ERR('Error in removeRole:', e);
+            await message.reply('Oops! An error has occurred [removeRole] <:birthday2:1249345278566465617>');
         } catch (replyError) {
-            console.error('Error sending error reply:', replyError);
+            logger.ERR('Error sending error reply:', replyError);
         }
     }
 }
@@ -76,11 +77,11 @@ async function addUser(userId, database, message) {
 
         await removeRole(userId, message)
     } catch (error) {
-        console.error('Error in addUser:', error);
+        logger.ERR('Error in addUser:', error);
         try {
             await message.reply('Oops! An error has occurred [addUser] <:birthday2:1249345278566465617>');
         } catch (replyError) {
-            console.error('Error sending error reply:', replyError);
+            logger.ERR('Error sending error reply:', replyError);
         }
     }
 }
@@ -118,11 +119,11 @@ async function removeUser(userId, database, message) {
             await message.react('❌');
         }
     } catch (error) {
-        console.error('Error in removeUser:', error);
+        logger.ERR('Error in removeUser:', error);
         try {
             await message.reply('Oops! An error has occurred [removeUser] <:birthday2:1249345278566465617>');
         } catch (replyError) {
-            console.error('Error sending error reply:', replyError);
+            logger.ERR('Error sending error reply:', replyError);
         }
     }
 }
@@ -154,11 +155,11 @@ async function process(params, database, message) {
         else
             return await message.reply('Action unknown. Enter a valid action')
     } catch (error) {
-        console.error(error);
+        logger.ERR(error);
         try {
             await message.reply('Oops! An error has occurred <:birthday2:1249345278566465617>');
         } catch (replyError) {
-            console.error('Error sending error reply:', replyError);
+            logger.ERR('Error sending error reply:', replyError);
         }
     }
 }

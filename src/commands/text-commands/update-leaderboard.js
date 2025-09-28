@@ -21,9 +21,10 @@ const Canvas = require('canvas');
 const StackBlur = require('stackblur-canvas');
 const logger = require('../../logger');
 const channels = require('../../../.botconfig/channels.json');
+const topLimits = require("../../../.botconfig/top-limits.json")
 
 /**
- * Cleans the top 15 channel by deleting the last 100 messages.
+ * Cleans the top 25 channel by deleting the last 100 messages.
  * @param {import('discord.js').TextChannel} channel 
  */
 async function cleanChannelTop15(channel) {
@@ -33,6 +34,42 @@ async function cleanChannelTop15(channel) {
             await fetched.at(i).delete().catch(logger.ERR);
         }
     }
+}
+
+/**
+ * Extracts the dominant color from an image
+ * @param {Canvas.Image} image - The image to analyze
+ * @returns {string} - RGB color string
+ */
+function getDominantColor(image) {
+    const canvas = Canvas.createCanvas(image.width, image.height);
+    const ctx = canvas.getContext('2d');
+    ctx.drawImage(image, 0, 0);
+    
+    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    const data = imageData.data;
+    
+    let r = 0, g = 0, b = 0;
+    let pixelCount = 0;
+    
+    // Sample every 4th pixel for performance
+    for (let i = 0; i < data.length; i += 16) {
+        const alpha = data[i + 3];
+        if (alpha > 128) { // Only count non-transparent pixels
+            r += data[i];
+            g += data[i + 1];
+            b += data[i + 2];
+            pixelCount++;
+        }
+    }
+    
+    if (pixelCount === 0) return '255, 255, 255'; // Fallback to white
+    
+    r = Math.round(r / pixelCount);
+    g = Math.round(g / pixelCount);
+    b = Math.round(b / pixelCount);
+    
+    return `${r}, ${g}, ${b}`;
 }
 
 /**
@@ -99,11 +136,102 @@ async function sendImage(channel, member, user, position) {
     ctx.drawImage(avatarImg, avatarX, avatarY, avatarSize, avatarSize);
     ctx.restore();
 
+    let roleIconImg = null;
+    let roleColors = null;
+    try {
+        const highestRole = member.roles.cache
+            .filter(role => role.icon !== null && role.icon !== undefined && role.id !== '1206788723493175346')
+            .sort((a, b) => b.position - a.position)
+            .first();
+
+        if (highestRole && highestRole.icon) {
+            const roleIconURL = highestRole.iconURL({ extension: 'png', size: 128 });
+            roleIconImg = await Canvas.loadImage(roleIconURL);
+            
+            if (highestRole.color && highestRole.color !== 0) {
+                roleColors = {
+                    primary: highestRole.color,
+                    secondary: highestRole.color
+                };
+                logger.INF(`Role color found: ${highestRole.name} - ${highestRole.color}`);
+            } else {
+                logger.INF(`No color found for role: ${highestRole.name}`);
+            }
+        } else {
+            const fallbackRole = member.guild.roles.cache.get('1302401396133466246');
+            if (fallbackRole && fallbackRole.icon) {
+                const roleIconURL = fallbackRole.iconURL({ extension: 'png', size: 128 });
+                roleIconImg = await Canvas.loadImage(roleIconURL);
+                
+                if (fallbackRole.color && fallbackRole.color !== 0) {
+                    roleColors = {
+                        primary: fallbackRole.color,
+                        secondary: fallbackRole.color
+                    };
+                }
+            }
+        }
+    } catch (error) {
+        logger.ERR(`Error loading role icon: ${error.message}`);
+    }
+
+    if (roleIconImg) {
+        const roleIconSize = 28;
+        const roleIconX = width - roleIconSize - 8;
+        const roleIconY = (height - roleIconSize) / 2;
+
+        const dominantColor = getDominantColor(roleIconImg);
+
+        ctx.save();
+        ctx.shadowColor = `rgba(${dominantColor}, 0.6)`;
+        ctx.shadowBlur = 6;
+        ctx.shadowOffsetX = 1;
+        ctx.shadowOffsetY = 1;
+        ctx.drawImage(roleIconImg, roleIconX, roleIconY, roleIconSize, roleIconSize);
+        ctx.restore();
+    }
+
     ctx.font = 'bold 16px Sans-serif';
-    ctx.fillStyle = '#fff';
     ctx.textBaseline = 'top';
     ctx.textAlign = 'left';
     const nameX = avatarX + avatarSize + 12;
+    
+    if (roleColors) {
+        const primaryColor = roleColors.primary;
+        
+        const r = (primaryColor >> 16) & 255;
+        const g = (primaryColor >> 8) & 255;
+        const b = primaryColor & 255;
+        
+        const lighterR = Math.min(255, r + 80);
+        const lighterG = Math.min(255, g + 80);
+        const lighterB = Math.min(255, b + 80);
+        
+        const darkerR = Math.max(0, r - 40);
+        const darkerG = Math.max(0, g - 40);
+        const darkerB = Math.max(0, b - 40);
+        
+        const usernameLength = member.user.username.length;
+        const gradientWidth = Math.max(150, usernameLength * 8);
+        
+        const gradient = ctx.createLinearGradient(nameX, 8, nameX + gradientWidth, 8);
+        
+        const wavePattern = usernameLength > 5 ? 0.15 : 0.25;
+        
+        gradient.addColorStop(0, `rgb(${r}, ${g}, ${b})`);
+        gradient.addColorStop(wavePattern, `rgb(${lighterR}, ${lighterG}, ${lighterB})`);
+        gradient.addColorStop(wavePattern * 2, `rgb(${darkerR}, ${darkerG}, ${darkerB})`);
+        gradient.addColorStop(wavePattern * 3, `rgb(${lighterR}, ${lighterG}, ${lighterB})`);
+        gradient.addColorStop(wavePattern * 4, `rgb(${r}, ${g}, ${b})`);
+        gradient.addColorStop(wavePattern * 5, `rgb(${darkerR}, ${darkerG}, ${darkerB})`);
+        gradient.addColorStop(wavePattern * 6, `rgb(${lighterR}, ${lighterG}, ${lighterB})`);
+        gradient.addColorStop(1, `rgb(${r}, ${g}, ${b})`);
+        
+        ctx.fillStyle = gradient;
+    } else {
+        ctx.fillStyle = '#fff';
+    }
+    
     ctx.fillText(member.user.username, nameX, 8);
 
     ctx.font = '12px Sans-serif';
@@ -136,16 +264,16 @@ module.exports = {
             }
 
             //const channel = await message.guild.channels.fetch('1294668385950498846')
-            const channel = await message.guild.channels.fetch(channels.TOP_15)
+            const channel = await message.guild.channels.fetch(channels.TEXT_XP_LEADERBOARD)
             if (!channel || !(channel instanceof GuildChannel)) {
-                await message.reply('The Top 15 XP channel was not found. Try again later...');
+                await message.reply(`The Top ${topLimits.positions} XP channel was not found. Try again later...`);
                 return;
             }
 
             await cleanChannelTop15(channel);
-            await channel.send('**TOP 15 USUARIOS CON MAS XP DE TEXTO EN EL SERVIDOR!**\n\n:warning:  Recuerda que el **Staff** y los usuarios con rol **Notable** no forman parte del Top\nPara ganar experiencia (XP), solo tienes que participar activamente en los canales de texto del servidor enviando mensajes de __texto, emojis, stickers__, etc. Todo lo referente a los canales de texto.\n\n**Para mas información puedes usar los siguientes comandos**\n- `/utilidades top xp` Muestra el Top 15\n- `/utilidades top rank` Muestra tu posición en el Top 25 \n\n*Si sales del Top 15, el rol se mantendrá contigo hasta que llegues al Top 25; si bajas otro nivel, lamentablemente perderás el rol, así que mantente activo!!!*');
+            await channel.send(`**TOP ${topLimits.positions} USUARIOS CON MAS XP DE TEXTO EN EL SERVIDOR!**\n\nPara ganar experiencia (XP), solo tienes que participar activamente en los canales de texto del servidor enviando mensajes de __texto, emojis, stickers__, etc. Todo lo referente a los canales de texto.\n\n**Para mas información puedes usar los siguientes comandos**\n- \`/topxp leaderboard\` Muestra el Top ${topLimits.positions}\n- \`/topxp usuario posicion\` Muestra tu posición en el Top ${topLimits.limit} \n\n*Si sales del Top ${topLimits.positions}, el rol se mantendrá contigo hasta que llegues al Top ${topLimits.limit}; si bajas otro nivel, lamentablemente perderás el rol, así que mantente activo!!!\nY si logras llegar al Top 1 el rol se vuelve permanente!!!*`);
 
-            for (let i = 0; i < top_xp.usersList.length && i < 15; i++) {
+            for (let i = 0; i < top_xp.usersList.length && i < topLimits.positions; i++) {
                 const member = await message.guild.members.fetch(top_xp.usersList[i].id).catch(() => null);
                 if (member) {
                     await sendImage(channel, member, top_xp.usersList[i], i + 1);
@@ -157,7 +285,7 @@ module.exports = {
             logger.ERR(error);
             try {
                 await message.reply({
-                    content: 'Se ha producido un error al actualizar el Top 15. ' + error.message,
+                    content: `Se ha producido un error al actualizar el Top ${topLimits.positions}. ` + error.message,
                 })
             } catch (e) {
                 logger.ERR(e);

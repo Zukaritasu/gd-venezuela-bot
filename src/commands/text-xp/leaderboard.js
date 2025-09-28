@@ -18,6 +18,7 @@
 const { ChatInputCommandInteraction, EmbedBuilder, Message } = require("discord.js")
 const { Db } = require("mongodb")
 const logger = require('../../logger')
+const topLimits = require('../../../.botconfig/top-limits.json')
 
 /**
  * 
@@ -25,7 +26,7 @@ const logger = require('../../logger')
  * @param {ChatInputCommandInteraction | Message} interaction 
  * @returns {Promise<EmbedBuilder>}
  */
-async function getTop15XPEmbed(database, interaction) {
+async function getTopXPEmbed(database, interaction) {
     const top_xp = await database.collection('config').findOne(
         {
             type: 'top_xp'
@@ -36,7 +37,7 @@ async function getTop15XPEmbed(database, interaction) {
         
     const embed = new EmbedBuilder()
     embed.setColor(0x2b2d31)
-    embed.setTitle(`TOP 15 XP TEXTO`)
+    embed.setTitle(`TOP ${topLimits.positions} XP TEXTO`)
     embed.setFooter({ text: `GD Venezuela` })
     embed.setTimestamp()
     embed.setThumbnail(`https://cdn.discordapp.com/icons/1119795689984102455/${interaction.guild.icon}.png`)
@@ -57,7 +58,7 @@ async function getTop15XPEmbed(database, interaction) {
         return `\`${str}\``;
     }
 
-    for (let i = 0; i < top_xp.usersList.length && i < 15; i++) {
+    for (let i = 0; i < top_xp.usersList.length && i < topLimits.positions; i++) {
         const member = await interaction.guild.members.fetch(top_xp.usersList[i].id)
         let userName = '';
         if (!member) {
@@ -79,12 +80,12 @@ async function getTop15XPEmbed(database, interaction) {
  */
 async function execute(database, interaction) {
     try {
-        const embed = await getTop15XPEmbed(database, interaction)
+        const embed = await getTopXPEmbed(database, interaction)
         if (!embed)
             return await interaction.reply('La lista de usuarios no está disponible <:ani_okitathinking:1244840221376512021>')
         await interaction.reply({ embeds: [embed] })
     } catch (error) {
-        console.error(error)
+        logger.ERR(error);
         try {
             await interaction.reply({ 
                 content: 'Ups! Ha ocurrido un error. Intenta mas tarde... <:birthday2:1249345278566465617>' 
@@ -96,6 +97,6 @@ async function execute(database, interaction) {
 }
 
 module.exports = {
-    getTop15XPEmbed,
+    getTop15XPEmbed: getTopXPEmbed,
     execute
 }

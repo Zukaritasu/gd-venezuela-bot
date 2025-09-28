@@ -15,7 +15,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-const { SlashCommandBuilder, ChatInputCommandInteraction, Message, Client } = require('discord.js');
+const { SlashCommandBuilder, ChatInputCommandInteraction, Message, Client, TextChannel } = require('discord.js');
 const { states } = require('../../../.botconfig/country-states.json');
 const { Db } = require('mongodb');
 const utils = require('../../utils')
@@ -264,7 +264,47 @@ Comentario: ${parts.length > 2 ? parts.slice(3).join(' ') : parts[3].trim()}
     }
 }
 
+/**
+ * 
+ * @param {Client} client 
+ * @param {Db} database 
+ * @returns 
+ */
+async function checkNewSubmitRecords(client, database) {
+    try {
+        /** @type {TextChannel} */
+        const channel = await client.channels.fetch(channels.SEND_RECORD);
+        if (!channel) {
+            throw new Error('Could not find SEND_RECORD channel');
+        }
+
+        let lastMessageId = undefined;
+        while (true) {
+            const fetched = await channel.messages.fetch({ limit: 1, ...(lastMessageId && { before: lastMessageId }) });
+            if (fetched.size === 0) break;
+
+            const message = fetched.first();
+            lastMessageId = message.id;
+
+            if (message.author.bot || message.reactions.cache.has('✅') || message.reactions.cache.has('❌'))
+                break;
+            const parts = message.content.split('\n').map(part => part.trim()).filter(part => part.length > 0);
+            if (parts.length < 3) {
+                await sendErrorDM(message, 'El formato del mensaje es inválido. Debe contener al menos:\nNombre del nivel\nname: tu nombre\nvideo: tu enlace\n[Comentario opcional]');
+                continue;
+            }
+
+            await processSubmitRecord(database, message, parts);
+        }
+
+    } catch (e) {
+        logger.ERR('Error fetching new messages:', e);
+    }
+}
+
+
 module.exports = {
     execute,
-    processSubmitRecord
+    processSubmitRecord,
+    checkNewSubmitRecords
 };

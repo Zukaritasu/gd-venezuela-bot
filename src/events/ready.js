@@ -32,6 +32,9 @@ module.exports = {
 		/*await require('./voiceStateUpdate').scanAndDisconnectUsers(client)
 		await require('./voiceStateUpdate').scanVoiceChannels(client)*/
 
+		// Check new submit records
+		await require('../commands/records/submit').checkNewSubmitRecords(client, database)
+
 		// Load services
 
 		for (let i = 0; i < services.length; i++) {
