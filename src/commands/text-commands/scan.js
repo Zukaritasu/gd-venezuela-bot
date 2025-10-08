@@ -20,6 +20,9 @@ const { Db } = require("mongodb");
 const topLimits = require("../../../.botconfig/top-limits.json")
 const logger = require("../../logger.js");
 const channels = require("../../../.botconfig/channels.json");
+const { COLL_TEXT_XP } = require("../../../.botconfig/database-info.json");
+
+///////////////////////////////////
 
 const STAR_ROLE_ID = '1302401396133466246'
 const PROBOT_USER_ID = '282859044593598464'
@@ -53,8 +56,8 @@ function isRoleAssignable(blMembers, member) {
  * @returns {Promise<string[]>}
  */
 async function getBlacklistMembers(database) {
-	const config = await database.collection('config').findOne(
-		{ type: 'top_xp' },
+	const config = await database.collection(COLL_TEXT_XP).findOne(
+		{ type: 'blacklist' },
 		{
 			projection: 
 			{ 
@@ -166,16 +169,16 @@ async function removeInvalidRolesFromUsers(guildMembers, users, _message, usersE
  */
 async function saveUsersListXP(database, message, users) {
     try {
-        const config = await database.collection('config').findOne({ type: 'top_xp' });
+        const config = await database.collection(COLL_TEXT_XP).findOne({ type: 'userlist' });
         const op = config
-            ? await database.collection('config').updateOne({ _id: config._id }, { $set: { usersList: users } })
-            : await database.collection('config').insertOne({ type: 'top_xp', usersList: users });
+            ? await database.collection(COLL_TEXT_XP).updateOne({ _id: config._id }, { $set: { userlist: users } })
+            : await database.collection(COLL_TEXT_XP).insertOne({ type: 'userlist', userlist: users });
         if (!op.acknowledged)
             throw new Error('Failed to save the list of users');
         return true;
     } catch (e) {
         logger.ERR(e);
-        try { message.reply(`Error: ${e.message}`); } catch {}
+        try { await message.reply(`Error: ${e.message}`); } catch {}
         return false;
     }
 }
@@ -230,7 +233,7 @@ async function scan(database, message, parameters) {
     } catch (e) {
         logger.ERR(e)
         try {
-            message.reply(`Error: ${e.message}`)
+            await message.reply(`Error: ${e.message}`)
         } catch (err) {
             logger.ERR(err)
         }

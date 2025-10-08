@@ -19,6 +19,7 @@ const { Message } = require("discord.js");
 const { Db } = require("mongodb");
 const topLimits = require("../../../.botconfig/top-limits.json")
 const logger = require("../../logger");
+const { COLL_TEXT_XP } = require('../../../.botconfig/database-info.json');
 
 /**
  * @param {string} userId
@@ -49,12 +50,12 @@ async function removeRole(userId, message) {
  */
 async function addUser(userId, database, message) {
     try {
-        const collection = database.collection('config');
+        const collection = database.collection(COLL_TEXT_XP);
         const { acknowledged, upsertedCount } = await collection.updateOne(
-            { type: 'top_xp' },
+            { type: 'blacklist' },
             {
                 $setOnInsert: {
-                    type: 'top_xp', blacklist: []
+                    type: 'blacklist', blacklist: []
                 }
             },
             { upsert: true }
@@ -62,7 +63,7 @@ async function addUser(userId, database, message) {
 
         if (acknowledged || upsertedCount) {
             const updateResult = await collection.updateOne(
-                { type: 'top_xp' },
+                { type: 'blacklist' },
                 {
                     $addToSet: {
                         blacklist: userId
@@ -93,12 +94,12 @@ async function addUser(userId, database, message) {
  */
 async function removeUser(userId, database, message) {
     try {
-        const collection = database.collection('config');
+        const collection = database.collection(COLL_TEXT_XP);
         const { acknowledged, upsertedCount } = await collection.updateOne(
-            { type: 'top_xp' },
+            { type: 'blacklist' },
             {
                 $setOnInsert: {
-                    type: 'top_xp', blacklist: []
+                    type: 'blacklist', blacklist: []
                 }
             },
             { upsert: true }
@@ -106,7 +107,7 @@ async function removeUser(userId, database, message) {
 
         if (acknowledged || upsertedCount) {
             const updateResult = await collection.updateOne(
-                { type: 'top_xp' },
+                { type: 'blacklist' },
                 {
                     $pull: {
                         blacklist: userId

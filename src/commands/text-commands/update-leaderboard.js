@@ -22,6 +22,7 @@ const StackBlur = require('stackblur-canvas');
 const logger = require('../../logger');
 const channels = require('../../../.botconfig/channels.json');
 const topLimits = require("../../../.botconfig/top-limits.json")
+const { COLL_TEXT_XP } = require("../../../.botconfig/database-info.json")
 
 /**
  * Cleans the top 25 channel by deleting the last 100 messages.
@@ -253,12 +254,12 @@ module.exports = {
      */
     update: async (database, message) => {
         try {
-            const top_xp = await database.collection('config').findOne(
+            const top_xp = await database.collection(COLL_TEXT_XP).findOne(
                 {
-                    type: 'top_xp'
+                    type: 'userlist'
                 });
 
-            if (!top_xp || !('usersList' in top_xp)) {
+            if (!top_xp || !('userlist' in top_xp)) {
                 await message.reply('The list of XP users has not been found. Try again later...');
                 return;
             }
@@ -273,10 +274,10 @@ module.exports = {
             await cleanChannelTop15(channel);
             await channel.send(`**TOP ${topLimits.positions} USUARIOS CON MAS XP DE TEXTO EN EL SERVIDOR!**\n\nPara ganar experiencia (XP), solo tienes que participar activamente en los canales de texto del servidor enviando mensajes de __texto, emojis, stickers__, etc. Todo lo referente a los canales de texto.\n\n**Para mas información puedes usar los siguientes comandos**\n- \`/topxp leaderboard\` Muestra el Top ${topLimits.positions}\n- \`/topxp usuario posicion\` Muestra tu posición en el Top ${topLimits.limit} \n\n*Si sales del Top ${topLimits.positions}, el rol se mantendrá contigo hasta que llegues al Top ${topLimits.limit}; si bajas otro nivel, lamentablemente perderás el rol, así que mantente activo!!!\nY si logras llegar al Top 1 el rol se vuelve permanente!!!*`);
 
-            for (let i = 0; i < top_xp.usersList.length && i < topLimits.positions; i++) {
-                const member = await message.guild.members.fetch(top_xp.usersList[i].id).catch(() => null);
+            for (let i = 0; i < top_xp.userlist.length && i < topLimits.positions; i++) {
+                const member = await message.guild.members.fetch(top_xp.userlist[i].id).catch(() => null);
                 if (member) {
-                    await sendImage(channel, member, top_xp.usersList[i], i + 1);
+                    await sendImage(channel, member, top_xp.userlist[i], i + 1);
                 }
             }
 
