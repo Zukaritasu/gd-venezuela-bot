@@ -20,6 +20,8 @@ const { SlashCommandBuilder, EmbedBuilder, ChatInputCommandInteraction, ActionRo
     Client } = require('discord.js');
 const { Db } = require('mongodb');
 const robtopapi = require('../../robtopapi');
+const { COLL_CREATOR_POINT_PLAYERS } = require('../../../.botconfig/database-info.json');
+const logger = require('../../logger');
 
 const EMBED_COLOR = 0x2b2d31 /** Black */
 
@@ -31,7 +33,7 @@ const EMBED_COLOR = 0x2b2d31 /** Black */
 async function getCreatorPointsUsersList(database, interaction) {
     let fields = []
     try {
-        const cpPlayers = database.collection('cpPlayers')
+        const cpPlayers = database.collection(COLL_CREATOR_POINT_PLAYERS)
 
         for await (const doc of cpPlayers.find()) {
             const member = interaction.guild.members.cache.find(member => member.id === doc.userID)
@@ -52,7 +54,7 @@ async function getCreatorPointsUsersList(database, interaction) {
                 })
         }
     } catch (e) {
-        console.error(e)
+        logger.ERR(e)
         return { content: 'An error occurred while querying the database information' }
     }
 
@@ -89,7 +91,7 @@ async function execute(_client, database, interaction) {
         await interaction.deferReply();
         await interaction.editReply(await getCreatorPointsUsersList(database, interaction));
     } catch (error) {
-        console.error(error)
+        logger.ERR(error)
         await interaction.editReply('An unknown error has occurred. Please try again later');
     }
 }

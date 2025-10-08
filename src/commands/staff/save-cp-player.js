@@ -15,19 +15,19 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-const { SlashCommandBuilder, EmbedBuilder, ChatInputCommandInteraction, ActionRowBuilder,
+const { ChatInputCommandInteraction, ActionRowBuilder,
     ButtonBuilder, ButtonStyle,
     Client } = require('discord.js');
-const https = require('https');
 const utils = require('../../utils');
 const { Db } = require('mongodb');
 const axios = require('axios');
 const { GuildMember } = require('discord.js');
+const { COLL_CREATOR_POINT_PLAYERS } = require('../../../.botconfig/database-info.json')
+const logger = require('../../logger');
 
-const EMBED_COLOR = 0x2b2d31 /** Black */
+///////////////////////////////////
 
 const ROLE_CREATOR_POINT_ID = '1216234978673819798'
-
 const ERROR_TIMEOUT_MESSAGE = 'Collector received no interactions before ending with reason: time'
 
 /**
@@ -81,8 +81,7 @@ async function confirmUser(interaction, response) {
         map.set(pairs[i], pairs[i + 1]);
 
     if (map.get('8') === '0') {
-        await interaction.editReply(':warning: The user has no creator points');
-        return null
+        return await interaction.editReply(':warning: The user has no creator points');
     }
 
     const message = `A user with the username ${map.get('1')} has been found. `
@@ -124,7 +123,7 @@ async function confirmUser(interaction, response) {
             if (e.message === ERROR_TIMEOUT_MESSAGE) {
                 await userResponse.delete()
             } else {
-                console.error(e)
+                logger.ERR(e)
                 await interaction.editReply(
                     {
                         content: 'An unknown error has occurred',
@@ -132,7 +131,7 @@ async function confirmUser(interaction, response) {
                     }
                 );
             }
-        } catch (err) {
+        } catch {
 
         }
     }
@@ -165,11 +164,14 @@ async function verifyPlayerStatus(interaction, member) {
  */
 async function saveUserAccount(database, userResponse, member) {
     try {
-        let account = await database.collection('cpPlayers').findOne({ accountID: userResponse.accountID })
+        let account = await database.collection(COLL_CREATOR_POINT_PLAYERS).findOne(
+            { 
+                accountID: userResponse.accountID 
+            })
 
         let result = null
         if (account === null) {
-            result = await database.collection('cpPlayers').insertOne(
+            result = await database.collection(COLL_CREATOR_POINT_PLAYERS).insertOne(
                 {
                     userID: member.id,    /* discord */
                     accountID: userResponse.accountID /* geometry dash id account */
@@ -183,13 +185,16 @@ async function saveUserAccount(database, userResponse, member) {
                 'An error occurred while inserting the information'
         });
     } catch (e) {
-        console.error(e)
-        await userResponse.confirmation.update(
+        logger.ERR(e)
+        try {
+            await userResponse.confirmation.update(
             {
                 content: 'An error occurred while saving the account information',
                 components: []
-            }
-        );
+            });
+        } catch {
+            
+        }
     }
 }
 
@@ -228,7 +233,7 @@ async function execute(_client, database, interaction) {
         else
             await processAccountCreatorPoint(interaction, database);
     } catch (error) {
-        console.error(error)
+        logger.ERR(error)
         await interaction.editReply('An unknown error has occurred. Please try again later');
     }
 }
