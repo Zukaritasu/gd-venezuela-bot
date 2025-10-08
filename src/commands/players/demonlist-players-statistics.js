@@ -147,10 +147,10 @@ async function getInfo() {
 }
 
 /**
- * @param {Db} database 
+ * @param {Db} _database 
  * @param {ChatInputCommandInteraction} interaction 
  */
-async function execute(database, interaction) {
+async function execute(_database, interaction) {
     try {
         await interaction.reply({
             content: 'Selecciona una de las opciones para visualizar el archivo',

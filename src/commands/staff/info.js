@@ -20,9 +20,7 @@ const { states } = require('../../../.botconfig/country-states.json');
 const { Db } = require('mongodb');
 const utils = require('../../utils')
 
-//
-// +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-//
+/////////////////////////////////////////////
 
 const staffRolesID = [
     { 
@@ -42,11 +40,11 @@ const staffRolesID = [
 /**
  * 
  * @param {*} _client 
- * @param {*} database 
+ * @param {*} _database 
  * @param {ChatInputCommandInteraction} interaction 
  */
-async function execute(_client, database, interaction) {
-    const added = []
+async function execute(_client, _database, interaction) {
+    const membersId = []
 
     let categories = []
     staffRolesID.forEach(staffRole => {
@@ -57,8 +55,8 @@ async function execute(_client, database, interaction) {
         const collection = interaction.guild.members.cache.filter(member => 
                     member.roles.cache.find(role => role.id === staffRole.id) !== undefined)
         collection.forEach(member => {
-            if (member.id !== '953136140452495411' && added.indexOf(member.id) === -1) {
-                added.push(member.id)
+            if (member.id !== '953136140452495411' && membersId.indexOf(member.id) === -1) {
+                membersId.push(member.id)
                 category.value = category.value.concat(`- ${member.user.username}\n`)
             }
         })

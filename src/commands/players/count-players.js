@@ -17,12 +17,9 @@
 
 const { SlashCommandBuilder, ChatInputCommandInteraction, EmbedBuilder } = require('discord.js');
 const { states } = require('../../../.botconfig/country-states.json')
+const logger = require('../../logger');
 
-//
-// +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-//
-
-const EMBED_COLOR = 0x2b2d31
+///////////////////////////////////////////
 
 /**
  * @param {Client} client 
@@ -64,7 +61,7 @@ async function embedNumberPlayers(_client, _database, interaction) {
         content: '',
         embeds: [
             new EmbedBuilder()
-                .setColor(EMBED_COLOR)
+                .setColor(0x2b2d31)
                 .setTitle('CANTIDAD DE JUGADORES POR ESTADO')
                 .addFields(fields)
                 .setTimestamp()
@@ -89,14 +86,15 @@ async function execute(client, database, interaction) {
     try {
         await interaction.deferReply();
         await interaction.editReply(await embedNumberPlayers(client, database, interaction));
-    } catch (error) {
-        console.error(error)
+    } catch (e) {
+        logger.ERR(e);
         await interaction.editReply(
             {
                 content: 'An unknown error has occurred',
                 embeds: [],
                 components: []
-            });
+            }
+        );
     }
 }
 

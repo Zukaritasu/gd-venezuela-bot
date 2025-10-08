@@ -15,7 +15,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-const { SlashCommandBuilder, EmbedBuilder, ChatInputCommandInteraction, ActionRowBuilder,
+const { EmbedBuilder, ChatInputCommandInteraction, ActionRowBuilder,
     ButtonBuilder, ButtonStyle, StringSelectMenuBuilder, StringSelectMenuOptionBuilder,
     Client } = require('discord.js');
 const utils = require('../../utils');
@@ -24,7 +24,8 @@ const apipcrate = require('../../apipcrate');
 const playerProfile = require('./demonlist/profile')
 const { Db } = require('mongodb');
 
-const EMBED_COLOR = 0x2b2d31 /** Black */
+////////////////////////////////////
+
 const ERROR_TIMEOUT_MESSAGE = 'Collector received no interactions before ending with reason: time'
 
 /**
@@ -209,7 +210,7 @@ async function createEmbedLeaderboard(interaction) {
         } catch (e) {
             try { // try catch to ensure if a new exception occurs from calling the editReply method
                 if (e.message !== ERROR_TIMEOUT_MESSAGE) {
-                    console.error(e)
+                    logger.ERR(e)
                     await interaction.editReply(
                         {
                             embeds: [],
@@ -231,7 +232,7 @@ async function createEmbedLeaderboard(interaction) {
                     );
                 }
             } catch (err) {
-                console.error(err)
+                logger.ERR(err)
             }
         }
     }
