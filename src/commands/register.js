@@ -20,13 +20,11 @@ const { SlashCommandBuilder, ChatInputCommandInteraction, ActionRowBuilder, Butt
 const axios = require('axios');
 const { Db } = require('mongodb');
 const crypto = require('crypto');
-
+const logger = require('../logger');
 const { PASSWORDGDBOT, ACCOUNTIDGDBOT } = require('../../.botconfig/token.json')
+const { COLL_GD_PROFILES } = require('../../.botconfig/database-info.json');
 
-
-//
-// +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-//
+/////////////////////////////////////////////
 
 const ERROR_TIMEOUT_MESSAGE = 'Collector received no interactions before ending with reason: time'
 
@@ -226,8 +224,8 @@ async function checkMessage(database, interaction, confirmation, code) {
         )
         return false
     } else {
-        const usersgd = database.collection('usersgd')
-        const result = await usersgd.insertOne(
+        const gdProfiles = database.collection(COLL_GD_PROFILES)
+        const result = await gdProfiles.insertOne(
             {
                 userId: interaction.member.id,
                 playerID: request.get('playerID'),
@@ -253,6 +251,7 @@ async function checkMessage(database, interaction, confirmation, code) {
  * 
  * @param {*} database 
  * @param {ChatInputCommandInteraction} interaction 
+ * @return {Promise<void>}
  */
 async function processCode(database, interaction) {
     try {
@@ -275,17 +274,16 @@ async function processCode(database, interaction) {
             return
         }
 
-        const account = await database.collection('usersgd').findOne({
+        const profile = await database.collection(COLL_GD_PROFILES).findOne({
             userId: interaction.member.id
         })
 
-        if (account) {
-            await interaction.editReply(
+        if (profile) {
+            return await interaction.editReply(
                 {
                     content: 'Tu perfil de Geometry Dash ya está vinculado al bot <:Cubo_Aleczd:1126884738108502106>',
                 }
             );
-            return
         }
 
         const code = generateCode();
@@ -315,7 +313,7 @@ async function processCode(database, interaction) {
     } catch (e) {
         try {
             if (e.message !== ERROR_TIMEOUT_MESSAGE) {
-                console.error(e)
+                logger.ERR(e)
                 await interaction.editReply(
                     {
                         embeds: [],
@@ -332,7 +330,7 @@ async function processCode(database, interaction) {
                     }
                 );
             }
-        } catch (err) {
+        } catch {
             /** Do not catch the exception */
         }
     }
@@ -349,7 +347,7 @@ async function execute(_client, database, interaction) {
         await interaction.deferReply({ ephemeral: true });
         await processCode(database, interaction);
     } catch (error) {
-        console.error(error)
+        logger.ERR(error)
         await interaction.editReply('An unknown error has occurred. Please try again later');
     }
 }
