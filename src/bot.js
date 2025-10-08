@@ -21,6 +21,7 @@ const { TOKEN, URI_DATABASE } = require('../.botconfig/token.json');
 const { Db, MongoClient } = require('mongodb');
 const redis = require('redis')
 const logger = require('./logger')
+const { DATABASE_NAME } = require('../.botconfig/database-info.json');
 
 //
 // +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
@@ -35,7 +36,7 @@ process.chdir(__dirname);
 
 	try {
 		database = (await (mongodb = new MongoClient(URI_DATABASE)).connect())
-			.db('gdvenezuela')
+			.db(DATABASE_NAME)
         logger.INF('Database connection successful!');
 	} catch (e) {
         logger.ERR(e)

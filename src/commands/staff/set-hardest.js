@@ -17,25 +17,31 @@
 
 const { SlashCommandBuilder, ChatInputCommandInteraction, PermissionsBitField, GuildMember } = require('discord.js');
 const { states } = require('../../../.botconfig/country-states.json')
+const { COLL_CONFIG } = require('../../../.botconfig/database-info.json');
 const https = require('https');
 const { Db } = require('mongodb');
 const utils = require('../../utils');
+const logger = require('../../logger');
 
-//
-// +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-//
+/////////////////////////////////////////////////
 
 /**
  * 
  * @param {Number} level 
- * @returns Object
+ * @returns {Promise<Object|Error>} Demon information or Error if not found
  */
-function getResponseJSON(level) {
+function getDemonInfo(level) {
     return new Promise(function (resolve, reject) {
         https.get(`https://www.pointercrate.com/api/v2/demons/listed?limit=1&after=${--level}`, res => {
             let data = [];
             res.on('data', chunk => { data.push(chunk); });
-            res.on('end', () => { resolve(JSON.parse(Buffer.concat(data).toString())) });
+            res.on('end', () => { 
+                /** @type {Object[]} */
+                const demons = JSON.parse(Buffer.concat(data).toString());
+                if (Array.isArray(demons) && demons.length > 0)
+                    return resolve(demons[0]);
+                resolve(new Error('Level not found'));
+            });
             res.on('error', err => { reject(err); })
         });
     });
@@ -54,10 +60,10 @@ function getResponseJSON(level) {
  */
 async function updateHardest(database, interaction, username, memberId, videoUrl, levelId, stateName, attemps) {
     try {
-        let hardest = await database.collection('config').findOne({ type: 'hardest' })
+        let hardest = await database.collection(COLL_CONFIG).findOne({ type: 'hardest' })
         let result = null;
         if (hardest === null) {
-            result = await database.collection('config').insertOne(
+            result = await database.collection(COLL_CONFIG).insertOne(
                 hardest = {
                     type: 'hardest',
                     username: username,
@@ -68,7 +74,7 @@ async function updateHardest(database, interaction, username, memberId, videoUrl
                     attemps: attemps
                 });
         } else {
-            result = await database.collection('config').updateOne(
+            result = await database.collection(COLL_CONFIG).updateOne(
                 { _id: hardest._id },
                 {
                     $set: {
@@ -86,7 +92,7 @@ async function updateHardest(database, interaction, username, memberId, videoUrl
         await interaction.editReply(result.acknowledged ? 'The change was successful!' :
             'An error occurred while inserting the information');
     } catch (e) {
-        console.error(e)
+        logger.ERR(e);
         await interaction.editReply('An unknown error occurred while changing the bot language');
     }
 }
@@ -97,7 +103,7 @@ async function updateHardest(database, interaction, username, memberId, videoUrl
  */
 async function validateUserInfo(interaction) {
     const member = interaction.guild.members.cache
-        .get(interaction.options.getUser('user', false).id);
+        .get(interaction.options.getUser('user', false)?.id);
     if (member === undefined) {
         return {
             error: true,
@@ -140,7 +146,7 @@ async function validateUserInfo(interaction) {
         }
     }
 
-    const response = await getResponseJSON(position)
+    const response = await getDemonInfo(position)
     if (response instanceof Error) {
         return {
             error: true,
@@ -185,8 +191,12 @@ async function execute(_client, database, interaction) {
             }
         }
     } catch (e) {
-        console.error(e)
-        await interaction.editReply('An unknown error has occurred');
+        logger.ERR(e);
+        try {
+            await interaction.editReply('An unknown error has occurred');
+        } catch (err) {
+            
+        }
     }
 }
 

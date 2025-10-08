@@ -1,0 +1,11 @@
+{
+	"DATABASE_NAME": "gdvenezuela",
+	"COLL_CREATOR_POINT_PLAYERS": "creator_point_players",
+	"COLL_CONFIG": "config",
+	"COLL_GDVZLA_LIST": "gdvzla_list",
+	"COLL_GDVZLA_LIST_PROFILES": "gdvzla_list_profiles",
+	"COLL_STATES": "states",
+	"COLL_GD_PROFILES": "gd_profiles",
+	"COLL_YOUTUBE_CHANNELS": "youtube_channels",
+	"COLL_TEXT_XP": "text_xp"
+}

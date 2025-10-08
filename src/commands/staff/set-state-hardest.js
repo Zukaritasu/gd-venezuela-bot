@@ -19,10 +19,10 @@ const { SlashCommandBuilder, ChatInputCommandInteraction } = require('discord.js
 const { states } = require('../../../.botconfig/country-states.json');
 const { Db } = require('mongodb');
 const utils = require('../../utils')
+const logger = require('../../logger')
+const { COLL_STATES } = require('../../../.botconfig/database-info.json');
 
-//
-// +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-//
+///////////////////////////////////////
 
 /**
  * 
@@ -35,11 +35,10 @@ const utils = require('../../utils')
  */
 async function updateStateHardest(interaction, database, stateId, player, level, ytVideo) {
     if(ytVideo && !utils.isValidYouTubeUrl(ytVideo)) {
-        await interaction.editReply('Enlace invalido (YouTube)')
-        return
+        return await interaction.editReply('Enlace invalido (YouTube)')
     } 
 
-    let stateInfo = await database.collection('states').findOne(
+    let stateInfo = await database.collection(COLL_STATES).findOne(
         { 
             stateId: `${stateId}` 
         })
@@ -47,7 +46,7 @@ async function updateStateHardest(interaction, database, stateId, player, level,
     let result = null;
     if (stateInfo === null) {
         // if the state does not exist it is inserted in the db
-        result = await database.collection('states').insertOne(
+        result = await database.collection(COLL_STATES).insertOne(
             {
                 stateId: `${stateId}`,
                 stateName: states.find(state => state.roleId === stateId).name,
@@ -57,7 +56,7 @@ async function updateStateHardest(interaction, database, stateId, player, level,
             });
     } else {
         // the state's most difficult level is updated
-        result = await database.collection('states').updateOne(
+        result = await database.collection(COLL_STATES).updateOne(
             { _id: stateInfo._id },
             {
                 $set: {
@@ -70,8 +69,7 @@ async function updateStateHardest(interaction, database, stateId, player, level,
     }
 
     if (!result.acknowledged) {
-        await interaction.editReply('An error occurred while inserting the information');
-        throw null
+        return await interaction.editReply('An error occurred while inserting the information');
     }
 
     await interaction.editReply('The change was successful!');
@@ -99,8 +97,10 @@ async function execute(_client, database, interaction) {
                 interaction.options.getString('youtube', false)
             )
     } catch (error) {
-        console.error(error);
-        await interaction.editReply('An unknown error has occurred');
+        logger.ERR(error)
+        try {
+            await interaction.editReply('An unknown error has occurred');
+        } catch { }
     }
 }
 

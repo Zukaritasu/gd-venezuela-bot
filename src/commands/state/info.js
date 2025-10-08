@@ -22,10 +22,10 @@ const { states } = require('../../../.botconfig/country-states.json');
 const { Db } = require('mongodb');
 const utils = require('../../utils')
 const aredlapi = require('../../aredlapi')
+const { COLL_STATES } = require('../../../.botconfig/database-info.json');
+const logger = require('../../logger');
 
-//
-// +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-//
+////////////////////////////////////////////
 
 const ERROR_TIMEOUT_MESSAGE = 'Collector received no interactions before ending with reason: time'
 
@@ -41,7 +41,7 @@ async function getHardestStateInfo(database, stateId /* <roleId> */) {
         ytVideo: null
     }
 
-    let hardest = await database.collection('states').findOne({ stateId: `${stateId}` })
+    let hardest = await database.collection(COLL_STATES).findOne({ stateId: `${stateId}` })
     if (hardest !== null) {
         info.levelName = hardest.levelName
         info.player = hardest.player
@@ -269,7 +269,7 @@ async function showStateInfo(database, response, confirmation, interaction, coll
     } catch (e) {
         try { // try catch to ensure if a new exception occurs from calling the editReply method
             if (e.message !== ERROR_TIMEOUT_MESSAGE) {
-                console.error(e)
+                logger.ERR(e)
                 await interaction.editReply(
                     {
                         embeds: [],
@@ -292,7 +292,7 @@ async function showStateInfo(database, response, confirmation, interaction, coll
                     }
                 );
             }
-        } catch (err) {
+        } catch {
 
         }
 
@@ -364,7 +364,7 @@ async function execute(_client, database, interaction) {
                 if (response)
                     await response.delete();
             } else {
-                console.error(e);
+                logger.ERR(e)
                 await interaction.editReply(
                     {
                         embeds: [],
@@ -373,7 +373,7 @@ async function execute(_client, database, interaction) {
                     }
                 );
             }
-        } catch (err) {
+        } catch {
 
         }
     }

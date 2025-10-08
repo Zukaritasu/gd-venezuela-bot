@@ -19,8 +19,11 @@ const { ChatInputCommandInteraction, Client, StringSelectMenuBuilder, StringSele
 const { Db } = require("mongodb")
 const robtopapi = require('../../robtopapi')
 const utils = require('../../utils')
-
 const { states } = require('../../../.botconfig/country-states.json');
+const { COLL_GD_PROFILES } = require('../../../.botconfig/database-info.json');
+const logger = require("../../logger");
+
+///////////////////////////////////
 
 const ERROR_TIMEOUT_MESSAGE = 'Collector received no interactions before ending with reason: time'
 
@@ -31,10 +34,10 @@ const ERROR_TIMEOUT_MESSAGE = 'Collector received no interactions before ending 
  */
 async function getUserStadistic(database, userId, stadistic) {
     try {
-        const user = await database.collection('usersgd').findOne({ userId: userId })
+        const user = await database.collection(COLL_GD_PROFILES).findOne({ userId: userId })
         if (user !== null) {
             const response = await robtopapi.getGJUserInfo20(user.accountID)
-            if (response != null) {
+            if (response !== null) {
                 let value = response.get(stadistic.key)
                 if (value !== undefined) {
                     if (stadistic.key === 'demons') {
@@ -144,7 +147,7 @@ async function showStadistic(database, response, confirmation, interaction, coll
     } catch (e) {
         try { // try catch to ensure if a new exception occurs from calling the editReply method
             if (e.message !== ERROR_TIMEOUT_MESSAGE) {
-                console.error(e)
+                logger.ERR(e)
                 await interaction.editReply(
                     {
                         embeds: [],
@@ -166,7 +169,7 @@ async function showStadistic(database, response, confirmation, interaction, coll
                 );
             }
         } catch (err) {
-            console.error(err)
+            logger.ERR(err)
         }
     }
 
@@ -239,7 +242,7 @@ async function processStateStatistics(client, database, interaction, stadistic) 
                 if (response)
                     await response.delete();
             } else {
-                console.error(e);
+                logger.ERR(e)
                 await interaction.editReply(
                     {
                         embeds: [],
@@ -248,7 +251,7 @@ async function processStateStatistics(client, database, interaction, stadistic) 
                     }
                 );
             }
-        } catch (err) {
+        } catch {
 
         }
     }
