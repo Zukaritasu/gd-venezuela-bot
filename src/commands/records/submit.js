@@ -15,13 +15,13 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-const { SlashCommandBuilder, ChatInputCommandInteraction, Message, Client, TextChannel } = require('discord.js');
-const { states } = require('../../../.botconfig/country-states.json');
+const { ChatInputCommandInteraction, Message, Client, TextChannel } = require('discord.js');
 const { Db } = require('mongodb');
 const utils = require('../../utils')
 const logger = require('../../logger');
 const aredlapi = require('../../aredlapi');
 const channels = require('../../../.botconfig/channels.json');
+const { COLL_GDVZLA_LIST_PROFILES } = require('../../../.botconfig/database-info.json');
 
 ///////////////////////////////////////////////////////////
 
@@ -35,7 +35,7 @@ const channels = require('../../../.botconfig/channels.json');
  */
 async function getProfile(interaction, db, username) {
     try {
-        const result = await db.collection('profiles').findOne({ username: username })
+        const result = await db.collection(COLL_GDVZLA_LIST_PROFILES).findOne({ username: username })
         if (result) return result;
 
         if (interaction instanceof Message)
@@ -258,7 +258,7 @@ Comentario: ${parts.length > 2 ? parts.slice(3).join(' ') : parts[3].trim()}
         logger.ERR('Error in processSubmitRecord:', e);
         try {
             message.reply('An unknown error has occurred');
-        } catch (error) {
+        } catch {
 
         }
     }

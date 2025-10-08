@@ -18,6 +18,7 @@
 const { Client, ChatInputCommandInteraction, Embed, EmbedBuilder } = require("discord.js");
 const { Db } = require("mongodb");
 const logger = require("../../logger");
+const { COLL_GDVZLA_LIST_PROFILES } = require('../../../.botconfig/database-info.json')
 
 
 /**
@@ -36,7 +37,7 @@ async function execute(_client, db, interaction) {
             });
         }
 
-        const result = await db.collection('profiles').findOne({ userId: user.id });
+        const result = await db.collection(COLL_GDVZLA_LIST_PROFILES).findOne({ userId: user.id });
         if (!result) {
             return await interaction.editReply({
                 content: 'El usuario no tiene un perfil creado. Puedes crear uno con el comando `/records perfil crear`.'

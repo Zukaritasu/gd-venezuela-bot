@@ -20,6 +20,7 @@ const { Db } = require("mongodb");
 const logger = require("../../logger");
 const utils = require("../../utils");
 const { states } = require('../../../.botconfig/country-states.json');
+const { COLL_GDVZLA_LIST_PROFILES } = require('../../../.botconfig/database-info.json');
 
 /**
  * 
@@ -82,7 +83,7 @@ async function execute(_client, db, interaction) {
         }
 
         const username = interaction.options.getString('username');
-        const result = await db.collection('profiles').findOne({ userId: user.id })
+        const result = await db.collection(COLL_GDVZLA_LIST_PROFILES).findOne({ userId: user.id })
         if (result) {
             return await interaction.editReply({
                 content: `El perfil del usuario ya existe.`
@@ -96,7 +97,7 @@ async function execute(_client, db, interaction) {
             state: stateName,
         };
 
-        const insertResult = await db.collection('profiles').insertOne(profile);
+        const insertResult = await db.collection(COLL_GDVZLA_LIST_PROFILES).insertOne(profile);
         if (!insertResult.acknowledged || !insertResult.insertedId) {
             return await interaction.editReply({
                 content: 'No se pudo crear el perfil. Por favor, inténtalo de nuevo más tarde.'
@@ -114,7 +115,7 @@ async function execute(_client, db, interaction) {
                 content: 'Ocurrió un error al crear el perfil. Por favor, inténtalo de nuevo más tarde.'
             });
         } catch {
-            // ignore
+            
         }
     }
 }
