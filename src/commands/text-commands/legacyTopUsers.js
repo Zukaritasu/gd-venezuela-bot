@@ -18,6 +18,7 @@
 const { Message } = require("discord.js");
 const { Db } = require("mongodb");
 const logger = require("../../logger.js");
+const { COLL_TEXT_XP } = require("../../../.botconfig/database-info.json");
 
 /**
  * Adds or removes a user from the legacy top users list.
@@ -37,7 +38,7 @@ async function addOrRemove(message, database, userId, action) {
             ? { $addToSet: { users: userId } }
             : { $pull: { users: userId } };
 
-        const result = await database.collection('xp').updateOne(
+        const result = await database.collection(COLL_TEXT_XP).updateOne(
             { type: 'legacyToUsers' },
             modifier,
             { upsert: true }

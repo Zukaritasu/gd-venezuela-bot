@@ -15,10 +15,9 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-const { ChatInputCommandInteraction } = require("discord.js")
-const { Db } = require("mongodb")
 const logger = require("../../logger")
 const topLimits = require("../../../.botconfig/top-limits.json")
+const { COLL_TEXT_XP } = require('../../../.botconfig/database-info.json') 
 
 
 async function leave(database, interaction) {
@@ -34,14 +33,14 @@ async function join(database, interaction) {
 async function position(database, interaction) {
     try {
         await interaction.deferReply({ ephemeral: true })
-        const top_xp = await database.collection('config').findOne(
+        const top_xp = await database.collection(COLL_TEXT_XP).findOne(
             {
-                type: 'top_xp'
+                type: 'userslist'
             });
     
-        if (!top_xp || !('usersList' in top_xp))
+        if (!top_xp || !('userslist' in top_xp))
             return await interaction.editReply('La lista de usuarios no está disponible <:ani_okitathinking:1244840221376512021>')
-        const user = top_xp.usersList.find(user => user.id === interaction.member.id)
+        const user = top_xp.userslist.find(user => user.id === interaction.member.id)
         if (!user)
             return await interaction.editReply(`Tu posición no existe dentro del Top ${topLimits.limit} <:ani_chibiqiqipeek:1244839483581403138>`)
         return await interaction.editReply(`Tu posición actual es **${user.position}** <:steamunga:1298001230790135939>`)
@@ -51,7 +50,7 @@ async function position(database, interaction) {
             await interaction.editReply({ 
                 content: 'Ups! Ha ocurrido un error. Intenta mas tarde... <:birthday2:1249345278566465617>' 
             })
-        } catch (e) {
+        } catch {
             
         }
     }

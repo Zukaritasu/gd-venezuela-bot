@@ -20,13 +20,11 @@ const { SlashCommandBuilder, EmbedBuilder, ChatInputCommandInteraction, ActionRo
     Client } = require('discord.js');
 const utils = require('../utils');
 const apipcrate = require('../apipcrate');
+const logger = require('../logger');
 const { Db } = require('mongodb');
+const { COLL_CONFIG } = require('../../.botconfig/database-info.json')
 
-const EMBED_COLOR = 0x2b2d31 /** Black */
-
-//
-//============================================================================
-//
+////////////////////////////////////////
 
 /**
  * 
@@ -50,7 +48,7 @@ async function createEmbed(hardest, database, interaction) {
     }
 
     let embed = new EmbedBuilder()
-    embed.setColor(EMBED_COLOR)
+    embed.setColor(0x2b2d31)
     embed.setTitle(`${levelInfo.name} (Top #${levelInfo.position})`)
     embed.addFields(
         { name: 'Usuario', value: `<:cn:1295174767317618748> <@${hardest.memberId}>`, inline: true },
@@ -99,13 +97,13 @@ async function createEmbed(hardest, database, interaction) {
 async function execute(_client, database, interaction) {
     try {
         await interaction.deferReply();
-        const hardest = await database.collection('config').findOne({ type: 'hardest' })
+        const hardest = await database.collection(COLL_CONFIG).findOne({ type: 'hardest' })
         if (hardest === null)
             await interaction.editReply('Aun no se ha definido un hardest');
         else
             await interaction.editReply(await createEmbed(hardest, database, interaction));
     } catch (error) {
-        console.error(error);
+        logger.ERR(error);
         await interaction.editReply('Ha ocurrido un error desconocido');
     }
 }

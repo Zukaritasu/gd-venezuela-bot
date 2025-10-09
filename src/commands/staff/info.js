@@ -15,10 +15,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-const { SlashCommandBuilder, ChatInputCommandInteraction, EmbedBuilder } = require('discord.js');
-const { states } = require('../../../.botconfig/country-states.json');
-const { Db } = require('mongodb');
-const utils = require('../../utils')
+const { ChatInputCommandInteraction, EmbedBuilder } = require('discord.js');
 
 /////////////////////////////////////////////
 

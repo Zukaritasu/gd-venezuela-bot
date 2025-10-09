@@ -34,9 +34,9 @@ const ERROR_TIMEOUT_MESSAGE = 'Collector received no interactions before ending 
  */
 async function getUserStadistic(database, userId, stadistic) {
     try {
-        const user = await database.collection(COLL_GD_PROFILES).findOne({ userId: userId })
-        if (user !== null) {
-            const response = await robtopapi.getGJUserInfo20(user.accountID)
+        const profile = await database.collection(COLL_GD_PROFILES).findOne({ userId: userId })
+        if (profile !== null) {
+            const response = await robtopapi.getGJUserInfo20(profile.accountID)
             if (response !== null) {
                 let value = response.get(stadistic.key)
                 if (value !== undefined) {

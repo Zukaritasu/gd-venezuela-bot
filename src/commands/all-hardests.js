@@ -18,6 +18,7 @@
 const { SlashCommandBuilder, ChatInputCommandInteraction, EmbedBuilder } = require('discord.js');
 const { Db } = require('mongodb');
 const logger = require('../logger');
+const { COLL_STATES, COLL_CONFIG } = require('../../.botconfig/database-info.json');
 
 //
 // +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
@@ -31,8 +32,8 @@ async function createEmbedList(database) {
     let fields = []
 
     try {
-        const hardests = database.collection('states')
-        const countryHardest = await database.collection('config').findOne({ type: 'hardest' })
+        const hardests = database.collection(COLL_STATES)
+        const countryHardest = await database.collection(COLL_CONFIG).findOne({ type: 'hardest' })
 
         const getTrophy = (player) => {
             if (countryHardest) {

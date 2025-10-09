@@ -17,6 +17,7 @@
 
 const { SlashCommandBuilder, ChatInputCommandInteraction, Client } = require("discord.js");
 const { Db } = require("mongodb");
+const logger = require("../logger");
 
 /**
  * 
@@ -28,11 +29,11 @@ async function execute(_client, _database, interaction) {
     try {
         await interaction.reply('https://github.com/Zukaritasu/gd-venezuela-bot')
     } catch (e) {
-        console.error(e);
+        logger.ERR(`Error executing /github command: ${e.message}`, e);
         try {
             await interaction.channel?.send(`<@${interaction.member.id}> An unknown error has occurred [GitHub Link]`)
         } catch (error) {
-            console.error('Failed to send error message:', error)
+            logger.ERR(`Error sending message in /github command: ${error.message}`, error);
         }
     }
 }

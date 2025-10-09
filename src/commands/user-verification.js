@@ -20,6 +20,7 @@ const { Db } = require("mongodb");
 const logger = require('../logger');
 const utils = require('../utils');
 const channels = require('../../.botconfig/channels.json');
+const { COLL_SERVER_NEW_ACCOUNTS } = require('../../.botconfig/database-info.json');
 
 /**
  * Checks if the user is inside the server
@@ -63,8 +64,8 @@ async function execute(client, _database, interaction) {
         }
 
         // Check if the user is in the blacklist
-        const blacklist = await _database.collection('config').findOne({ type: 'black_list_new_users' });
-        if (blacklist && Array.isArray(blacklist.users) && blacklist.users.includes(interaction.user.id)) {
+        const blacklist = await _database.collection(COLL_SERVER_NEW_ACCOUNTS).findOne({ type: 'blacklist' });
+        if (blacklist && Array.isArray(blacklist.accounts) && blacklist.accounts.includes(interaction.user.id)) {
             await interaction.editReply({
                 content: '¡Acción denegada! / Action denied!'
             });
@@ -134,9 +135,9 @@ async function denyUser(client, database, message, messageParts) {
         }
 
         // Add userId to the blacklist in the database
-        await database.collection('config').updateOne(
-            { type: 'black_list_new_users' },
-            { $addToSet: { users: userId } },
+        await database.collection(COLL_SERVER_NEW_ACCOUNTS).updateOne(
+            { type: 'blacklist' },
+            { $addToSet: { accounts: userId } },
             { upsert: true });
         
         // Try to fetch the user object
@@ -198,9 +199,9 @@ async function approveUser(client, database, message, messageParts) {
         }
 
         // Add userId to the whitelist in the database
-        await database.collection('config').updateOne(
-            { type: 'white_list_new_users' },
-            { $addToSet: { users: userId } },
+        await database.collection(COLL_SERVER_NEW_ACCOUNTS).updateOne(
+            { type: 'whitelist' },
+            { $addToSet: { accounts: userId } },
             { upsert: true });
 
         // Notify the user

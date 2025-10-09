@@ -141,7 +141,7 @@ async function confirmUser(interaction, response) {
 
 /**
  * 
- * @param {*} interaction 
+ * @param {ChatInputCommandInteraction} interaction 
  * @param {GuildMember} member 
  * @returns 
  */
@@ -158,7 +158,7 @@ async function verifyPlayerStatus(interaction, member) {
 
 /**
  * 
- * @param {*} database 
+ * @param {Db} database 
  * @param {*} userResponse 
  * @param {GuildMember} member 
  */

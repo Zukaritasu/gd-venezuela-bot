@@ -19,6 +19,7 @@ const { ChatInputCommandInteraction, EmbedBuilder, Message } = require("discord.
 const { Db } = require("mongodb")
 const logger = require('../../logger')
 const topLimits = require('../../../.botconfig/top-limits.json')
+const { COLL_TEXT_XP } = require('../../../.botconfig/database-info.json')
 
 /**
  * 
@@ -27,12 +28,12 @@ const topLimits = require('../../../.botconfig/top-limits.json')
  * @returns {Promise<EmbedBuilder>}
  */
 async function getTopXPEmbed(database, interaction) {
-    const top_xp = await database.collection('config').findOne(
+    const top_xp = await database.collection(COLL_TEXT_XP).findOne(
         {
-            type: 'top_xp'
+            type: 'userslist'
         });
 
-    if (!top_xp || !('usersList' in top_xp))
+    if (!top_xp || !('userslist' in top_xp))
         return null
         
     const embed = new EmbedBuilder()
@@ -58,15 +59,15 @@ async function getTopXPEmbed(database, interaction) {
         return `\`${str}\``;
     }
 
-    for (let i = 0; i < top_xp.usersList.length && i < topLimits.positions; i++) {
-        const member = await interaction.guild.members.fetch(top_xp.usersList[i].id)
+    for (let i = 0; i < top_xp.userslist.length && i < topLimits.positions; i++) {
+        const member = await interaction.guild.members.fetch(top_xp.userslist[i].id)
         let userName = '';
         if (!member) {
             userName = '<Usuario desconocido>';
         } else {
             userName = `[${member.user.username}](${member.user.displayAvatarURL({ dynamic: true })})`;
         }
-        description += `<:estrella2:1303859148877987880> ${formatNumber(position++)} ${userName} | XP: \`${top_xp.usersList[i].xp}\` ${top_xp.usersList[i].id === interaction.member.id ? '**<**' : ''}\n`
+        description += `<:estrella2:1303859148877987880> ${formatNumber(position++)} ${userName} | XP: \`${top_xp.userslist[i].xp}\` ${top_xp.userslist[i].id === interaction.member.id ? '**<**' : ''}\n`
     }
 
     embed.setDescription(description)

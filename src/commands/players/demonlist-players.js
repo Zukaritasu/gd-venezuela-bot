@@ -15,19 +15,17 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-const { SlashCommandBuilder, EmbedBuilder, ChatInputCommandInteraction, ActionRowBuilder,
+const { EmbedBuilder, ChatInputCommandInteraction, ActionRowBuilder,
     ButtonBuilder, ButtonStyle, StringSelectMenuBuilder, StringSelectMenuOptionBuilder,
     Client } = require('discord.js');
-const https = require('https');
 const utils = require('../../utils');
 const apipcrate = require('../../apipcrate');
 const { Db } = require('mongodb');
 const playerProfile = require('./demonlist/profile')
 
-const EMBED_COLOR = 0x2b2d31 /** Black */
+//////////////////////////////////////
+
 const ERROR_TIMEOUT_MESSAGE = 'Collector received no interactions before ending with reason: time'
-
-
 
 /**
  * 

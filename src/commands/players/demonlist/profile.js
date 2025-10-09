@@ -107,7 +107,7 @@ async function createEmbedProfile(client, database, interaction, playerId /* dem
     try {
         const playerInfo = await apipcrate.getPlayerExtraInfo(playerId)
         if (playerInfo instanceof Error) {
-            console.error(playerInfo)
+            logger.ERR('Error fetching player info: ', playerInfo);
             return null
         }
 

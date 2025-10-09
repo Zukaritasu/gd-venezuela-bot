@@ -15,15 +15,13 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-const { SlashCommandBuilder, EmbedBuilder, ChatInputCommandInteraction, ActionRowBuilder,
-    ButtonBuilder, ButtonStyle,
-    Client } = require('discord.js');
+const { EmbedBuilder, ChatInputCommandInteraction, Client } = require('discord.js');
 const { Db } = require('mongodb');
 const robtopapi = require('../../robtopapi');
 const { COLL_CREATOR_POINT_PLAYERS } = require('../../../.botconfig/database-info.json');
 const logger = require('../../logger');
 
-const EMBED_COLOR = 0x2b2d31 /** Black */
+///////////////////////////////////////////
 
 /**
  * 

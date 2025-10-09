@@ -56,7 +56,7 @@ function isRoleAssignable(blMembers, member) {
  * @returns {Promise<string[]>}
  */
 async function getBlacklistMembers(database) {
-	const config = await database.collection(COLL_TEXT_XP).findOne(
+	const collTextXP = await database.collection(COLL_TEXT_XP).findOne(
 		{ type: 'blacklist' },
 		{
 			projection: 
@@ -67,7 +67,7 @@ async function getBlacklistMembers(database) {
 		}
 	);
 
-	return config ? config.blacklist : [];
+	return collTextXP ? collTextXP.blacklist : [];
 }
 
 /**

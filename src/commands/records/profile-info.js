@@ -37,8 +37,8 @@ async function execute(_client, db, interaction) {
             });
         }
 
-        const result = await db.collection(COLL_GDVZLA_LIST_PROFILES).findOne({ userId: user.id });
-        if (!result) {
+        const profile = await db.collection(COLL_GDVZLA_LIST_PROFILES).findOne({ userId: user.id });
+        if (!profile) {
             return await interaction.editReply({
                 content: 'El usuario no tiene un perfil creado. Puedes crear uno con el comando `/records perfil crear`.'
             });
@@ -55,9 +55,9 @@ async function execute(_client, db, interaction) {
             .setColor(0x2b2d31)
             .setDescription(`Información del perfil de ${member.user.username}`)
             .addFields(
-                { name: 'ID de Usuario', value: result.userId, inline: true },
-                { name: 'Nombre de Usuario', value: result.username, inline: true },
-                { name: 'Estado', value: result.state, inline: true }
+                { name: 'ID de Usuario', value: profile.userId, inline: true },
+                { name: 'Nombre de Usuario', value: profile.username, inline: true },
+                { name: 'Estado', value: profile.state, inline: true }
             )
             .setTimestamp()
             .setFooter({ text: 'Perfil de Records' });

@@ -35,8 +35,8 @@ const { COLL_GDVZLA_LIST_PROFILES } = require('../../../.botconfig/database-info
  */
 async function getProfile(interaction, db, username) {
     try {
-        const result = await db.collection(COLL_GDVZLA_LIST_PROFILES).findOne({ username: username })
-        if (result) return result;
+        const profile = await db.collection(COLL_GDVZLA_LIST_PROFILES).findOne({ username: username })
+        if (profile) return profile;
 
         if (interaction instanceof Message)
             await sendErrorDM(interaction, 'Usuario no encontrado. Verifica e intenta nuevamente. Si el usuario no existe, puedes crear uno con el comando `/records perfil crear`.');

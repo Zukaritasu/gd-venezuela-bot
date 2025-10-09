@@ -20,6 +20,7 @@ const { Db } = require("mongodb");
 const logger = require('./logger');
 const utils = require('./utils');
 const channels = require('../.botconfig/channels.json');
+const { COLL_SERVER_NEW_ACCOUNTS } = require('../.botconfig/database-info.json')
 
 const ModerationAction = {
     KICK: 'active',
@@ -33,28 +34,28 @@ const ModerationAction = {
  * @param {GuildMember} member
  * @returns {Promise<boolean>} true if the member is in the whitelist, false otherwise
  */
-async function verifyMemberInWhiteList(database, member) {
-	const config = database.collection('config');
-	let whiteListMembers = await config.findOne(
+async function verifyAccountInWhiteList(database, member) {
+	const newAccounts = database.collection(COLL_SERVER_NEW_ACCOUNTS);
+	let whiteListAccounts = await newAccounts.findOne(
 		{
-			type: 'white_list_new_users'
+			type: 'whitelist'
 		}
 	);
 
-	if (!whiteListMembers || !whiteListMembers.users) {
+	if (!whiteListAccounts || !whiteListAccounts.accounts) {
 		// If it doesn't exist, create it with an empty array of users
-		await config.insertOne(whiteListMembers = {
-			type: 'white_list_new_users',
-			users: []
+		await newAccounts.insertOne(whiteListAccounts = {
+			type: 'whitelist',
+			accounts: []
 		});
 	}
 
-	if (!Array.isArray(whiteListMembers.users)) {
-		whiteListMembers.users = [];
+	if (!Array.isArray(whiteListAccounts.accounts)) {
+		whiteListAccounts.accounts = [];
 	}
 
 	// Check if the user is already in the whitelist
-	return whiteListMembers.users.includes(member.user.id);
+	return whiteListAccounts.accounts.includes(member.user.id);
 }
 
 /**
@@ -152,7 +153,7 @@ async function generateAltServerInvite(client) {
 async function checkUserAccountAge(guild, database, member) {
 	const accountAgeMs = Date.now() - member.user.createdAt.getTime();
 	const daysMs = 21 * 24 * 60 * 60 * 1000; // 21 days in milliseconds
-	if (accountAgeMs < daysMs && !(await verifyMemberInWhiteList(database, member))) {
+	if (accountAgeMs < daysMs && !(await verifyAccountInWhiteList(database, member))) {
 		try {
 			const inviteUrl = await generateAltServerInvite(guild.client);
 			await member.send(`Hola! Tu cuenta de Discord no cumple con la antigüedad mínima requerida para ingresar directamente al servidor **GD Venezuela**.\n\nPara verificar tu acceso, únete al siguiente servidor alternativo: ${inviteUrl}\n\nEsto permitirá que el bot y tú compartan un servidor en común y puedas ejecutar el comando /verify por mensaje directo. Un moderador revisará tu solicitud, y si es aprobada, recibirás el enlace al servidor principal, de lo contrario serás baneado del servidor. ***Este proceso puede tardar unas pocas horas o un día***\n\nGracias por tu comprensión.`);

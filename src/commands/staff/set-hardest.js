@@ -180,7 +180,7 @@ async function execute(_client, database, interaction) {
             if (userInfo.error) {
                 await interaction.editReply(userInfo.message);
             } else {
-                updateHardest(database, interaction,
+                await updateHardest(database, interaction,
                     interaction.options.getString('player', false),
                     userInfo.memberId,
                     userInfo.videoUrl,
