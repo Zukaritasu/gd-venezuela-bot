@@ -73,9 +73,29 @@ async function getResponseJSON(url) {
 
 module.exports = {
     setRedisClientObject: (redisObj) => redisObject = redisObj,
+
+    /**
+     * @typedef {Object} LevelInfo
+     * @property {string} id - Unique UUID of the level.
+     * @property {string} name - Name of the level.
+     * @property {number} position - Position in the ranking.
+     * @property {string} publisher_id - UUID of the publisher.
+     * @property {number} points - Points assigned to the level.
+     * @property {boolean} legacy - Indicates whether the level is legacy.
+     * @property {number} level_id - Internal numeric ID of the level.
+     * @property {boolean} two_player - Whether the level supports two players.
+     * @property {string[]} tags - Descriptive tags for the level.
+     * @property {string} description - Detailed description of the level.
+     * @property {?string} song - ID of the associated song (can be null).
+     * @property {number} edel_enjoyment - Enjoyment rating according to EDEL.
+     * @property {boolean} is_edel_pending - Whether it's pending EDEL evaluation.
+     * @property {?number} gddl_tier - Tier in the GDDL list, if applicable.
+     * @property {?number} nlw_tier - Tier in the NLW list, if applicable.
+     */
+
     /**
      * 
-     * @returns {Promise<{id: number, name: string}[]>}
+     * @returns {Promise<LevelInfo[]>}
      */
     getLevels: () => getResponseJSON('v2/api/aredl/levels'),
     getLevelCreators: (level_id) => getResponseJSON(`v2/api/aredl/levels/${level_id}/creators`),
@@ -89,11 +109,11 @@ module.exports = {
             ]
         );
 
-        if (json instanceof Error) 
+        if (json instanceof Error)
             throw json;
         if (creatorsArray instanceof Error)
             throw creatorsArray;
-        if (!Array.isArray(creatorsArray)) 
+        if (!Array.isArray(creatorsArray))
             throw new Error('Error fetching creators');
 
         json['creators'] = creatorsArray.length > 0 ? creatorsArray : [json.publisher];

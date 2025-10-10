@@ -19,8 +19,8 @@ const { Events } = require('discord.js');
 const logger = require('../logger')
 
 const services = [
-	'../commands/youtube/service-notification.js',
-	//'../commands/gdvzla-list/service-levels.js'
+	//'../commands/youtube/service-notification.js',
+	'../commands/gdvzla-list/service-levels.js'
 ]
 
 module.exports = {
