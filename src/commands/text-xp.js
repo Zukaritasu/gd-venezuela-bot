@@ -43,9 +43,7 @@ async function execute(_client, database, interaction) {
         }
     } else {
         if (subcommand === 'help') {
-            await interaction.deferReply({ ephemeral: true })
-            await interaction.editReply('Esta función está deshabilitada temporalmente...')
-            //await require('./text-xp/help').execute(database, interaction)
+            await require('./text-xp/help').execute(database, interaction)
         } else if (subcommand === 'leaderboard') {
             await require('./text-xp/leaderboard').execute(database, interaction)
         }
