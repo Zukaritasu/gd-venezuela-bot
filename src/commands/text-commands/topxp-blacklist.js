@@ -149,9 +149,9 @@ async function process(params, database, message) {
             return await message.reply('The user does not exist on the server')
         }
 
-        if (params[0] == 'add')
+        if (params[0].toLowerCase() == 'add')
             return await addUser(userId, database, message)
-        else if (params[0] == 'remove')
+        else if (params[0].toLowerCase() == 'remove')
             return await removeUser(userId, database, message)
         else
             return await message.reply('Action unknown. Enter a valid action')
