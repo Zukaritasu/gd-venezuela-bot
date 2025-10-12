@@ -160,7 +160,7 @@ async function process(params, database, message) {
         try {
             await message.reply('Oops! An error has occurred <:birthday2:1249345278566465617>');
         } catch (replyError) {
-            logger.ERR('Error sending error reply:', replyError);
+            logger.ERR(replyError);
         }
     }
 }
