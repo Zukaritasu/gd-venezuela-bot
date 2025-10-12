@@ -38,7 +38,17 @@ function WAR(...args) {
 }
 
 function ERR(...args) {
-  log('ERR', console.error, args);
+    const formatted = args.map(arg => {
+        if (arg instanceof Error) {
+            return [
+                `✖ ${arg.name}: ${arg.message}`,
+                ...arg.stack?.split('\n').slice(1).map(line => `    at ${line.trim()}`)
+            ].join('\n');
+        }
+        return arg;
+    });
+
+    log('ERR', console.error, formatted);
 }
 
 function DBG(...args) {
