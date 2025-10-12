@@ -21,6 +21,7 @@ const topLimits = require("../../../.botconfig/top-limits.json")
 const logger = require("../../logger.js");
 const channels = require("../../../.botconfig/channels.json");
 const { COLL_TEXT_XP } = require("../../../.botconfig/database-info.json");
+const { getUsersException } = require('../text-commands/users-exception.js')
 
 ///////////////////////////////////
 
@@ -200,6 +201,7 @@ async function scan(database, message, parameters) {
         await message.guild.members.fetch();
         const guildMembers = message.guild.members.cache;
         const blacklist = await getBlacklistMembers(database)
+        const usersException = await getUsersException(database)
 
         const users = getProBotTopUsers(blacklist, guildMembers, message, await message.channel.messages.fetch({
             limit: parameters.length >= 1 ? parseInt(parameters[0]) + 1 : 5
@@ -214,8 +216,8 @@ async function scan(database, message, parameters) {
         if (!await saveUsersListXP(database, message, users))
             return
 
-        const rolesRemoved = await debugUserRoles(guildMembers, message, topLimits.usersException)
-        const InvalidRoles = await removeInvalidRolesFromUsers(guildMembers, users, message, topLimits.usersException)
+        const rolesRemoved = await debugUserRoles(guildMembers, message, usersException)
+        const InvalidRoles = await removeInvalidRolesFromUsers(guildMembers, users, message, usersException)
 
         let addedRoles = 0
 
