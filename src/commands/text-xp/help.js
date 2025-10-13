@@ -20,7 +20,7 @@ async function execute(_database, interaction) {
 				)
 				.setColor(0x2b2d31),
 			new EmbedBuilder()
-                .setTitle('Comandos')
+                .setTitle('COMANDOS')
                 .setFields(
                     {
                         name: '/textxp leaderboard',
@@ -41,7 +41,7 @@ async function execute(_database, interaction) {
                 )
                 .setColor(0x2b2d31),
             new EmbedBuilder()
-                .setTitle('Preguntas Frecuentes')
+                .setTitle('PREGUNTAS FRECUENTES')
                 .setFields(
                     {
                         name: '¿Qué sucede si me retiro del servidor?',
