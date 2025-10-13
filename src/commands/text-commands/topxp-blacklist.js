@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2024 Zukaritasu
+ * Copyright (C) 2024 - 2025 Zukaritasu
  * 
  * his program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -35,10 +35,10 @@ async function removeRole(userId, message) {
         await message.reply('Role removed successfully!')
     } catch (e) {
         try {
-            logger.ERR('Error in removeRole:', e);
+            logger.ERR(e);
             await message.reply('Oops! An error has occurred [removeRole] <:birthday2:1249345278566465617>');
         } catch (replyError) {
-            logger.ERR('Error sending error reply:', replyError);
+            logger.ERR(replyError);
         }
     }
 }
@@ -78,11 +78,11 @@ async function addUser(userId, database, message) {
 
         await removeRole(userId, message)
     } catch (error) {
-        logger.ERR('Error in addUser:', error);
+        logger.ERR(error);
         try {
             await message.reply('Oops! An error has occurred [addUser] <:birthday2:1249345278566465617>');
         } catch (replyError) {
-            logger.ERR('Error sending error reply:', replyError);
+            logger.ERR(replyError);
         }
     }
 }
@@ -120,11 +120,11 @@ async function removeUser(userId, database, message) {
             await message.react('❌');
         }
     } catch (error) {
-        logger.ERR('Error in removeUser:', error);
+        logger.ERR(error);
         try {
             await message.reply('Oops! An error has occurred [removeUser] <:birthday2:1249345278566465617>');
         } catch (replyError) {
-            logger.ERR('Error sending error reply:', replyError);
+            logger.ERR(replyError);
         }
     }
 }
