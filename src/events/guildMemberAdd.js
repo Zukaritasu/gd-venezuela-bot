@@ -124,6 +124,7 @@ module.exports = {
      */
     async execute(_client, database, member) {
         try {
+            if (member.guild.id !== '1119795689984102455') return;
             if (await checkAccounts.checkUserAccountAge(member.guild, database, member)) {
                 await updateCache(member);
                 await welcomeMessageMember(member);
