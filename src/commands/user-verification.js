@@ -15,7 +15,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-const { SlashCommandBuilder, ChatInputCommandInteraction, Client, Guild, Message, EmbedBuilder } = require("discord.js");
+const { SlashCommandBuilder, ChatInputCommandInteraction, Client, Guild, Message, EmbedBuilder, User } = require("discord.js");
 const { Db } = require("mongodb");
 const logger = require('../logger');
 const utils = require('../utils');
@@ -73,7 +73,7 @@ async function execute(client, _database, interaction) {
         }
 
         const channel = (await client.guilds.fetch(utils.GD_VENEZUELA_SERVER_ID))
-                .channels.cache.get(channels.MODERATION);
+            .channels.cache.get(channels.MODERATION);
         if (!channel) {
             throw new Error('Channel not found');
         }
@@ -139,7 +139,7 @@ async function denyUser(client, database, message, messageParts) {
             { type: 'blacklist' },
             { $addToSet: { accounts: userId } },
             { upsert: true });
-        
+
         // Try to fetch the user object
         const user = await client.users.fetch(userId);
         let dbClose = false;
@@ -163,8 +163,8 @@ async function denyUser(client, database, message, messageParts) {
             }
         }
         // Ban the user from the guild
-        await (await client.guilds.fetch(utils.GD_VENEZUELA_SERVER_ID)).bans.create(userId, { 
-            reason: 'Solicitud de verificación denegada' 
+        await (await client.guilds.fetch(utils.GD_VENEZUELA_SERVER_ID)).bans.create(userId, {
+            reason: 'Solicitud de verificación denegada'
         });
         await message.react('✅');
         if (dbClose) {
@@ -241,11 +241,65 @@ async function approveUser(client, database, message, messageParts) {
     }
 }
 
+/**
+ * Send a direct message to the user. The user may have DMs turned
+ * off, soit will be impossible to send them a message unless a
+ * staff member sends them one.
+ * @param {Client} client -bot instance
+ * @param {Message} message - Original message invoking the command
+ * @param {string} content - Message content, including the command
+ * @returns {Promise<void>}
+ */
+async function sendDM(client, message, content) {
+    try {
+        if (!message.reference || !message.reference.messageId)
+            return null;
+
+        const repliedMessage = await message.channel.messages.fetch(message.reference.messageId);
+        if (!repliedMessage || repliedMessage.author.id !== '1294111960882872341')
+            return null;
+
+        let userId = null
+        for (let i = 0; i < repliedMessage.embeds.length; i++) {
+            const field = repliedMessage.embeds[i].fields.find(field => field.name === 'User ID')
+            if (field) {
+                userId = field.value
+                break;
+            }
+        }
+
+        const match = content.match(/^--dm\s+(.+)$/);
+        if (!match)
+            return await message.reply('Formato inválido. Usa: --dm <mensaje>');
+        const [, dmContent] = match;
+        let user
+        try {
+            user = await client.users.fetch(userId)
+        } catch (error) {
+            logger.ERR(error)
+            return await message.reply(`Error al buscar el usuario`)
+        }
+
+        await user.send(`**[STAFF]** ${dmContent}\n\n-# Para responder ejecuta el comando /responder`)
+        await message.react('✅')
+    } catch (error) {
+        try {
+            if (error?.code === 50007)
+                return await message.react('📧')
+            logger.ERR(error)
+            await message.reply(`Ha ocurrido un error inesperado: ${error?.message || 'Unknown'}`)
+        } catch {
+
+        }
+    }
+}
+
 module.exports = {
     data: new SlashCommandBuilder()
         .setName('verify')
         .setDescription('Notifica al Staff para verificar un usuario'),
     execute,
+    sendDM,
     denyUser,
     approveUser
 };

@@ -37,9 +37,11 @@ module.exports = {
                         ?.execute(client, database, interaction);
                 } else if (interaction.commandName === 'verify') {
                     await require('../commands/user-verification').execute(client, database, interaction);
+                } else if (interaction.commandName === 'responder') {
+                    await require('../commands/user-response').execute(client, database, interaction);
                 } else {
                     await interaction.reply({
-                            content: 'Este comando no se puede usar por mensaje directo. Intenta ejecutarlo en GD Venezuela.'
+                            content: 'Este comando no se puede ejecutar por mensaje directo. Intenta ejecutarlo en GD Venezuela.'
                         }
                     );
                 }

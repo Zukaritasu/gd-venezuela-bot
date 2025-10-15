@@ -99,6 +99,9 @@ module.exports = {
                 }  else if (message.content.startsWith('--aprobar') && message.channel.id === /*'1119807234076049428'*/ channels.MODERATION) {
                     if (utils.hasUserPermissions(message.member))
                         await require('../commands/user-verification').approveUser(client, database, message, getCommandParameters(message.content))
+                }   else if (message.content.startsWith('--dm') && [channels.MODERATION, channels.BOT_TESTING].find(channel => channel === message.channel.id)) {
+                    if (utils.hasUserPermissions(message.member))
+                        await require('../commands/user-verification').sendDM(client, message, message.content)
                 } else if (message.content.startsWith('--test-welcome')) {
                     if (utils.hasUserPermissions(message.member)) {
                         const member = message.member;
