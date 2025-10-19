@@ -39,6 +39,7 @@ The last feature that has been added to the bot is a small user XP monitoring sy
 | /records ayuda| Displays a help message specifying the functions of each command related to sending a completion |
 | /records perfil crear | Create a new profile for GD Venezuela List
 | /records perfil info | The bot displays your GD Venezuela List profile information. Normally, it only shows your user ID, username, and state of country |
+| /responder | Send a reply to the GD Venezuela moderation channel
 
 ## Secret commands (Authorised personnel only)
 
@@ -52,6 +53,7 @@ The last feature that has been added to the bot is a small user XP monitoring sy
 | --aceptar | Accepts a completion sent by the user. To define if the level was completed in mobile the argument “mobile” must be left after the command. Example --aceptar mobile |
 | --aprobar | The bot adds the user ID to the whitelist to grant access to the server if the user has a new account |
 | --denegar | The bot adds the user ID to the blacklist that prohibits access to the server, which results in the user being banned from the server even if they are not a member of the server. |
+| --dm | Send a message to the user's DM. The command only works in the server's moderation channel
 
 
 ## Contribution
