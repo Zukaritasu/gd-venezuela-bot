@@ -271,9 +271,9 @@ function getEventsFromLevelChange(change, normalizedLevels, oldNormalizedLevels)
  * @returns {aredlapi.ChangelogEntry[]} The filtered changelog entries.
  */
 function filterChangelogLevels(changelog, doc, normalizedLevels, listData) {
-    const index = doc ? changelog.data.findIndex(entry => entry === doc.data) : changelog.data.length;
+    const index = doc ? changelog.findIndex(entry => entry === doc.data) : changelog.length;
     const filteredLevels = [];
-    changelog.data.slice(0, index).reverse().forEach(entry => {
+    changelog.slice(0, index).reverse().forEach(entry => {
         const levelIndex = normalizedLevels.findIndex(level => level.originName === entry.affected_level.name);
         if (levelIndex !== -1 && listData.content[levelIndex] !== normalizedLevels[levelIndex].name) {
             filteredLevels.push(entry);
@@ -326,9 +326,9 @@ async function printChangelog(db, client, normalizedLevels, listData) {
     if (messages.length > 0) {
         logger.DBG('**************************************')
         messages.forEach(msg => logger.DBG(msg))
-        /*const channel = await client.channels.fetch(channels.SEND_RECORD);
+        const channel = await client.channels.fetch(channels.LIST_CHANGES);
         if (channel && channel.isTextBased()) {
-            for (let i = messages.length - 1; i >= 0; i--) {
+            for (let i = 0; i < messages.length; i++) {
                 const messageSend = await channel.send({ content: messages[i] }).catch(() => null);
                 if (!messageSend)
                     return
@@ -336,7 +336,7 @@ async function printChangelog(db, client, normalizedLevels, listData) {
                 await messageSend.react('👎');
             }
             await channel.send('<@&1376586957735465111>');
-        }*/
+        }
     }
 }
 
@@ -366,6 +366,7 @@ async function service(db, client) {
                 // of the list have been moved, which means that the changes
                 // will be saved directly to GitHub and notified in the
                 // corresponding channel
+                
                 if (!await isSortedList(client, listData, normalizedLevels)) {
                     await saveSortedList(listData.sha, normalizedLevels.map(level => level.name));
                     await printChangelog(db, client, normalizedLevels, listData);
