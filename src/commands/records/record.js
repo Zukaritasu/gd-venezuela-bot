@@ -223,9 +223,9 @@ async function createRecordFile(message, fileName, levelName, jsonInfo, userId) 
  */
 async function printChanges(changes, guild) {
     const message = `**${changes.levelInserted}** ha sido agregado al top #${changes.indexInserted + 1}, ${changes.levelNameUp ? 
-        `por encima de ${changes.levelNameDown} y por debajo de ${changes.levelNameUp}` : `por encima de ${changes.levelNameDown}`}.` +
-        `\n${changes.levelExtended ? `Este cambio empuja a ${changes.levelExtended} a la extended list y a ${changes.levelLegacy} a la legacy list` 
-        : `Este cambio empuja a ${changes.levelLegacy} a la legacy list`}.`
+        `por encima de **${changes.levelNameDown}** y por debajo de **${changes.levelNameUp}**` : `por encima de **${changes.levelNameDown}**`}.` +
+        `\n${changes.levelExtended ? `Este cambio empuja a **${changes.levelExtended}** a la extended list y a **${changes.levelLegacy}** a la legacy list` 
+        : `Este cambio empuja a **${changes.levelLegacy}** a la legacy list`}.`
 
     /** @type {TextChannel} */
     const channel = await guild.channels.fetch(channels.LIST_CHANGES); // lista-cambios
