@@ -34,15 +34,11 @@ async function getCreatorPointsUsersList(database, interaction) {
         const cpPlayers = database.collection(COLL_CREATOR_POINT_PLAYERS)
 
         for await (const doc of cpPlayers.find()) {
-            const member = interaction.guild.members.cache.find(member => member.id === doc.userID)
-            if (member === undefined)
-                continue
-
+            const member = interaction.guild.members.cache.find(member => member.user.id === doc.userID)
             const response = await robtopapi.getGJUserInfo20(doc.accountID)
-            if (response === null) {
+            if (member === undefined || member === null)
                 continue
-            }
-
+            
             fields.push(
                 {
                     cpCount: parseInt(response.get('creatorpoints')),

@@ -32,24 +32,6 @@ const ERROR_TIMEOUT_MESSAGE = 'Collector received no interactions before ending 
 
 /**
  * 
- * @param {number} accountID 
- */
-async function getGJUserInfo20(accountID) {
-    const data = new URLSearchParams({
-        "secret": "Wmfd2893gb7",
-        "targetAccountID": accountID
-    });
-
-    return axios.post('http://www.boomlings.com/database/getGJUserInfo20.php', data, {
-        headers: {
-            'User-Agent': '',
-            'Content-Type': 'application/x-www-form-urlencoded'
-        }
-    })
-}
-
-/**
- * 
  * @param {string} playerName 
  */
 async function getGJUsers20(playerName) {
@@ -173,9 +155,14 @@ async function saveUserAccount(database, userResponse, member) {
         if (account === null) {
             result = await database.collection(COLL_CREATOR_POINT_PLAYERS).insertOne(
                 {
-                    userID: member.id,    /* discord */
+                    userID: member.user.id,    /* discord */
                     accountID: userResponse.accountID /* geometry dash id account */
                 });
+        } else {
+            return await userResponse.confirmation.update({
+                components: [],
+                content: 'The account is already registered in the database'
+            });
         }
 
         await userResponse.confirmation.update({
@@ -201,7 +188,7 @@ async function saveUserAccount(database, userResponse, member) {
 /**
  * 
  * @param {ChatInputCommandInteraction} interaction 
- * @param {*} database 
+ * @param {Db} database 
  */
 async function processAccountCreatorPoint(interaction, database) {
     const response = `${(await getGJUsers20(interaction.options.getString('player', false))).data}`
@@ -209,7 +196,7 @@ async function processAccountCreatorPoint(interaction, database) {
         await interaction.editReply('User not found');
     } else {
         const user = interaction.options.getUser('user', false);
-        const member = interaction.guild.members.cache.find(member => member.id === user.id)
+        const member = interaction.guild.members.cache.find(member => member.user.id === user.id)
         if (await verifyPlayerStatus(interaction, member)) {
             const userResponse = await confirmUser(interaction, response)
             if (userResponse != null) {
