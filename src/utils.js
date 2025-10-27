@@ -19,10 +19,24 @@ const { PermissionsBitField, GuildMember } = require("discord.js");
 const { YOUTUBE_API_KEY } = require('../.botconfig/token.json')
 const logger = require('./logger')
 const { states } = require('../.botconfig/country-states.json');
+const fetch = require('node-fetch');
+const crypto = require('crypto');
 
 //
 // +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 //
+
+/**
+ * @param {string} fileUrl - URL of the file
+ * @returns {Promise<string>} - The SHA256 hash of the file
+ */
+async function getSHA256(fileUrl) {
+    const response = await fetch(fileUrl);
+    const buffer = await response.buffer();
+
+    const hash = crypto.createHash('sha256').update(buffer).digest('hex');
+    return hash;
+}
 
 /**
  * 
@@ -196,5 +210,6 @@ module.exports = {
     getUserFlagState,
     normalizeYoutubeLink,
     GD_VENEZUELA_SERVER_ID: '1119795689984102455',
-    formatDate
+    formatDate,
+    getSHA256
 }

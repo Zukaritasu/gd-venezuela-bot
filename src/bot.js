@@ -31,7 +31,7 @@ process.chdir(__dirname);
 
 
 (async () => {
-    /** @type Db */
+    /** @type {Db} */
 	let database = null
 
 	try {
@@ -44,8 +44,7 @@ process.chdir(__dirname);
 	}
 
     // Modules are loaded to define the redis object
-
-    const modules = [ './apipcrate', './aredlapi', './robtopapi' ]
+    const modules = [ './apipcrate', './aredlapi', './robtopapi', './checkAttachments', './commands/text-commands/save-hashes' ]
     const redisClient = redis.createClient()
 
     try {

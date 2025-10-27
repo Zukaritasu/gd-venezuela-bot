@@ -23,6 +23,7 @@ const utils = require('../utils');
 const path = require('path');
 const channels = require('../../.botconfig/channels.json');
 const submit = require('../commands/records/submit');
+const checkAttachments = require('../checkAttachments')
 
 ///////////////////////////////////////////////////////////
 
@@ -68,7 +69,6 @@ module.exports = {
                     return
                 }
 
-                //await require('./voiceStateUpdate').resetTimeout(client, message.member)
                 if (message.content.startsWith('--scan')) {
                     if (utils.hasUserPermissions(message.member))
                         await require('../commands/text-commands/scan').scan(database, message, getCommandParameters(message.content))
@@ -90,83 +90,21 @@ module.exports = {
                 } else if (message.content.startsWith('--aceptar') && message.channel.id === /*'1294668385950498846'*/ channels.SUBMITS) {
                     if (utils.hasUserPermissions(message.member) || usersWhitelist.includes(message.member.id))
                         await require('../commands/records/record').accept(message)
-                }  else if (message.content.startsWith('--rechazar') && message.channel.id === /*'1294668385950498846'*/ channels.SUBMITS) {
+                } else if (message.content.startsWith('--rechazar') && message.channel.id === /*'1294668385950498846'*/ channels.SUBMITS) {
                     if (utils.hasUserPermissions(message.member) || usersWhitelist.includes(message.member.id))
                         await require('../commands/records/record').decline(message)
-                }  else if (message.content.startsWith('--denegar') && message.channel.id === /*'1119807234076049428'*/ channels.MODERATION) {
+                } else if (message.content.startsWith('--denegar') && message.channel.id === /*'1119807234076049428'*/ channels.MODERATION) {
                     if (utils.hasUserPermissions(message.member))
                         await require('../commands/user-verification').denyUser(client, database, message, getCommandParameters(message.content))
-                }  else if (message.content.startsWith('--aprobar') && message.channel.id === /*'1119807234076049428'*/ channels.MODERATION) {
+                } else if (message.content.startsWith('--aprobar') && message.channel.id === /*'1119807234076049428'*/ channels.MODERATION) {
                     if (utils.hasUserPermissions(message.member))
                         await require('../commands/user-verification').approveUser(client, database, message, getCommandParameters(message.content))
-                }   else if (message.content.startsWith('--dm') && [channels.MODERATION, channels.BOT_TESTING].find(channel => channel === message.channel.id)) {
+                } else if (message.content.startsWith('--dm') && [channels.MODERATION, channels.BOT_TESTING].find(channel => channel === message.channel.id)) {
                     if (utils.hasUserPermissions(message.member))
                         await require('../commands/user-verification').sendDM(client, message, message.content)
-                } else if (message.content.startsWith('--test-welcome')) {
-                    if (utils.hasUserPermissions(message.member)) {
-                        const member = message.member;
-                        const guild = member.guild;
-                        const count = guild.memberCount;
-
-                        const canvas = Canvas.createCanvas(1138, 640);
-                        const ctx = canvas.getContext('2d');
-
-                        const background = await Canvas.loadImage(path.join(__dirname, '../../images/welcome_background_blur.png'));
-                        ctx.drawImage(background, 0, 0, canvas.width, canvas.height);
-
-                        let avatarImage = member.user.avatarURL({ extension: 'png' }) || member.user.defaultAvatarURL;
-                        logger.DBG(avatarImage)
-
-                        const avatar = await Canvas.loadImage(avatarImage);
-
-                        const radius = 124;
-                        const x = canvas.width / 2;
-                        const y = canvas.height / 2 - 48;
-
-                        ctx.save();
-                        ctx.beginPath();
-                        ctx.arc(x, y, radius + 8, 0, Math.PI * 2, true);
-                        ctx.shadowColor = 'rgba(0, 0, 0, 0.75)';
-                        ctx.shadowBlur = 26;
-                        ctx.shadowOffsetX = 0;
-                        ctx.shadowOffsetY = 0;
-                        ctx.closePath();
-                        ctx.fill();
-
-                        ctx.beginPath();
-                        ctx.arc(x, y, radius, 0, Math.PI * 2, true);
-                        ctx.closePath();
-                        ctx.fillStyle = '#ffffff';
-                        ctx.fill();
-
-                        ctx.beginPath();
-                        ctx.arc(x, y, radius - 12, 0, Math.PI * 2, true);
-                        ctx.closePath();
-                        ctx.clip();
-                        ctx.drawImage(avatar, x - (radius - 12), y - (radius - 12), (radius - 12) * 2, (radius - 12) * 2);
-                        ctx.restore();
-
-                        ctx.font = 'bold 64px MakroTrial';
-                        ctx.fillStyle = '#ffffff';
-                        ctx.textAlign = 'center';
-                        ctx.shadowColor = 'rgb(0, 0, 0)';
-                        ctx.shadowBlur = 10;
-                        ctx.shadowOffsetX = 4;
-                        ctx.shadowOffsetY = 4;
-                        ctx.fillText('BIENVENID@', x, y + radius + 60);
-
-                        ctx.font = '36px MakroTrial';
-                        ctx.fillText(member.user.username, x, y + radius + 106);
-
-                        const attachment = new AttachmentBuilder(canvas.toBuffer(), { name: 'welcome-image.png' });
-
-                        message.reply(
-                            {
-                                content: `# Bienvenido al servidor, ${member}!\n\n***Recuerda pasarte por <#1119803609773785159> para obtener roles y acceder a los diferentes canales de este servidor***. \n\nContigo somos **${count}** miembros y esperamos que disfrutes de tu estancia en GD Venezuela!`,
-                                files: [attachment]
-                            }
-                        );
-                    }
+                } else if (message.content.startsWith('--save-hash')) {
+                    if (utils.hasUserPermissions(message.member))
+                        await require('../commands/text-commands/save-hashes').saveHashes(database, message)
                 } else if (message.channel.id === channels.SEND_RECORD) {
                     if (message.member.roles.cache.has('1119804850620866600') /* rol venezolado id */) {
                         const command = message.content.split('\n');
@@ -176,18 +114,17 @@ module.exports = {
                             await message.react('❌');
                         }
                     }
-                }/* else if (message.channel.id === '1294668385950498846' && message.author.id === '591640548490870805') {
-                    const command = message.content.split('\n');
-                    if (command.length >= 3) {
-                        await submit.processSubmitRecord(message, command);
-                    } else {
-                        await message.react('❌');
-                    }
-                }*/
+                } else if (message.attachments.size > 0 && !utils.hasUserPermissions(message.member) && !message.member.roles.cache.has('1216132476674773142') /* rol Notable */) {
+                    await checkAttachments.check(database, message)
+                }
             }
         } catch (e) {
             logger.ERR(e)
-            message.reply(e.message)
+            try {
+                await message.reply(e.message)
+            } catch {
+
+            }
         }
     }
 }
