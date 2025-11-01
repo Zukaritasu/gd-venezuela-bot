@@ -19,7 +19,7 @@ const logger = require("../../logger")
 const topLimits = require("../../../.botconfig/top-limits.json")
 const { COLL_TEXT_XP } = require('../../../.botconfig/database-info.json');
 const { Db } = require("mongodb");
-const { ChatInputCommandInteraction, GuildMember } = require("discord.js");
+const { ChatInputCommandInteraction, GuildMember, MessageFlags } = require("discord.js");
 const topxpBacklist = require('../text-commands/topxp-blacklist')
 
 /////////////////////////////////////////
@@ -34,10 +34,11 @@ const topxpBacklist = require('../text-commands/topxp-blacklist')
 
 /**
  * @param {Db} database 
- * @param {ChatInputCommandInteraction} user 
+ * @param {GuildMember} member 
  * @returns {Promise<UserInfo | undefined>}
  */
-async function getUserInfo(database, interaction) {
+async function getUserInfo(database, member) {
+    /** @type {{_id: string, type: string, userslist: UserInfo[] | undefined}} */
     const top_xp = await database.collection(COLL_TEXT_XP).findOne(
         {
             type: 'userslist'
@@ -45,7 +46,28 @@ async function getUserInfo(database, interaction) {
 
     if (!top_xp || !('userslist' in top_xp))
         return undefined;
-    return top_xp.userslist.find(user => user.id === interaction.member.id)
+    return top_xp.userslist.find(user => user.id === member.id)
+}
+
+/**
+ * Add or remove user from blacklist
+ * 
+ * @param {Db} database 
+ * @param {string} id 
+ * @param {boolean} add
+ */
+async function addOrRemoveUser(database, id, add) {
+    const blacklistCollection = database.collection(COLL_TEXT_XP);
+    
+    const result = await blacklistCollection.updateOne(
+        { type: 'blacklist' },
+        add ? { $addToSet: { blacklist: id } } : { $pull: { blacklist: id } },
+        { upsert: true }
+    );
+
+    if (!result.acknowledged) {
+        throw new Error(`Failed to ${add ? 'add' : 'remove'} user ${id} ${add ? 'to' : 'from'} blacklist.`);
+    }
 }
 
 /**
@@ -54,30 +76,35 @@ async function getUserInfo(database, interaction) {
  * @param {ChatInputCommandInteraction} interaction 
  */
 async function leave(database, interaction) {
-    /*try {
-        if (!interaction.member) return
+    try {
+        if (!interaction.guild || !interaction.member) return
+        await interaction.deferReply({ flags: MessageFlags.Ephemeral })
 
-        await interaction.deferReply({ ephemeral: true })
-
+        /** @type {GuildMember} */
         const member = interaction.member
-        const userInfo = await getUserInfo(database, interaction)
-        if (!userInfo)
+        const userInfo = await getUserInfo(database, member)
+
+        if (!userInfo) {
             return await interaction.editReply(`Tu posición no existe dentro del Top ${topLimits.limit} <:ani_chibiqiqipeek:1244839483581403138>`)
-        if (!member.roles.cache.has(topLimits.starsRoleID))
+        }
+
+        if (!member.roles.cache.has(topLimits.starsRoleID)) {
             return await interaction.editReply(`No tienes asignado el rol Estrellas`)
+        }
+
         await member.roles.remove(topLimits.starsRoleID, `The user unsubscribed with the Estrellas role`)
-        await topxpBacklist.addUser(member.id, database, interaction, false, true)
-        await interaction.editReply(`Se ha procesado la solicitud con éxito!`)
+        await addOrRemoveUser(database, member.id, true)
+        await interaction.editReply(`Se ha procesado la solicitud con éxito! Tu rol de Estrellas ha sido removido.`)
     } catch (error) {
         logger.ERR(error)
         try {
             await interaction.editReply({
-                content: 'Ups! Ha ocurrido un error. Intenta mas tarde... <:birthday2:1249345278566465617>'
+                content: 'Ha ocurrido un error. Intenta mas tarde...'
             })
         } catch (replyError) {
             logger.ERR(replyError)
         }
-    }*/
+    }
 }
 
 /**
@@ -86,17 +113,32 @@ async function leave(database, interaction) {
  * @param {ChatInputCommandInteraction} interaction 
  */
 async function join(database, interaction) {
-    /*try {
-        if (!interaction.member) return
-        await interaction.deferReply({ ephemeral: true })
+    try {
+        if (!interaction.guild || !interaction.member) return
+        await interaction.deferReply({ flags: MessageFlags.Ephemeral })
 
-        const member = interaction.member
-        if (!await topxpBacklist.isUserBlacklisted(member.id, database)) {
-            return await interaction.editReply(`Se ha procesado la solicitud con éxito!`)
+        const exits = await database.collection(COLL_TEXT_XP).findOne(
+            {
+                type: 'blacklist',
+                blacklist: interaction.member.id
+            });
+
+        if (!exits) {
+            return await interaction.editReply(`Usuario no encontrado en la lista de exclusión`)
         }
+
+        addOrRemoveUser(database, interaction.member.id, false)
+        await interaction.editReply(`Se ha procesado la solicitud con éxito! Tu rol se asignará en la proxima actualización del Top ${topLimits.limit}`)
     } catch (error) {
-        
-    }*/
+        logger.ERR(error)
+        try {
+            await interaction.editReply({
+                content: 'Ha ocurrido un error. Intenta mas tarde...'
+            })
+        } catch (replyError) {
+            logger.ERR(replyError)
+        }
+    }
 }
 
 /**
@@ -107,8 +149,9 @@ async function join(database, interaction) {
  */
 async function position(database, interaction) {
     try {
-        await interaction.deferReply({ ephemeral: true })
-        const userInfo = await getUserInfo(database, interaction)
+        if (!interaction.guild || !interaction.member) return
+        await interaction.deferReply({ flags: MessageFlags.Ephemeral })
+        const userInfo = await getUserInfo(database, interaction.member)
         if (!userInfo)
             return await interaction.editReply(`Tu posición no existe dentro del Top ${topLimits.limit} <:ani_chibiqiqipeek:1244839483581403138>`)
         return await interaction.editReply(`Tu posición actual es **${userInfo.position}** <:steamunga:1298001230790135939>`)
