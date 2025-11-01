@@ -129,7 +129,6 @@ async function isListUpdatable(db) {
  * @param {string[]} sortedList - The sorted list of level names.
  */
 async function saveSortedList(sha, sortedList) {
-    logger.DBG('Save Sorted List...')
     await axios.put(`https://api.github.com/repos/Abuigsito/gdvzla/contents/data/_list.json`, {
         message: `Sorted list _list.json`,
         content: Buffer.from(JSON.stringify(sortedList, null, 4)).toString('base64'),
@@ -140,7 +139,6 @@ async function saveSortedList(sha, sortedList) {
             Authorization: `token ${GITHUB_TOKEN}`
         }
     });
-    return
 }
 
 /**
@@ -324,8 +322,6 @@ async function printChangelog(db, client, normalizedLevels, listData) {
     }
 
     if (messages.length > 0) {
-        logger.DBG('**************************************')
-        messages.forEach(msg => logger.DBG(msg))
         const channel = await client.channels.fetch(channels.LIST_CHANGES);
         if (channel && channel.isTextBased()) {
             for (let i = 0; i < messages.length; i++) {
@@ -348,7 +344,6 @@ async function service(db, client) {
     const functionRun = async () => {
         try {
             if (await isListUpdatable(db)) {
-                logger.DBG('Sorting list...')
                 /** @type {ListData} */
                 const listData = await getListLevels();
                 const currentLevels = await aredlapi.getLevels();
