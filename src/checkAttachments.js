@@ -162,7 +162,7 @@ async function check(db, message) {
 		if (hashes.length === 0) return;
 
 		for (const attachment of message.attachments.values()) {
-			if (attachment?.contentType.startsWith('image/')) {
+			if (typeof attachment?.contentType === 'string' && attachment.contentType.startsWith('image/')) {
 				const hash = await utils.getSHA256(attachment.url);
 				const hashInfo = hashes.find(h => h.hash === hash);
 				if (hashInfo) {
