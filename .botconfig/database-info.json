@@ -9,5 +9,6 @@
 	"COLL_YOUTUBE_CHANNELS": "youtube_channels",
 	"COLL_SERVER_NEW_ACCOUNTS": "server_new_accounts",
 	"COLL_SERVER_CONFIG": "server_config",
-	"COLL_GDVZLA_LIST_CONFIG": "gdvzla_list_config"
+	"COLL_GDVZLA_LIST_CONFIG": "gdvzla_list_config",
+	"COLL_PROFILES": "profiles"
 }
