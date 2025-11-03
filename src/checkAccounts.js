@@ -78,7 +78,7 @@ function createEmbedReport(member, actionText) {
 		},
 		{
 			name: 'Joined Discord',
-			value: utils.formatDate(member.user.createdAt),
+			value: utils.formatDateTime(member.user.createdAt),
 			inline: true
 		}
 	)

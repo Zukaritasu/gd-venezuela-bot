@@ -83,7 +83,7 @@ function isValidPointercrateUrl(url) {
 function normalizeYoutubeLink(url) {
     const youtubeRegex = /(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/(?:[^\/\s]+\/S+\/|(?:v|e(?:mbed)?|shorts|live)\/|.*[?&]v=)|youtu\.be\/)([a-zA-Z0-9_-]{11})/;
     const match = url.match(youtubeRegex);
-    
+
     if (match && match[1])
         return `https://www.youtube.com/watch?v=${match[1]}`;
     return url;
@@ -189,15 +189,31 @@ function isAdministrator(member) {
  * @returns {string} The formatted date string.
  * This function formats the date to "DD de MMMM de YYYY HH:mm" in Spanish.
  */
-function formatDate(date) {
+function formatDateTime(date) {
     const months = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio',
-                   'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
+        'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
     const day = date.getDate().toString().padStart(2, '0');
     const month = months[date.getMonth()];
     const year = date.getFullYear();
     const hour = date.getHours().toString().padStart(2, '0');
     const minute = date.getMinutes().toString().padStart(2, '0');
     return `${day} de ${month} de ${year} ${hour}:${minute}`;
+}
+
+/**
+ * Formats a date to a human-readable string in Spanish.
+ * 
+ * @param {Date} date The date to format.
+ * @returns {string} The formatted date string.
+ * This function formats the date to "DD de MMMM de YYYY" in Spanish.
+ */
+function formatDate(date) {
+    const months = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio',
+        'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
+    const day = date.getDate().toString().padStart(2, '0');
+    const month = months[date.getMonth()];
+    const year = date.getFullYear();
+    return `${day} de ${month} de ${year}`;
 }
 
 module.exports = {
@@ -211,5 +227,6 @@ module.exports = {
     normalizeYoutubeLink,
     GD_VENEZUELA_SERVER_ID: '1119795689984102455',
     formatDate,
+    formatDateTime,
     getSHA256
 }

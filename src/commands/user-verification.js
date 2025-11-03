@@ -91,7 +91,7 @@ async function execute(client, _database, interaction) {
             },
             {
                 name: 'Joined Discord',
-                value: utils.formatDate(interaction.user.createdAt),
+                value: utils.formatDateTime(interaction.user.createdAt),
                 inline: true
             }
         )

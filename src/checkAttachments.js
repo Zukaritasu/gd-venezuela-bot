@@ -131,8 +131,8 @@ async function reportHackedUser(message, hashInfo) {
                 .setFields(
 					{ name: 'Username', value: `${message.author.tag}`, inline: true },
                     { name: 'User ID', value: userId, inline: true },
-                    { name: 'Joined Discord', value: utils.formatDate(message.author.createdAt), inline: true },
-                    { name: 'Joined Server', value: utils.formatDate(joinedAt), inline: true }
+                    { name: 'Joined Discord', value: utils.formatDateTime(message.author.createdAt), inline: true },
+                    { name: 'Joined Server', value: utils.formatDateTime(joinedAt), inline: true }
                 )
         ],
         components: [
