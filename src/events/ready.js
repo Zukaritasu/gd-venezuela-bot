@@ -15,13 +15,46 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-const { Events } = require('discord.js');
+const { Events, Client, RateLimitError } = require('discord.js');
 const logger = require('../logger')
 
 const services = [
 	//'../commands/youtube/service-notification.js',
 	'../commands/gdvzla-list/service-levels.js'
 ]
+
+/**
+ * Convert an emoji character to its corresponding twemoji URL.
+ * @param {string} emoji - The emoji character
+ * @returns {string} URL of the twemoji image
+ */
+function emojiToTwemojiUrl(emoji) {
+	const codePoints = [...emoji].map(char => char.codePointAt(0).toString(16)).join('-');
+	return `https://twemoji.maxcdn.com/v/latest/72x72/${codePoints}.png`;
+}
+
+/**
+ * Print all roles with emojis in their names
+ * @param {Client} client 
+ */
+async function printRoles(client) {
+	const guild = await client.guilds.fetch('1119795689984102455');
+	const roles = await guild.roles.fetch();
+
+	logger.DBG('Roles with emojis in their names:');
+
+	for (const [, role] of roles) {
+		if (role.iconURL()) {
+			logger.DBG(`${role.name}\n${role.id}\n${role.iconURL()}\n----------------`);
+		} else {
+			const match = role.name.match(/^([\p{Emoji_Presentation}\p{Extended_Pictographic}])/u);
+			if (match) {
+				logger.DBG(`${role.name}\n${role.id}\n${emojiToTwemojiUrl(match[1])}\n----------------`);
+			}
+		}
+
+	}
+}
 
 module.exports = {
 	name: Events.ClientReady,
@@ -31,6 +64,8 @@ module.exports = {
 		// disconect afk users
 		/*await require('./voiceStateUpdate').scanAndDisconnectUsers(client)
 		await require('./voiceStateUpdate').scanVoiceChannels(client)*/
+
+		//await printRoles(client);
 
 		// Check new submit records
 		await require('../commands/records/submit').checkNewSubmitRecords(client, database)
