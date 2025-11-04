@@ -41,7 +41,7 @@ function ERR(...args) {
     const formatted = args.map(arg => {
         if (arg instanceof Error) {
             return [
-                `✖ ${arg.name}: ${arg.message}`,
+                `${arg.name}: ${arg.message}`,
                 ...arg.stack?.split('\n').slice(1).map(line => `    at ${line.trim()}`)
             ].join('\n');
         }

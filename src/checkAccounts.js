@@ -22,6 +22,7 @@ const userKickManager = require('./userKickManager')
 const utils = require('./utils');
 const channels = require('../.botconfig/channels.json');
 const { COLL_SERVER_NEW_ACCOUNTS } = require('../.botconfig/database-info.json')
+const { RESTJSONErrorCodes } = require('discord-api-types/v10')
 
 /////////////////////////////////////////////////
 // Check user accounts age and take actions if necessary
@@ -171,7 +172,7 @@ async function checkUserAccountAge(guild, database, member) {
 			await member.send(`Hola! Tu cuenta de Discord no cumple con la antigüedad mínima requerida para ingresar directamente al servidor **GD Venezuela**.\n\nPara verificar tu acceso, únete al siguiente servidor alternativo: ${inviteUrl}\n\nEsto permitirá que el bot y tú compartan un servidor en común y puedas ejecutar el comando /verify por mensaje directo. Un moderador revisará tu solicitud, y si es aprobada, recibirás el enlace al servidor principal, de lo contrario serás baneado del servidor. ***Este proceso puede tardar unas pocas horas o un día***\n\nGracias por tu comprensión.`);
 		} catch (e) {
 			logger.ERR(`Unable to send message via DM to ${member.user.tag}: ${e}`);
-			if (e.code === 50007) { // Cannot send messages to this user
+			if (e.code === RESTJSONErrorCodes.CannotSendMessagesToThisUser) {
 				return await executeModerationAction(guild, database, member, ModerationAction.BAN);
 			}
 		}
