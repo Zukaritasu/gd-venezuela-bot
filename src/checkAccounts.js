@@ -18,15 +18,25 @@
 const { Guild, GuildMember, EmbedBuilder } = require("discord.js");
 const { Db } = require("mongodb");
 const logger = require('./logger');
+const userKickManager = require('./userKickManager')
 const utils = require('./utils');
 const channels = require('../.botconfig/channels.json');
 const { COLL_SERVER_NEW_ACCOUNTS } = require('../.botconfig/database-info.json')
+
+/////////////////////////////////////////////////
+// Check user accounts age and take actions if necessary
+//////////////////////////////////////////////////
+
+/**
+ * Enum for moderation actions
+ * @readonly
+ * @enum {string}
+ */
 
 const ModerationAction = {
     KICK: 'active',
     BAN: 'banned'
 };
-
 
 /**
  * Check if the member is in the whitelist
@@ -88,17 +98,19 @@ function createEmbedReport(member, actionText) {
 
 /** * Execute a moderation action on the member
  * @param {Guild} guild
+ * @param {Db} database 
  * @param {GuildMember} member
  * @param {ModerationAction} action
  * @returns {Promise<boolean>} false if the action was taken, true otherwise
  */
-async function executeModerationAction(guild, member, action) {
+async function executeModerationAction(guild, database, member, action) {
 	try {
 		let reportChannel = guild.channels.cache.get(channels.MODERATION); // moderation channel
 		let actionText = '';
 		if (action === ModerationAction.KICK) {
 			await member.kick('Account too new');
 			actionText = 'expulsado';
+			await userKickManager.trackUserExpulsion(database, member.user);
 		} else if (action === ModerationAction.BAN) {
 			await member.ban({ reason: 'Account too new' });
 			actionText = 'baneado';
@@ -160,10 +172,10 @@ async function checkUserAccountAge(guild, database, member) {
 		} catch (e) {
 			logger.ERR(`Unable to send message via DM to ${member.user.tag}: ${e}`);
 			if (e.code === 50007) { // Cannot send messages to this user
-				return await executeModerationAction(guild, member, ModerationAction.BAN);
+				return await executeModerationAction(guild, database, member, ModerationAction.BAN);
 			}
 		}
-		return await executeModerationAction(guild, member, ModerationAction.KICK);
+		return await executeModerationAction(guild, database, member, ModerationAction.KICK);
 	}
 	return true;
 }

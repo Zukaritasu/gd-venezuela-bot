@@ -22,19 +22,34 @@ const path = require('path');
 const { exit } = require('process');
 const logger = require('./src/logger')
 const botenv = require('./src/botenv')
+const fetch = require('node-fetch');
 
-//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+/////////////////////////////////////////////////
+// Main bot launcher
+/////////////////////////////////////////////////
 
 const HASHLIST_FILENAME = './hashlist.json';
 
 process.chdir(__dirname);
 
-//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+/////////////////////////////////////////////////
+// Functions
+/////////////////////////////////////////////////
 
+/**
+ * Generate SHA256 hash of a file
+ * @param {string} filePath - The path to the file
+ * @returns {string} - The SHA256 hash of the file
+ */
 function generateSHA256(filePath) {
     return crypto.createHash('sha256').update(JSON.stringify(require(filePath))).digest('hex')
 }
 
+/**
+ * Execute a JS file synchronously in a subprocess
+ * @param {string} command - The command to execute
+ * @returns {Promise<boolean>} - true if the command executed successfully, false otherwise
+ */
 async function execJSFileSynch(command) {
     return !(await new Promise((resolve, reject) => {
         fork(command).on('exit', (code) => {
@@ -52,6 +67,39 @@ async function execJSFileSynch(command) {
     }))
 }
 
+/** 
+ * Verify system clock integrity by comparing with a trusted time source
+ * @returns {Promise<boolean>} - true if the system clock is in sync, false otherwise
+ */
+async function verifyClockIntegrity() {
+    try {
+        const response = await fetch('https://worldtimeapi.org/api/timezone/Etc/UTC');
+        if (!response.ok) {
+            throw new Error(`Failed to fetch time from trusted source: ${response.statusText}`);
+        }
+        const data = await response.json();
+        const trustedTime = new Date(data.utc_datetime);
+        const localTime = new Date();
+
+        const timeDifference = Math.abs(trustedTime - localTime);
+        const maxAllowedDifference = 10000; // 10 seconds
+
+        if (timeDifference > maxAllowedDifference) {
+            logger.ERR(`System clock is out of sync by more than 10 seconds. Difference: ${timeDifference / 1000} seconds.`);
+            return false;
+        }
+    } catch (error) {
+        logger.ERR(error);
+        return false;
+    }
+
+    return true;
+}
+
+///////////////////////////////////////////////////
+// Main
+/////////////////////////////////////////////////
+
 logger.INF('*'.repeat(50))
 logger.INF('Starting bot...')
 
@@ -59,16 +107,20 @@ let commands = botenv.getAbsolutePathCommands()
 
 const writeHashlistFile = () => {
     let new_haslist = []
-    commands.forEach(command => new_haslist.push({
-        name: command.name,
-        hash: generateSHA256(command.absolutePath)
-    }
+    commands.forEach(command => new_haslist.push(
+        {
+            name: command.name,
+            hash: generateSHA256(command.absolutePath)
+        }
     ))
 
     fs.writeFileSync(HASHLIST_FILENAME, JSON.stringify(new_haslist, null, 2))
 }
 
 (async () => {
+    if (!(await verifyClockIntegrity())) 
+        exit(1)
+
     if (commands.length !== 0) {
         try {
             if (!fs.existsSync(HASHLIST_FILENAME)) {
