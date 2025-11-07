@@ -53,6 +53,21 @@ function getCommandParameters(content) {
     return []
 }
 
+/**
+ * 
+ * @param {Message} message 
+ * @returns {Promise<boolean}
+ */
+async function repliedMessageContainsEmbedSubmitPack(client, message) {
+    if (!message.reference || !message.reference?.messageId)
+        return false;
+
+    const repliedMessage = await message.channel.messages.fetch(message.reference.messageId);
+    if (!repliedMessage || repliedMessage.author.id !== '1294111960882872341' /* bot id */)
+        return false;
+    return repliedMessage.embeds.length > 0 ? repliedMessage.embeds[0].fields.find(field => field.name === 'Pack') !== undefined : false
+}
+
 module.exports = {
     name: Events.MessageCreate,
     once: false,
@@ -87,13 +102,19 @@ module.exports = {
                 } else if (message.content.startsWith('--test-command')) {
                     if (utils.hasUserPermissions(message.member))
                         await require('../commands/youtube/service-notification').testCommand(message.channel)
-                } else if (message.content.startsWith('--aceptar') && message.channel.id === /*'1294668385950498846'*/ channels.SUBMITS) {
+                } 
+                
+                else if (message.content.startsWith('--aceptar') && message.channel.id === /*'1294668385950498846'*/ channels.SUBMITS) {
+                    const submitPack = await repliedMessageContainsEmbedSubmitPack(client, message)
                     if (utils.hasUserPermissions(message.member) || usersWhitelist.includes(message.member.id))
-                        await require('../commands/records/record').accept(message)
+                        await require(submitPack ? '../commands/packs/pack' : '../commands/records/record').accept(message)
                 } else if (message.content.startsWith('--rechazar') && message.channel.id === /*'1294668385950498846'*/ channels.SUBMITS) {
+                    const submitPack = await repliedMessageContainsEmbedSubmitPack(client, message)
                     if (utils.hasUserPermissions(message.member) || usersWhitelist.includes(message.member.id))
-                        await require('../commands/records/record').decline(message)
-                } else if (message.content.startsWith('--denegar') && message.channel.id === /*'1119807234076049428'*/ channels.MODERATION) {
+                        await require(submitPack ? '../commands/packs/pack' : '../commands/records/record').decline(message)
+                } 
+                
+                else if (message.content.startsWith('--denegar') && message.channel.id === /*'1119807234076049428'*/ channels.MODERATION) {
                     if (utils.hasUserPermissions(message.member))
                         await require('../commands/user-verification').denyUser(client, database, message, getCommandParameters(message.content))
                 } else if (message.content.startsWith('--aprobar') && message.channel.id === /*'1119807234076049428'*/ channels.MODERATION) {

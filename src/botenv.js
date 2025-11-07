@@ -35,7 +35,8 @@ const commandFileList = [
     'user-verification.js',
     'text-xp.js',
     'user-response.js',
-    'perfil.js'
+    'perfil.js',
+    'packs.js'
 ]
 
 function getCommandsCollection() {
