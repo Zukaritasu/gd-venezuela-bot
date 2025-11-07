@@ -15,7 +15,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-const { PermissionsBitField, GuildMember } = require("discord.js");
+const { PermissionsBitField, GuildMember, Guild } = require("discord.js");
 const { YOUTUBE_API_KEY } = require('../.botconfig/token.json')
 const logger = require('./logger')
 const { states } = require('../.botconfig/country-states.json');
@@ -216,6 +216,35 @@ function formatDate(date) {
     return `${day} de ${month} de ${year}`;
 }
 
+/**
+ * Loads all guild members using pagination.
+ * Avoids the GuildMembersTimeout error and allows handling large guilds.
+ * 
+ * @param {Guild} guild
+ * @returns {Promise<Map<string, GuildMember> | null>} Map with all members
+ */
+async function getAllMembers(guild) {
+    const allMembers = new Map();
+    let after;
+
+    try {
+        while (true) {
+            const members = await guild.members.fetch({ limit: 600, after });
+            if (members.size === 0) 
+                break;
+            members.forEach((member) => allMembers.set(member.id, member));
+            after = [...members.keys()].pop();
+        }
+
+        return allMembers;
+    } catch (err) {
+        logger.ERR(err)
+    }
+
+    return null
+}
+
+
 module.exports = {
     isValidYouTubeUrl,
     getYouTubeThumbnail,
@@ -228,5 +257,6 @@ module.exports = {
     GD_VENEZUELA_SERVER_ID: '1119795689984102455',
     formatDate,
     formatDateTime,
-    getSHA256
+    getSHA256,
+    getAllMembers
 }

@@ -198,7 +198,6 @@ async function scan(database, message, parameters) {
             return message.reply(`Comando de uso exclusivo en <#${channels.BOT_MODERATION}>`);
         }
 
-        await message.guild.members.fetch();
         const guildMembers = message.guild.members.cache;
         const blacklist = await getBlacklistMembers(database)
         const usersException = await getUsersException(database)

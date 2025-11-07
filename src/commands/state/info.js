@@ -104,7 +104,6 @@ async function getStateInfo(database, interaction, roleId) {
     const creatorPtsRoleId = '1216234978673819798';
     const userCoinGdrRoleId = '1221273094035865771';
 
-    await interaction.guild.members.fetch()
     const members = interaction.guild.members.cache.filter(member => member.roles.cache.has(roleId))
 
     info.players = members.size;

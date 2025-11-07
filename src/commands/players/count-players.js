@@ -29,7 +29,6 @@ const logger = require('../../logger');
 async function embedNumberPlayers(_client, _database, interaction) {
     let fields = [];
 
-    await interaction.guild.members.fetch()
     for (const state of states) {
         const role = interaction.guild.roles.cache.get(state.roleId);
         if (role !== undefined) {

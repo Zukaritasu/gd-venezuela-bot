@@ -68,7 +68,6 @@ async function getUserStadistic(database, userId, stadistic) {
  * @returns 
  */
 async function showStadistic(database, response, confirmation, interaction, collectorFilter, stadistic) {
-    await interaction.guild.members.fetch();
     const grinders = interaction.guild.members.cache.filter(member =>
         member.roles.cache.find(role => role.id === '1119804850620866600' /* vnzl role */) !== undefined &&
         member.roles.cache.find(role => role.id === confirmation.values[0] /* state role id*/) !== undefined &&

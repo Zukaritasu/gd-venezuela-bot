@@ -16,7 +16,8 @@
  */
 
 const { Events, Client, RateLimitError } = require('discord.js');
-const logger = require('../logger')
+const logger = require('../logger');
+const utils = require('../utils');
 
 const services = [
 	//'../commands/youtube/service-notification.js',
@@ -87,7 +88,7 @@ module.exports = {
 		const guild = client.guilds.cache.get('1119795689984102455' /* GD Venezuela server ID */)
 		if (guild !== undefined) {
 			try {
-				await guild.members.fetch();
+				await utils.getAllMembers(guild)
 				logger.INF('All members have been loaded into the cache!')
 				// Check all users account age
 				await require('../checkAccounts').checkAllUsersAccountAge(guild, database);
