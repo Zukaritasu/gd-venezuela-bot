@@ -32,6 +32,19 @@ const HASHLIST_FILENAME = './hashlist.json';
 
 process.chdir(__dirname);
 
+const RETRYABLE_STATUS_CODES = [
+    408, // Request Timeout
+    429, // Too Many Requests (Rate Limit)
+    500, // Internal Server Error
+    502, // Bad Gateway
+    503, // Service Unavailable
+    504  // Gateway Timeout
+]
+
+const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+const RETRY_INTERVAL_MS = 3000;
+const MAX_ALLOWED_DIFFERENCE_MS = 10000;
+
 /////////////////////////////////////////////////
 // Functions
 /////////////////////////////////////////////////
@@ -46,25 +59,33 @@ function generateSHA256(filePath) {
 }
 
 /**
- * Execute a JS file synchronously in a subprocess
- * @param {string} command - The command to execute
+ * Execute a JS file in a subprocess (asynchronously)
+ * @param {string} command - The command/file path to execute
  * @returns {Promise<boolean>} - true if the command executed successfully, false otherwise
  */
-async function execJSFileSynch(command) {
-    return !(await new Promise((resolve, reject) => {
-        fork(command).on('exit', (code) => {
-            if (code != 0)
-                logger.ERR(`Subprocess is terminated with code ${code}`)
-            else
-                logger.INF(`Subprocess is terminated with code 0`)
-            resolve(code != 0)
-        }).on('error', (error) => {
-            reject(true)
-            console.log(`${error}`);
-        }).on('message', (message) => {
-            console.log(`${message}`);
-        })
-    }))
+async function executeSubprocess(command) {
+    return new Promise((resolve) => {
+        const child = fork(command);
+
+        child.on('exit', (code) => {
+            const success = code === 0;
+            if (!success) {
+                logger.ERR(`Subprocess terminated with error code ${code}`);
+            } else {
+                logger.INF(`Subprocess terminated with code 0`);
+            }
+            resolve(success);
+        });
+
+        child.on('error', (error) => {
+            logger.ERR(`Subprocess failed to start or encountered an internal error: ${error.message}`);
+            resolve(false);
+        });
+
+        child.on('message', (message) => {
+            console.log(`[SUBPROCESS MESSAGE]: ${message}`);
+        });
+    });
 }
 
 /** 
@@ -72,38 +93,47 @@ async function execJSFileSynch(command) {
  * @returns {Promise<boolean>} - true if the system clock is in sync, false otherwise
  */
 async function verifyClockIntegrity() {
+    const fetchReliably = async () => {
+        while (true) {
+            try {
+                const response = await fetch('https://worldtimeapi.org/api/timezone/Etc/UTC');
+                if (response.ok)
+                    return response;
+                if (!RETRYABLE_STATUS_CODES.includes(response.status))
+                    throw new Error(`Non-retryable HTTP status: ${response.status}`);
+            } catch (error) {
+                logger.ERR(error)
+                return null
+            }
+
+            await sleep(RETRY_INTERVAL_MS);
+        }
+    };
+
     try {
-        const response = await fetch('https://worldtimeapi.org/api/timezone/Etc/UTC');
-        if (!response.ok) {
-            throw new Error(`Failed to fetch time from trusted source: ${response.statusText}`);
-        }
+        const response = await fetchReliably();
+        if (!response)
+            return false
         const data = await response.json();
-        const trustedTime = new Date(data.utc_datetime);
-        const localTime = new Date();
+        const timeDifference = Math.abs(new Date(data.utc_datetime).getTime() - new Date().getTime());
 
-        const timeDifference = Math.abs(trustedTime - localTime);
-        const maxAllowedDifference = 10000; // 10 seconds
-
-        if (timeDifference > maxAllowedDifference) {
-            logger.ERR(`System clock is out of sync by more than 10 seconds. Difference: ${timeDifference / 1000} seconds.`);
-            return false;
-        }
+        if (timeDifference > MAX_ALLOWED_DIFFERENCE_MS)
+            throw new Error(`Clock out of sync by: ${timeDifference / 1000}s.`);
+        return true;
     } catch (error) {
         logger.ERR(error);
         return false;
     }
-
-    return true;
 }
 
-///////////////////////////////////////////////////
+/////////////////////////////////////////////////
 // Main
 /////////////////////////////////////////////////
 
 logger.INF('*'.repeat(50))
 logger.INF('Starting bot...')
 
-let commands = botenv.getAbsolutePathCommands()
+const commands = botenv.getAbsolutePathCommands()
 
 const writeHashlistFile = () => {
     let new_haslist = []
@@ -117,29 +147,32 @@ const writeHashlistFile = () => {
     fs.writeFileSync(HASHLIST_FILENAME, JSON.stringify(new_haslist, null, 2))
 }
 
+const deployCommands = async () => {
+    writeHashlistFile();
+    if (!(await executeSubprocess('./src/deploy-commands.js'))) {
+        exit(1);
+    }
+};
+
+
+
 (async () => {
-    if (!(await verifyClockIntegrity())) 
+    if (!(await verifyClockIntegrity()))
         exit(1)
 
     if (commands.length !== 0) {
         try {
             if (!fs.existsSync(HASHLIST_FILENAME)) {
-                writeHashlistFile()
-                if (!(await execJSFileSynch('./src/deploy-commands.js')))
-                    exit(1)
+                await deployCommands()
             } else {
                 const hashlist = require(HASHLIST_FILENAME)
                 if (hashlist.length !== commands.length) {
-                    writeHashlistFile()
-                    if (!(await execJSFileSynch('./src/deploy-commands.js')))
-                        exit(1)
+                    await deployCommands()
                 } else {
                     for (let i = 0; i < commands.length; i++) {
                         const data = hashlist.find(data => data.name === commands[i].name)
                         if (data === undefined || generateSHA256(commands[i].absolutePath) !== data.hash) {
-                            writeHashlistFile()
-                            if (!(await execJSFileSynch('./src/deploy-commands.js')))
-                                exit(1)
+                            await deployCommands()
                             break;
                         }
                     }
@@ -152,7 +185,7 @@ const writeHashlistFile = () => {
     }
 
     while (true) {
-        await execJSFileSynch('./src/bot.js')
-        setTimeout(() => { }, 5000);
+        await executeSubprocess('./src/bot.js')
+        await sleep(5000)
     }
 })()
