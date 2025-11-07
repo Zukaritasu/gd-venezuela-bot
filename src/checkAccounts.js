@@ -187,8 +187,10 @@ async function checkUserAccountAge(guild, database, member) {
  * @param {Db} database
  */
 async function checkAllUsersAccountAge(guild, database) {
-	const members = await guild.members.fetch();
-	for (const member of members.values()) {
+	const allMembers = await utils.getAllMembers(guild)
+	if (!allMembers) return
+	
+	for (const member of allMembers.values()) {
 		try {
 			if (member.user.bot)
 				continue; // Skip bots
