@@ -185,9 +185,10 @@ async function checkUserAccountAge(guild, database, member) {
  * Check all users account age in the guild
  * @param {Guild} guild 
  * @param {Db} database
+ * @param {Map<string, GuildMember>} members 
  */
-async function checkAllUsersAccountAge(guild, database) {
-	const allMembers = await utils.getAllMembers(guild)
+async function checkAllUsersAccountAge(guild, database, members = null) {
+	const allMembers = members ? members : await utils.getAllMembers(guild)
 	if (!allMembers) return
 	
 	for (const member of allMembers.values()) {

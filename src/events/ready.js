@@ -83,15 +83,15 @@ module.exports = {
 		}
 
 		logger.INF(`Ready! Logged in as ${client.user.tag}`)
-		// Load server members into the cache
 
-		const guild = client.guilds.cache.get('1119795689984102455' /* GD Venezuela server ID */)
-		if (guild !== undefined) {
+		// Load server members into the cache
+		const guild = client.guilds.cache.get(process.env.SERVER_GD_VENEZUELA_ID)
+		if (guild) {
 			try {
-				await utils.getAllMembers(guild)
-				logger.INF('All members have been loaded into the cache!')
-				// Check all users account age
-				await require('../checkAccounts').checkAllUsersAccountAge(guild, database);
+				const allMembers = await utils.getAllMembers(guild)
+				if (allMembers) {
+					await require('../checkAccounts').checkAllUsersAccountAge(guild, database, allMembers);
+				}
 			} catch (e) {
 				logger.ERR(e)
 			}

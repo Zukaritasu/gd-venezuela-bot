@@ -15,6 +15,8 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+require('dotenv').config();
+
 const { Client, GatewayIntentBits, ActivityType } = require('discord.js');
 const botenv = require('./botenv')
 const { TOKEN, URI_DATABASE } = require('../.botconfig/token.json');
