@@ -18,16 +18,12 @@
 const { Events, Client, ChatInputCommandInteraction, Message, GuildMember, AttachmentBuilder, ChannelType } = require('discord.js');
 const { Db } = require('mongodb');
 const logger = require('../logger');
-const Canvas = require('canvas');
 const utils = require('../utils');
-const path = require('path');
 const channels = require('../../.botconfig/channels.json');
 const submit = require('../commands/records/submit');
 const checkAttachments = require('../checkAttachments')
 
 ///////////////////////////////////////////////////////////
-
-Canvas.registerFont(path.join(__dirname, '../../fonts/MakroTrial-Bold.otf'), { family: 'MakroTrial' });
 
 /**
  * List of user IDs that are whitelisted to use certain commands.
@@ -63,7 +59,7 @@ async function repliedMessageContainsEmbedSubmitPack(client, message) {
         return false;
 
     const repliedMessage = await message.channel.messages.fetch(message.reference.messageId);
-    if (!repliedMessage || repliedMessage.author.id !== '1294111960882872341' /* bot id */)
+    if (!repliedMessage || repliedMessage.author.id !== process.env.BOT_ID)
         return false;
     return repliedMessage.embeds.length > 0 ? repliedMessage.embeds[0].fields.find(field => field.name === 'Pack') !== undefined : false
 }
@@ -137,6 +133,10 @@ module.exports = {
                     }
                 } else if (message.attachments.size > 0 && !utils.hasUserPermissions(message.member) && !message.member.roles.cache.has('1216132476674773142') /* rol Notable */) {
                     await checkAttachments.check(database, message)
+                }
+
+                else if (message.content.startsWith('--test-welcome') && message.member.id === '591640548490870805') {
+                    await require('./guildMemberAdd').welcomeMessageMember(message.member, true)
                 }
             }
         } catch (e) {

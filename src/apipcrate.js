@@ -17,17 +17,16 @@
 
 const https = require('https');
 
-//
-//============================================================================
-//
+////////////////////////////////////////////////////////
+
 
 /** @type {import('redis').RedisClientType} */
 let redisObject = null
 
 /**
  * 
- * @param {*} url 
- * @returns 
+ * @param {string} url 
+ * @returns {Promise<Object>}
  */
 async function getResponseJSON(url) {
     return new Promise(async (resolve) => {
@@ -67,27 +66,11 @@ async function getResponseJSON(url) {
         } catch (error) {
             resolve(error);
         }
-        
-        /*https.get(options, res => {
-            let data = [];
-            res.on('error', error => {
-                resolve(error);
-            });
-            res.on('data', chunk => { data.push(chunk); });
-            res.on('end', () => {
-                try {
-                    resolve(JSON.parse(Buffer.concat(data).toString()));
-                } catch (error) {
-                    resolve(error);
-                }
-            });
-        });*/
     });
 }
 
 /**
- * 
- * @param {*} id 
+ * @param {string} id 
  */
 async function getPlayerExtraInfo(id) {
     const response = await getResponseJSON(`api/v1/players/${id}`)
@@ -145,16 +128,11 @@ function getNumberDemonsByCategory(records) {
 
 module.exports = {
     setRedisClientObject: (redisObj) => redisObject = redisObj,
-    /////
+    
     getDemon: (id) => getResponseJSON(`api/v2/demons/${id}`),
-
-    /**
-     * @param {string} code 
-     * @returns {Promise<Object[]>}
-     */
     getCountryLeaderboard: (code) => getResponseJSON(`api/v1/players?nation=${code}`),
     getPlayerInfo: (id) => getResponseJSON(`api/v1/players/${id}`),
-    /////
+    
     getPlayerExtraInfo,
     utils: {
         getNumberDemonsByCategory

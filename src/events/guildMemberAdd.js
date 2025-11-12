@@ -15,7 +15,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-const { Events, Client, Guild, GuildMember, AttachmentBuilder, EmbedBuilder } = require('discord.js');
+const { Events, Client, GuildMember, AttachmentBuilder } = require('discord.js');
 const logger = require('../logger')
 const Canvas = require('canvas');
 const path = require('path');
@@ -23,29 +23,19 @@ const { Db } = require('mongodb');
 const checkAccounts = require('../checkAccounts');
 const channels = require('../../.botconfig/channels.json');
 
-/**
- * Updates the cache for the member in the guild.
- * This is necessary to ensure that the member
- * is properly cached after they join the guild.
- * 
- * @param {GuildMember} member - The member to update in the cache.
- */
-async function updateCache(member) {
-    try {
-        await member.guild.members.fetch(member.id);
-        logger.INF('The cache has been updated with the new member!')
-    } catch (e) {
-        logger.ERR(e)
-    }
-}
+//////////////////////////////////////////////////////////////
+
+Canvas.registerFont(path.join(__dirname, '../../fonts/Franklin Gothic Condensed.ttf'), { family: 'FranklinGothic' });
+
+/////////////////////////////////////////////////////////////
 
 /**
  * 
  * @param {GuildMember} member 
  */
-async function welcomeMessageMember(member) {
+async function welcomeMessageMember(member, test = false) {
     try {
-        const channel = member.guild.channels.cache.get(channels.WELCOME);
+        const channel = member.guild.channels.cache.get(test ? channels.BOT_TESTING : channels.WELCOME);
         if (channel) {
             const guild = member.guild;
             const count = guild.memberCount;
@@ -57,13 +47,12 @@ async function welcomeMessageMember(member) {
             ctx.drawImage(background, 0, 0, canvas.width, canvas.height);
 
             let avatarImage = member.user.avatarURL({ extension: 'png' }) || member.user.defaultAvatarURL;
-            //logger.DBG(avatarImage)
-
+            
             const avatar = await Canvas.loadImage(avatarImage);
 
             const radius = 124;
             const x = canvas.width / 2;
-            const y = canvas.height / 2 - 48;
+            const y = canvas.height / 2 - 56;
 
             ctx.save();
             ctx.beginPath();
@@ -88,7 +77,7 @@ async function welcomeMessageMember(member) {
             ctx.drawImage(avatar, x - (radius - 12), y - (radius - 12), (radius - 12) * 2, (radius - 12) * 2);
             ctx.restore();
 
-            ctx.font = 'bold 64px MakroTrial';
+            /*ctx.font = 'bold 64px FranklinGothic';
             ctx.fillStyle = '#ffffff';
             ctx.textAlign = 'center';
             ctx.shadowColor = 'rgb(0, 0, 0)';
@@ -97,14 +86,31 @@ async function welcomeMessageMember(member) {
             ctx.shadowOffsetY = 4;
             ctx.fillText('BIENVENID@', x, y + radius + 60);
 
-            ctx.font = '36px MakroTrial';
+            ctx.font = '36px FranklinGothic';
             ctx.fillText(member.user.username.replace(/@/g, '@\u200b'), x, y + radius + 106);
+
+            const attachment = new AttachmentBuilder(canvas.toBuffer(), { name: 'welcome-image.png' });*/
+
+            const y2 =  y + 20
+
+            ctx.font = 'bold 82px FranklinGothic';
+            ctx.fillStyle = '#ffffff';
+            ctx.textAlign = 'center';
+            ctx.shadowColor = 'rgb(0, 0, 0)';
+            ctx.shadowBlur = 10;
+            ctx.shadowOffsetX = 4;
+            ctx.shadowOffsetY = 4;
+            ctx.fillText('BIENVENID@', x, y2 + radius + 60);
+
+            ctx.font = '48px FranklinGothic';
+            ctx.fillText(member.user.username.replace(/@/g, '@\u200b'), x, y2 + radius + 108);
 
             const attachment = new AttachmentBuilder(canvas.toBuffer(), { name: 'welcome-image.png' });
 
+
             channel.send(
                 {
-                    content: `# Bienvenido al servidor, ${member}!\n\n***Recuerda pasarte por <#1119803609773785159> para obtener roles y acceder a los diferentes canales de este servidor***. \n\nContigo somos **${count}** miembros y esperamos que disfrutes de tu estancia en GD Venezuela!`,
+                    content: `# Bienvenido al servidor, ${member}!\n\n***Recuerda pasarte por <#1119803609773785159> para obtener roles y acceder a los diferentes canales de este servidor***. \n\nContigo somos **${count}** miembros y esperamos que disfrutes de tu estancia en **GD Venezuela**!`,
                     files: [attachment]
                 }
             );
@@ -126,11 +132,14 @@ module.exports = {
         try {
             if (member.guild.id !== '1119795689984102455') return;
             if (await checkAccounts.checkUserAccountAge(member.guild, database, member)) {
-                await updateCache(member);
+                // Updates the cache for the member in the guild. This is necessary to ensure 
+                // that the member is properly cached after they join the guild.
+                await member.guild.members.fetch(member.id);
                 await welcomeMessageMember(member);
             }
         } catch (e) {
             logger.ERR(e)
         }
-    }
+    },
+    welcomeMessageMember
 };
