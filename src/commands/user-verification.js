@@ -21,6 +21,7 @@ const logger = require('../logger');
 const utils = require('../utils');
 const channels = require('../../.botconfig/channels.json');
 const { COLL_SERVER_NEW_ACCOUNTS } = require('../../.botconfig/database-info.json');
+const { RESTJSONErrorCodes } = require('discord-api-types/v10')
 
 /**
  * Checks if the user is inside the server
@@ -34,12 +35,40 @@ async function isUserInsideServer(client, interaction) {
     try {
         member = await guild.members.fetch(typeof interaction === 'string' ? interaction : interaction.user.id);
     } catch (err) {
-        if (err.code === 10007) { // Unknown Member
+        if (err.code === RESTJSONErrorCodes.UnknownMember) {
             return false;
         }
         throw err;
     }
     return member !== null;
+}
+
+/**
+ * Tries to retrieve a User ID from a replied message (a reply).
+ *
+ * This function specifically looks for the user ID in a field named 'User ID' 
+ * within the first embed of the message being replied to, but ONLY if 
+ * that replied message was sent by the bot (identified by process.env.BOT_ID).
+ *
+ * If the message is not a reply, the replied message is not from the bot, 
+ * or the necessary embed/field is not found, it returns null.
+ *
+ * @param {Message} message - The Message object which may contain a reference to another message.
+ * @returns {Promise<string | null>} A promise that resolves with the User ID (string) if found, 
+ * or null otherwise.
+ */
+async function getUserIDAux(message) {
+    if (message.reference && message.reference?.messageId) {
+        const repliedMessage = await message.channel.messages.fetch(message.reference.messageId)
+            .catch(err => logger.ERR("Error fetching replied message: " + err));
+        if (repliedMessage && repliedMessage.author.id === process.env.BOT_ID) {
+            if (repliedMessage.embeds.length > 0) {
+                return repliedMessage.embeds[0].fields.find(field => field.name === 'User ID')?.value
+            }
+        }
+    }
+
+    return null
 }
 
 /**
@@ -128,10 +157,14 @@ async function execute(client, _database, interaction) {
  */
 async function denyUser(client, database, message, messageParts) {
     try {
-        const userId = messageParts[0]; // User ID to be denied
+        // User ID to be denied
+        const userId = messageParts[0] || await getUserIDAux(message);
+        if (!userId) {
+            await message.reply('El ID de usuario no se ha proporcionado, lo que impide continuar'); return;
+        }
+
         if (await isUserInsideServer(client, userId)) {
-            await message.reply('El usuario ya se encuentra dentro del servidor.');
-            return;
+            await message.reply('El usuario ya se encuentra dentro del servidor.'); return;
         }
 
         // Add userId to the blacklist in the database
@@ -154,7 +187,7 @@ async function denyUser(client, database, message, messageParts) {
                     logger.ERR(`Error kicking user ${userId} from the alt server: ${err}`);
                 }
             } catch (err) {
-                if (err.code === 50007) { // Cannot send messages to this user
+                if (err.code === RESTJSONErrorCodes.CannotSendMessagesToThisUser) {
                     logger.ERR(err);
                     dbClose = true;
                 } else {
@@ -192,10 +225,13 @@ async function denyUser(client, database, message, messageParts) {
  */
 async function approveUser(client, database, message, messageParts) {
     try {
-        const userId = messageParts[0];
+        const userId = messageParts[0] || await getUserIDAux(message);
+        if (!userId) {
+            await message.reply('El ID de usuario no se ha proporcionado, lo que impide continuar'); return;
+        }
+
         if (await isUserInsideServer(client, userId)) {
-            await message.reply('El usuario ya se encuentra dentro del servidor.');
-            return;
+            await message.reply('El usuario ya se encuentra dentro del servidor.'); return;
         }
 
         // Add userId to the whitelist in the database
@@ -218,7 +254,7 @@ async function approveUser(client, database, message, messageParts) {
                     logger.ERR(`Error kicking user ${userId} from the alt server: ${err}`);
                 }
             } catch (err) {
-                if (err.code === 50007) { // Cannot send messages to this user
+                if (err.code === RESTJSONErrorCodes.CannotSendMessagesToThisUser) {
                     logger.ERR(err);
                     dbClose = true;
                 } else {
@@ -284,7 +320,7 @@ async function sendDM(client, message, content) {
         await message.react('✅')
     } catch (error) {
         try {
-            if (error?.code === 50007)
+            if (error?.code === RESTJSONErrorCodes.CannotSendMessagesToThisUser)
                 return await message.react('📧')
             logger.ERR(error)
             await message.reply(`Ha ocurrido un error inesperado: ${error?.message || 'Unknown'}`)
