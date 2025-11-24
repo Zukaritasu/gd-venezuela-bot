@@ -361,7 +361,7 @@ async function service(db, client) {
                 // of the list have been moved, which means that the changes
                 // will be saved directly to GitHub and notified in the
                 // corresponding channel
-                
+
                 if (!await isSortedList(client, listData, normalizedLevels)) {
                     await saveSortedList(listData.sha, normalizedLevels.map(level => level.name));
                     await printChangelog(db, client, normalizedLevels, listData);
@@ -386,5 +386,51 @@ async function service(db, client) {
 }
 
 module.exports = {
-    start: service
+    start: service,
+    sortStatusError: async () => {
+        try {
+            /** @type {ListData} */
+            const listData = await getListLevels();
+            const currentLevels = await aredlapi.getLevels();
+            /** @type {NormalizedLevel[]} */
+            let normalizedLevels = currentLevels.filter(level => listData.content.includes(getLevelName(level.name)))
+                .map(level => {
+                    return {
+                        originName: level.name,
+                        name: getLevelName(level.name),
+                        position: level.position
+                    }
+                }).sort((a, b) => a.position - b.position);
+
+            let listA = listData.content;
+            let listB = normalizedLevels.map(level => level.name);
+
+            const setA = new Set(listA);
+            const setB = new Set(listB);
+
+            listB.forEach(name => {
+                if (setA.has(name)) {
+                    setA.delete(name);
+                    setB.delete(name);
+                }
+            });
+
+            let surplus;
+
+            if (setA.size > setB.size) {
+                surplus = Array.from(setA).join(', ');
+                surplus += ' are extra in the the GDVZLA List result';
+            } else if (setB.size > setA.size) {
+                surplus = Array.from(setB).join(', ');
+                surplus += ' are extra in the ARED List result';
+            } else {
+                surplus = 'There is no name left over';
+            }
+
+            logger.DBG(`The remaining names are: ${surplus}`);
+        } catch (error) {
+            logger.ERR(error);
+            return false;
+        }
+    }
 }

@@ -57,6 +57,40 @@ async function printRoles(client) {
 	}
 }
 
+
+async function clearBotDMMessages(client, userId) {
+    const targetUserId = '797892987106754580'; // El ID del usuario específico
+    
+    try {
+        const user = await client.users.fetch(targetUserId);
+        const dmChannel = await user.createDM();
+        
+        logger.DBG(`Buscando mensajes del bot en DM con el usuario ${user.tag}...`);
+
+        let fetchedMessages;
+        let messagesDeleted = 0;
+        
+        do {
+            fetchedMessages = await dmChannel.messages.fetch({ limit: 100 });
+            const botMessages = fetchedMessages.filter(m => m.author.id === client.user.id);
+
+            if (botMessages.size === 0) {
+                break;
+            }
+            
+            for (const message of botMessages.values()) {
+                await message.delete();
+                messagesDeleted++;
+            }
+        } while (fetchedMessages.size >= 100);
+
+        logger.DBG(`✅ Se eliminaron ${messagesDeleted} mensajes del bot en el DM.`);
+
+    } catch (error) {
+        logger.ERR(`❌ Error al limpiar los mensajes DM del usuario ${targetUserId}:`, error);
+    }
+}
+
 module.exports = {
 	name: Events.ClientReady,
 	once: true,
@@ -69,6 +103,7 @@ module.exports = {
 		//await printRoles(client);
 
 		// Check new submit records
+		//await require('../commands/gdvzla-list/service-levels').sortStatusError();
 		await require('../commands/records/submit').checkNewSubmitRecords(client, database)
 
 		// Load services
@@ -96,5 +131,7 @@ module.exports = {
 				logger.ERR(e)
 			}
 		}
+
+		//clearBotDMMessages(client)
 	},
 };
