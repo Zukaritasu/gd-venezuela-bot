@@ -182,17 +182,17 @@ async function createRecordFile(message, fileName, levelName, jsonInfo, userId) 
         changes.indexInserted = insertIndex;
 
         if (insertIndex - 1 >= 0)
-            changes.levelNameUp = 
-        levels.find(lvl => getFileName(lvl.name) === levelLists[insertIndex - 1])?.name || null;
+            changes.levelNameUp =
+                levels.find(lvl => getFileName(lvl.name) === levelLists[insertIndex - 1])?.name || null;
         if (insertIndex + 1 < levelLists.length)
-            changes.levelNameDown = 
-        levels.find(lvl => getFileName(lvl.name) === levelLists[insertIndex + 1])?.name || null;
+            changes.levelNameDown =
+                levels.find(lvl => getFileName(lvl.name) === levelLists[insertIndex + 1])?.name || null;
         if (levelLists.length > 150)
-            changes.levelLegacy = 
-        levels.find(lvl => getFileName(lvl.name) === levelLists[150])?.name || null;
+            changes.levelLegacy =
+                levels.find(lvl => getFileName(lvl.name) === levelLists[150])?.name || null;
         if (insertIndex < 75)
-            changes.levelExtended = 
-        levels.find(lvl => getFileName(lvl.name) === levelLists[75])?.name || null;
+            changes.levelExtended =
+                levels.find(lvl => getFileName(lvl.name) === levelLists[75])?.name || null;
 
         const fileEditedList = Buffer.from(JSON.stringify(levelLists, null, 4)).toString("base64");
         await axios.put(`https://api.github.com/repos/Abuigsito/gdvzla/contents/data/_list.json`, {
@@ -222,10 +222,10 @@ async function createRecordFile(message, fileName, levelName, jsonInfo, userId) 
  * @returns {Promise<void>}
  */
 async function printChanges(changes, guild) {
-    const message = `**${changes.levelInserted}** ha sido agregado al top #${changes.indexInserted + 1}, ${changes.levelNameUp ? 
+    const message = `**${changes.levelInserted}** ha sido agregado al top #${changes.indexInserted + 1}, ${changes.levelNameUp ?
         `por encima de **${changes.levelNameDown}** y por debajo de **${changes.levelNameUp}**` : `por encima de **${changes.levelNameDown}**`}.` +
-        `\n${changes.levelExtended ? `Este cambio empuja a **${changes.levelExtended}** a la extended list y a **${changes.levelLegacy}** a la legacy list` 
-        : `Este cambio empuja a **${changes.levelLegacy}** a la legacy list`}.`
+        `\n${changes.levelExtended ? `Este cambio empuja a **${changes.levelExtended}** a la extended list y a **${changes.levelLegacy}** a la legacy list`
+            : `Este cambio empuja a **${changes.levelLegacy}** a la legacy list`}.`
 
     /** @type {TextChannel} */
     const channel = await guild.channels.fetch(channels.LIST_CHANGES); // lista-cambios
@@ -281,8 +281,20 @@ async function addPlayerToStateList(message, jsonInfo) {
  * @param {string} fileName
  */
 async function addRecord(message, file, jsonInfo, fileName, isMobile) {
-    jsonInfo.mobile = isMobile;
-    file.content.records.push(jsonInfo);
+    const oldRecord = file.content.records.find(record => record.user === jsonInfo.user);
+    if (oldRecord) {
+        if (jsonInfo.percent <= oldRecord.percent) {
+            throw new Error(`El usuario **${jsonInfo.user}** ya tiene un progreso mayor o igual aceptado (${oldRecord.percent}%)`);
+        }
+
+        oldRecord.percent = jsonInfo.percent;
+        oldRecord.link = jsonInfo.link;
+        oldRecord.mobile = isMobile;
+    } else {
+        jsonInfo.mobile = isMobile;
+        file.content.records.push(jsonInfo);
+    }
+
     const fileEdited = Buffer.from(JSON.stringify(file.content, null, 4)).toString("base64");
     await axios.put(`https://api.github.com/repos/Abuigsito/gdvzla/contents/data/${fileName}.json`, {
         message: `Added record for ${jsonInfo.user} by ${message.author.username}`,
@@ -295,7 +307,9 @@ async function addRecord(message, file, jsonInfo, fileName, isMobile) {
         }
     });
 
-    await addPlayerToStateList(message, jsonInfo);
+    if (!oldRecord) {
+        await addPlayerToStateList(message, jsonInfo);
+    }
 }
 
 /**
@@ -345,7 +359,8 @@ async function handleProgress(message, isAccept) {
                 const changes = await createRecordFile(message, fileName, levelName, jsonInfo, userId);
                 await message.reply(`El archivo **${fileName}.json** no existe, por lo que se ha creado uno nuevo.`);
                 await printChanges(changes, message.guild);
-            } else if (file.content.verifier === jsonInfo.user || file.content.records.some(record => record.user === jsonInfo.user)) {
+            } else if (file.content.verifier === jsonInfo.user ||
+                file.content.records.some(record => record.user === jsonInfo.user && record.percent >= 100)) {
                 await botRecord.react('✅');
                 await message.react('⚠️');
                 return await message.reply('El progreso ya ha sido aceptado anteriormente.');
