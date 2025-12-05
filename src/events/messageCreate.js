@@ -131,7 +131,7 @@ module.exports = {
                             await message.react('❌');
                         }
                     }
-                } else if (message.attachments.size > 0 && !utils.hasUserPermissions(message.member) && !message.member.roles.cache.has('1216132476674773142') /* rol Notable */) {
+                } else if (message.attachments.size > 0 && !utils.hasUserPermissions(message.member) && !message.member.roles.cache.has(process.env.ID_ROL_NOTABLE) /* rol Notable */) {
                     await checkAttachments.check(database, message)
                 }
 
