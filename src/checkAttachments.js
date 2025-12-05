@@ -40,25 +40,25 @@ let redisObject = null
  * @returns {Promise<HashInfo[]>}
  */
 async function getHashes(db) {
-	const typeName = 'hashes-blacklist';
-	const cached = await redisObject.get(typeName);
+    const typeName = 'hashes-blacklist';
+    const cached = await redisObject.get(typeName);
 
-	if (cached) {
-		return JSON.parse(cached);
-	}
+    if (cached) {
+        return JSON.parse(cached);
+    }
 
-	const config = await db.collection(COLL_CONFIG).findOne({ type: typeName });
+    const config = await db.collection(COLL_CONFIG).findOne({ type: typeName });
 
-	if (config) {
-		await redisObject.set(typeName, JSON.stringify(config.hashes));
-		return config.hashes;
-	} else {
-		await db.collection(COLL_CONFIG).insertOne({
-			type: typeName,
-			hashes: []
-		});
-		return [];
-	}
+    if (config) {
+        await redisObject.set(typeName, JSON.stringify(config.hashes));
+        return config.hashes;
+    } else {
+        await db.collection(COLL_CONFIG).insertOne({
+            type: typeName,
+            hashes: []
+        });
+        return [];
+    }
 }
 
 /**
@@ -96,7 +96,7 @@ async function reportHackedUser(message, hashInfo) {
     const guild = message.guild;
     const userId = message.author.id;
     const unbanTimeMs = 5 * 60 * 1000; // 5 minutes
-	const joinedAt = message.member.joinedAt;
+    const joinedAt = message.member.joinedAt;
 
     await guild.members.ban(userId, {
         reason: 'User with compromised account has sent content identified as fraudulent',
@@ -112,11 +112,11 @@ async function reportHackedUser(message, hashInfo) {
     }, unbanTimeMs);
 
     const hastebinUrlPromise = uploadToHastebin(hashInfo.hash);
-    
+
     const channel = guild.channels.cache.get(channels.MODERATION);
     if (!channel) {
         logger.ERR(`Report channel ${channels.MODERATION} not found.`);
-        return; 
+        return;
     }
 
     const hastebinUrl = await hastebinUrlPromise;
@@ -127,9 +127,9 @@ async function reportHackedUser(message, hashInfo) {
                 .setTitle('User Banned (Compromised Account)')
                 .setDescription(`El usuario ha sido baneado por enviar un archivo adjunto con un hash conocido. Este baneo es temporal y se levantará después de ${unbanTimeMs / 60000} minutos.`)
                 .setColor(0x2b2d31)
-				.setThumbnail(message.author.displayAvatarURL({ size: 128, extension: 'png' }))
+                .setThumbnail(message.author.displayAvatarURL({ size: 128, extension: 'png' }))
                 .setFields(
-					{ name: 'Username', value: `${message.author.tag}`, inline: true },
+                    { name: 'Username', value: `${message.author.tag}`, inline: true },
                     { name: 'User ID', value: userId, inline: true },
                     { name: 'Joined Discord', value: utils.formatDateTime(message.author.createdAt), inline: true },
                     { name: 'Joined Server', value: utils.formatDateTime(joinedAt), inline: true }
@@ -144,10 +144,34 @@ async function reportHackedUser(message, hashInfo) {
                 new ButtonBuilder()
                     .setLabel(hastebinUrl ? 'View Hash Info' : 'Hastebin Failed')
                     .setStyle(ButtonStyle.Link)
-                    .setURL(hastebinUrl || 'https://hastebin.com/') 
+                    .setURL(hastebinUrl || 'https://hastebin.com/')
             )
         ]
     });
+}
+
+/**
+ * 
+ * @param {Db} db
+ * @param {Message} message 
+ * @returns {Promise<boolean>}
+ */
+async function checkHashAttachedFiles(db, message) {
+    const hashes = await getHashes(db);
+    if (hashes.length === 0) return false;
+
+    for (const attachment of message.attachments.values()) {
+        if (typeof attachment?.contentType === 'string' && attachment.contentType.startsWith('image/')) {
+            const hash = await utils.getSHA256(attachment.url);
+            const hashInfo = hashes.find(h => h.hash === hash);
+            if (hashInfo) {
+                await reportHackedUser(message, hashInfo);
+                return true;
+            }
+        }
+    }
+
+    return false;
 }
 
 /**
@@ -155,27 +179,16 @@ async function reportHackedUser(message, hashInfo) {
  * @param {Message} message 
  */
 async function check(db, message) {
-	try {
-		if (message.attachments.size === 0) return
+    try {
+        if (message.attachments.size === 0) return
 
-		const hashes = await getHashes(db);
-		if (hashes.length === 0) return;
-
-		for (const attachment of message.attachments.values()) {
-			if (typeof attachment?.contentType === 'string' && attachment.contentType.startsWith('image/')) {
-				const hash = await utils.getSHA256(attachment.url);
-				const hashInfo = hashes.find(h => h.hash === hash);
-				if (hashInfo) {
-					return await reportHackedUser(message, hashInfo);
-				}
-			}
-		}
-	} catch (error) {
-		logger.ERR(error)
-	}
+        if (await checkHashAttachedFiles(db, message)) return;
+    } catch (error) {
+        logger.ERR(error)
+    }
 }
 
 module.exports = {
-	check,
-	setRedisClientObject: (redisClient) => redisObject = redisClient
+    check,
+    setRedisClientObject: (redisClient) => redisObject = redisClient
 }
