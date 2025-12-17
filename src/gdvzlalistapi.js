@@ -42,7 +42,7 @@ let redisObject = null
  * @returns {Promise<{sha: string, content: object}>} The file's SHA and parsed content.
  */
 async function getGitHubFile(fileName) {
-	const response = await axios.get(`https://api.github.com/repos/Abuigsito/gdvzla/contents/data/${fileName}.json`, {
+	const response = await axios.get(`https://api.github.com/repos/Abuigsito/gdvzla/contents/public/data/${fileName}.json`, {
 		headers: {
 			Authorization: `token ${GITHUB_TOKEN}`
 		}
@@ -95,7 +95,7 @@ module.exports = {
 	 */
 	savePackFileLeaderboard: async (fileLeaderboard, fileId, moderator) => {
 		const fileContent = Buffer.from(JSON.stringify(fileLeaderboard.content, null, 4)).toString("base64");
-		await axios.put(`https://api.github.com/repos/Abuigsito/gdvzla/contents/data/packs/${fileId}_records.json`, {
+		await axios.put(`https://api.github.com/repos/Abuigsito/gdvzla/contents/public/data/packs/${fileId}_records.json`, {
 			message: `Updated ${fileId}_records.json by ${moderator.username}`,
 			content: fileContent,
 			sha: fileLeaderboard.sha,

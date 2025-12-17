@@ -76,7 +76,7 @@ function getLevelName(levelName) {
  * @throws {Error} If the request fails or the response is not successful.
  */
 async function getListLevels() {
-    const response = await axios.get(`https://api.github.com/repos/Abuigsito/gdvzla/contents/data/_list.json`, {
+    const response = await axios.get(`https://api.github.com/repos/Abuigsito/gdvzla/contents/public/data/_list.json`, {
         headers: {
             Authorization: `token ${GITHUB_TOKEN}`
         }
@@ -129,7 +129,7 @@ async function isListUpdatable(db) {
  * @param {string[]} sortedList - The sorted list of level names.
  */
 async function saveSortedList(sha, sortedList) {
-    await axios.put(`https://api.github.com/repos/Abuigsito/gdvzla/contents/data/_list.json`, {
+    await axios.put(`https://api.github.com/repos/Abuigsito/gdvzla/contents/public/data/_list.json`, {
         message: `Sorted list _list.json`,
         content: Buffer.from(JSON.stringify(sortedList, null, 4)).toString('base64'),
         sha: sha,

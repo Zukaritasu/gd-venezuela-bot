@@ -45,7 +45,7 @@ function getFileName(levelName) {
  */
 async function getGitHubFile(fileName) {
     try {
-        const response = await axios.get(`https://api.github.com/repos/Abuigsito/gdvzla/contents/data/${fileName}.json`, {
+        const response = await axios.get(`https://api.github.com/repos/Abuigsito/gdvzla/contents/public/data/${fileName}.json`, {
             headers: {
                 Authorization: `token ${GITHUB_TOKEN}`
             }
@@ -73,7 +73,7 @@ async function getBotMessage(message) {
         return null;
 
     const repliedMessage = await message.channel.messages.fetch(message.reference.messageId);
-    if (!repliedMessage || repliedMessage.author.id !== '1294111960882872341')
+    if (!repliedMessage || repliedMessage.author.id !== process.env.BOT_ID)
         return null;
 
     let userId = null, levelName = null;
@@ -140,7 +140,7 @@ async function createRecordFile(message, fileName, levelName, jsonInfo, userId) 
     // Create new record file
 
     const fileEdited = Buffer.from(JSON.stringify(fileContent, null, 4)).toString("base64");
-    await axios.put(`https://api.github.com/repos/Abuigsito/gdvzla/contents/data/${fileName}.json`, {
+    await axios.put(`https://api.github.com/repos/Abuigsito/gdvzla/contents/public/data/${fileName}.json`, {
         message: `Created record for ${jsonInfo.user} by ${message.author.username}`,
         content: fileEdited,
         branch: 'main'
@@ -195,7 +195,7 @@ async function createRecordFile(message, fileName, levelName, jsonInfo, userId) 
                 levels.find(lvl => getFileName(lvl.name) === levelLists[75])?.name || null;
 
         const fileEditedList = Buffer.from(JSON.stringify(levelLists, null, 4)).toString("base64");
-        await axios.put(`https://api.github.com/repos/Abuigsito/gdvzla/contents/data/_list.json`, {
+        await axios.put(`https://api.github.com/repos/Abuigsito/gdvzla/contents/public/data/_list.json`, {
             message: `Updated _list.json by ${message.author.username}`,
             content: fileEditedList,
             sha: listRespose.sha,
@@ -262,7 +262,7 @@ async function addPlayerToStateList(message, jsonInfo) {
         });
 
         const fileEditedPlayer = Buffer.from(JSON.stringify(playerListResponse.content, null, 4)).toString("base64");
-        await axios.put(`https://api.github.com/repos/Abuigsito/gdvzla/contents/data/_playerStates.json`, {
+        await axios.put(`https://api.github.com/repos/Abuigsito/gdvzla/contents/public/data/_playerStates.json`, {
             message: `Updated _playerStates.json by ${message.author.username}`,
             content: fileEditedPlayer,
             sha: playerListResponse.sha,
@@ -296,7 +296,7 @@ async function addRecord(message, file, jsonInfo, fileName, isMobile) {
     }
 
     const fileEdited = Buffer.from(JSON.stringify(file.content, null, 4)).toString("base64");
-    await axios.put(`https://api.github.com/repos/Abuigsito/gdvzla/contents/data/${fileName}.json`, {
+    await axios.put(`https://api.github.com/repos/Abuigsito/gdvzla/contents/public/data/${fileName}.json`, {
         message: `Added record for ${jsonInfo.user} by ${message.author.username}`,
         content: fileEdited,
         sha: file.sha,
