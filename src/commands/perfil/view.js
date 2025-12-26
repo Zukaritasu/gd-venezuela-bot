@@ -120,7 +120,7 @@ async function view(client, database, interaction) {
 					inline: true
 				} : null,
 			{
-				name: 'Badgets',
+				name: 'Badges',
 				value: member.roles.cache.map(role => {
 					const roleIcon = roleIcons.find(r => r.name.split('_')[1] === role.id);
 					if (roleIcon)
