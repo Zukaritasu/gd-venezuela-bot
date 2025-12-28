@@ -22,6 +22,7 @@ const userKickManager = require('./userKickManager')
 const utils = require('./utils');
 const channels = require('../.botconfig/channels.json');
 const { COLL_SERVER_NEW_ACCOUNTS } = require('../.botconfig/database-info.json')
+const { ACCOUNT_MINIMUM_AGE } = require('../.botconfig/token.json');
 const { RESTJSONErrorCodes } = require('discord-api-types/v10')
 
 /////////////////////////////////////////////////
@@ -165,8 +166,7 @@ async function generateAltServerInvite(client) {
  */
 async function checkUserAccountAge(guild, database, member) {
 	const accountAgeMs = Date.now() - member.user.createdAt.getTime();
-	const daysMs = 21 * 24 * 60 * 60 * 1000; // 21 days in milliseconds
-	if (accountAgeMs < daysMs && !(await verifyAccountInWhiteList(database, member))) {
+	if (accountAgeMs < ACCOUNT_MINIMUM_AGE && !(await verifyAccountInWhiteList(database, member))) {
 		try {
 			const inviteUrl = await generateAltServerInvite(guild.client);
 			await member.send(`Hola! Tu cuenta de Discord no cumple con la antigüedad mínima requerida para ingresar directamente al servidor **GD Venezuela**.\n\nPara verificar tu acceso, únete al siguiente servidor alternativo: ${inviteUrl}\n\nEsto permitirá que el bot y tú compartan un servidor en común y puedas ejecutar el comando /verify por mensaje directo. Un moderador revisará tu solicitud, y si es aprobada, recibirás el enlace al servidor principal, de lo contrario serás baneado del servidor. ***Este proceso puede tardar unas pocas horas o un día***\n\nGracias por tu comprensión.`);
