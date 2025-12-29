@@ -16,6 +16,7 @@
  */
 
 const { ChatInputCommandInteraction, Message, Client, TextChannel } = require('discord.js');
+const { RESTJSONErrorCodes } = require('discord-api-types/v10')
 const { Db } = require('mongodb');
 const utils = require('../../utils')
 const logger = require('../../logger');
@@ -179,14 +180,18 @@ Comentario: ${comment ?? ""}
         await interaction.editReply('Tu progreso ha sido enviado para su revisión');
     } catch (e) {
         logger.ERR('Error in submit command:', e);
-        await interaction.editReply('An unknown error has occurred');
+        try {
+            await interaction.editReply('An unknown error has occurred');
+        } catch (error) {
+            
+        }
     }
 }
 
 /**
  * Sends an error message to the user via DM if they provided incorrect data.
  * If the DM cannot be sent, reacts to the user's message with ❌.
- * 
+ *
  * @param {Message} message 
  * @param {string} errorMessage 
  */
@@ -201,7 +206,13 @@ async function sendErrorDM(message, errorMessage) {
         try {
             await user.send(errorMessage);
         } catch (error) {
-            
+            if (error.code === RESTJSONErrorCodes.CannotSendMessagesToThisUser) {
+                try {
+                    await message.guild.channels.cache.get(channels.BOT)?.send(`<@${user.id}> ${errorMessage}`);
+                } catch (error) {
+                    logger.ERR('Error sending error message to bot channel:', error);
+                }
+            }
         }
         await message.react('❌');
     } catch (e) {
