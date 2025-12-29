@@ -20,6 +20,7 @@ const { EmbedBuilder, ChatInputCommandInteraction, ActionRowBuilder,
     Client } = require('discord.js');
 const utils = require('../../utils');
 const apipcrate = require('../../apipcrate');
+const logger = require('../../logger');
 const { Db } = require('mongodb');
 const playerProfile = require('./demonlist/profile')
 
@@ -82,43 +83,88 @@ async function createEmbedLeaderboard(database, interaction) {
         await interaction.editReply({ content: 'No se encontraron jugadores de este pais' })
         return 
     }
+    const ITEMS_PER_PAGE = 12
 
-    const embed = new EmbedBuilder()
-    embed.setColor(0x2b2d31)
-    embed.setTitle(`Jugadores de la Demonlist`)
-    embed.setFooter({ text: `GD Venezuela` })
-    embed.setThumbnail('https://cdn.discordapp.com/icons/395654171422097420/379cfde8752cedae26b7ea171188953c.png')
-    embed.setTimestamp()
-    embed.addFields(players)
+    const baseEmbedProps = {
+        color: 0x2b2d31,
+        title: 'Jugadores de la Demonlist',
+        footer: { text: 'GD Venezuela' },
+        thumbnail: 'https://cdn.discordapp.com/icons/395654171422097420/379cfde8752cedae26b7ea171188953c.png',
+        author: { name: 'Venezuela', iconURL: 'https://flagcdn.com/w640/ve.png' }
+    }
 
-    embed.setAuthor({
-        name: 'Venezuela',
-        iconURL: 'https://flagcdn.com/w640/ve.png'
-    })
+    const pageCount = Math.max(1, Math.ceil(players.length / ITEMS_PER_PAGE))
+    let currentPage = 0
 
-    const message = { 
-        content: '',
-        embeds: [embed],
-        components: [
-            new ActionRowBuilder().addComponents(
-                new StringSelectMenuBuilder()
-                    .setCustomId('player')
-                    .setPlaceholder('Selecciona un jugador')
-                    .addOptions((() => {
-                        const options = []
-                        players.forEach(player => options.push(
-                            new StringSelectMenuOptionBuilder().setValue(`${options.length}`)
-                                .setLabel(player.originalName)
-                            )
-                        )
-                        return options
-                    })())),
-            new ActionRowBuilder().addComponents(
+    function buildEmbedForPage(page) {
+        const start = page * ITEMS_PER_PAGE
+        const end = Math.min(start + ITEMS_PER_PAGE, players.length)
+        const embed = new EmbedBuilder()
+        embed.setColor(baseEmbedProps.color)
+        embed.setTitle(baseEmbedProps.title)
+        embed.setFooter(baseEmbedProps.footer)
+        embed.setThumbnail(baseEmbedProps.thumbnail)
+        embed.setTimestamp()
+        embed.setAuthor(baseEmbedProps.author)
+        embed.addFields(players.slice(start, end))
+        return embed
+    }
+
+    function buildSelectForPage(page) {
+        const start = page * ITEMS_PER_PAGE
+        const end = Math.min(start + ITEMS_PER_PAGE, players.length)
+        const options = []
+        for (let i = start; i < end; i++) {
+            options.push(
+                new StringSelectMenuOptionBuilder()
+                    .setValue(String(i))
+                    .setLabel(players[i].originalName)
+            )
+        }
+        return new StringSelectMenuBuilder()
+            .setCustomId('player')
+            .setPlaceholder('Selecciona un jugador')
+            .addOptions(options)
+    }
+
+    function buildComponents(page) {
+        const components = []
+
+        components.push(new ActionRowBuilder().addComponents(buildSelectForPage(page)))
+
+        const buttons = []
+        if (pageCount > 1) {
+            buttons.push(
                 new ButtonBuilder()
-                    .setCustomId('close')
-                        .setEmoji('<:closeicon:1219429070266437693>')
-                    .setStyle(ButtonStyle.Danger)
-        )]
+                    .setCustomId('prev')
+                    .setEmoji('<:retroceder:1436857028092887091>')
+                    .setStyle(ButtonStyle.Primary)
+                    .setDisabled(page === 0)
+            )
+            buttons.push(
+                new ButtonBuilder()
+                    .setCustomId('next')
+                    .setEmoji('<:siguiente:1436857026876538900>')
+                    .setStyle(ButtonStyle.Primary)
+                    .setDisabled(page === pageCount - 1)
+            )
+        }
+
+        buttons.push(
+            new ButtonBuilder()
+                .setCustomId('close')
+                .setEmoji('<:closeicon:1219429070266437693>')
+                .setStyle(ButtonStyle.Danger)
+        )
+
+        components.push(new ActionRowBuilder().addComponents(buttons))
+        return components
+    }
+
+    let message = {
+        content: '',
+        embeds: [buildEmbedForPage(currentPage)],
+        components: buildComponents(currentPage)
     }
 
     try {
@@ -143,10 +189,26 @@ async function createEmbedLeaderboard(database, interaction) {
 
             if (confirmation.customId === 'close') {
                 await interaction.deleteReply(response); break;
+            } else if (confirmation.customId === 'prev') {
+                if (currentPage > 0) currentPage--
+                message = {
+                    content: '',
+                    embeds: [buildEmbedForPage(currentPage)],
+                    components: buildComponents(currentPage)
+                }
+                continue
+            } else if (confirmation.customId === 'next') {
+                if (currentPage < pageCount - 1) currentPage++
+                message = {
+                    content: '',
+                    embeds: [buildEmbedForPage(currentPage)],
+                    components: buildComponents(currentPage)
+                }
+                continue
             } else if (confirmation.customId === 'player') {
                 let embedProfileMessage = null
                 try {
-                    const embedProfile = await playerProfile.createEmbedProfile(undefined, database, interaction, 
+                    const embedProfile = await playerProfile.createEmbedProfile(undefined, database, interaction,
                         players[parseInt(confirmation.values[0])].playerId)
 
                     if (!embedProfile) {
@@ -167,7 +229,7 @@ async function createEmbedLeaderboard(database, interaction) {
                             new ActionRowBuilder().addComponents(
                                 new ButtonBuilder()
                                     .setCustomId('back')
-                                        .setEmoji('<:goback:1295223304205897730>')
+                                        .setEmoji('<:retroceder:1436857028092887091>')
                                     .setStyle(ButtonStyle.Primary),
                                 new ButtonBuilder()
                                     .setCustomId('close')
@@ -214,7 +276,7 @@ async function createEmbedLeaderboard(database, interaction) {
     } catch (e) {
         try { // try catch to ensure if a new exception occurs from calling the editReply method
             if (e.message !== ERROR_TIMEOUT_MESSAGE) {
-                console.error(e)
+                logger.ERR('Error in createEmbedLeaderboard:', e);
                 await interaction.editReply(
                     {
                         embeds: [],
@@ -236,7 +298,7 @@ async function createEmbedLeaderboard(database, interaction) {
                 );
             }
         } catch (err) {
-            console.error(err)
+            logger.ERR('Error handling exception in createEmbedLeaderboard:', err);
         }
     }
 }
@@ -252,8 +314,12 @@ async function execute(_client, database, interaction) {
         await interaction.deferReply();
         await createEmbedLeaderboard(database, interaction)
     } catch (error) {
-        console.error(error)
-        await interaction.editReply('An unknown error has occurred. Please try again later');
+        logger.ERR('Error in demonlist-players command:', error);
+        if (interaction.deferred || interaction.replied) {
+            await interaction.editReply('An unknown error has occurred');
+        } else {
+            await interaction.reply('An unknown error has occurred');
+        }
     }
 }
 
