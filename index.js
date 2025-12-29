@@ -18,11 +18,10 @@
 const { fork } = require('child_process');
 const fs = require('fs');
 const crypto = require('crypto');
-const path = require('path');
 const { exit } = require('process');
 const logger = require('./src/logger')
 const botenv = require('./src/botenv')
-const fetch = require('node-fetch');
+/* const fetch = require('node-fetch'); */
 
 /////////////////////////////////////////////////
 // Main bot launcher
@@ -94,7 +93,6 @@ async function executeSubprocess(command) {
  */
 async function verifyClockIntegrity() {
     const fetchReliably = async () => {
-        let lastError = null;
         while (true) {
             try {
                 const response = await fetch('https://worldtimeapi.org/api/timezone/Etc/UTC');
@@ -103,10 +101,7 @@ async function verifyClockIntegrity() {
                 if (!RETRYABLE_STATUS_CODES.includes(response.status))
                     throw new Error(`Non-retryable HTTP status: ${response.status}`);
             } catch (error) {
-                if (lastError === null || lastError.message !== error.message) {
-                    logger.ERR(`Error fetching time from worldtimeapi.org: ${error.message}`);
-                    lastError = error;
-                }
+                logger.ERR(error);
                 return null
             }
 
