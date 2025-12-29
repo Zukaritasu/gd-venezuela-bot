@@ -94,6 +94,7 @@ async function executeSubprocess(command) {
  */
 async function verifyClockIntegrity() {
     const fetchReliably = async () => {
+        let lastError = null;
         while (true) {
             try {
                 const response = await fetch('https://worldtimeapi.org/api/timezone/Etc/UTC');
@@ -102,7 +103,10 @@ async function verifyClockIntegrity() {
                 if (!RETRYABLE_STATUS_CODES.includes(response.status))
                     throw new Error(`Non-retryable HTTP status: ${response.status}`);
             } catch (error) {
-                logger.ERR(error)
+                if (lastError === null || lastError.message !== error.message) {
+                    logger.ERR(`Error fetching time from worldtimeapi.org: ${error.message}`);
+                    lastError = error;
+                }
                 return null
             }
 
