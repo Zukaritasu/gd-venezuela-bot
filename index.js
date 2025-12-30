@@ -20,7 +20,9 @@ const fs = require('fs');
 const crypto = require('crypto');
 const { exit } = require('process');
 const logger = require('./src/logger')
-const botenv = require('./src/botenv')
+const botenv = require('./src/botenv');
+const { TIMEZONEDB_API_KEY } = require('./.botconfig/token.json')
+
 /* const fetch = require('node-fetch'); */
 
 /////////////////////////////////////////////////
@@ -95,14 +97,15 @@ async function verifyClockIntegrity() {
     const fetchReliably = async () => {
         while (true) {
             try {
-                const response = await fetch('https://worldtimeapi.org/api/timezone/Etc/UTC');
-                if (response.ok)
-                    return response;
+                const response = await fetch(
+                    `https://api.timezonedb.com/v2.1/get-time-zone?key=${TIMEZONEDB_API_KEY}&format=json&by=zone&zone=Etc/UTC`, 
+                    { timeout: 5000 });
+                if (response.ok) return response;
                 if (!RETRYABLE_STATUS_CODES.includes(response.status))
                     throw new Error(`Non-retryable HTTP status: ${response.status}`);
             } catch (error) {
-                logger.ERR(error);
-                return null
+                logger.ERR(`Error fetching time: ${JSON.stringify(details)}`);
+                return null;
             }
 
             await sleep(RETRY_INTERVAL_MS);
@@ -114,7 +117,7 @@ async function verifyClockIntegrity() {
         if (!response)
             return false
         const data = await response.json();
-        const timeDifference = Math.abs(new Date(data.utc_datetime).getTime() - new Date().getTime());
+        const timeDifference = Math.abs((data.timestamp * 1000) - Date.now());
 
         if (timeDifference > MAX_ALLOWED_DIFFERENCE_MS)
             throw new Error(`Clock out of sync by: ${timeDifference / 1000}s.`);
