@@ -38,15 +38,15 @@ const topxpBacklist = require('../text-commands/topxp-blacklist')
  * @returns {Promise<UserInfo | undefined>}
  */
 async function getUserInfo(database, member) {
-    /** @type {{_id: string, type: string, userslist: UserInfo[] | undefined}} */
+    /** @type {{_id: string, type: string, userlist: UserInfo[] | undefined}} */
     const top_xp = await database.collection(COLL_TEXT_XP).findOne(
         {
-            type: 'userslist'
+            type: 'userlist'
         });
 
-    if (!top_xp || !('userslist' in top_xp))
+    if (!top_xp || !('userlist' in top_xp))
         return undefined;
-    return top_xp.userslist.find(user => user.id === member.id)
+    return top_xp.userlist.find(user => user.id === member.id)
 }
 
 /**

@@ -168,7 +168,7 @@ async function removeInvalidRolesFromUsers(guildMembers, users, _message, usersE
  * @param {{ id: string, position: number, assigned: boolean, xp: number }[]} users 
  * @returns {Promise<boolean>} 
  */
-async function saveUsersListXP(database, message, users) {
+async function saveUserListXP(database, message, users) {
     try {
         const config = await database.collection(COLL_TEXT_XP).findOne({ type: 'userlist' });
         const op = config
@@ -212,7 +212,7 @@ async function scan(database, message, parameters) {
             return message.reply(`${users.length} users have been found, ${topLimits.limit - users.length} user(s) are missing. Insert another page`)
 
         users.splice(topLimits.limit)
-        if (!await saveUsersListXP(database, message, users))
+        if (!await saveUserListXP(database, message, users))
             return
 
         const rolesRemoved = await debugUserRoles(guildMembers, message, usersException)

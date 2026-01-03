@@ -30,10 +30,10 @@ const { COLL_TEXT_XP } = require('../../../.botconfig/database-info.json')
 async function getTopXPEmbed(database, interaction) {
     const top_xp = await database.collection(COLL_TEXT_XP).findOne(
         {
-            type: 'userslist'
+            type: 'userlist'
         });
 
-    if (!top_xp || !('userslist' in top_xp))
+    if (!top_xp || !('userlist' in top_xp))
         return null
         
     const embed = new EmbedBuilder()
@@ -59,15 +59,15 @@ async function getTopXPEmbed(database, interaction) {
         return `\`${str}\``;
     }
 
-    for (let i = 0; i < top_xp.userslist.length && i < topLimits.positions; i++) {
-        const member = await interaction.guild.members.fetch(top_xp.userslist[i].id)
+    for (let i = 0; i < top_xp.userlist.length && i < topLimits.positions; i++) {
+        const member = await interaction.guild.members.fetch(top_xp.userlist[i].id)
         let userName = '';
         if (!member) {
             userName = '<Usuario desconocido>';
         } else {
             userName = `[${member.user.username}](${member.user.displayAvatarURL({ dynamic: true })})`;
         }
-        description += `<:estrella2:1303859148877987880> ${formatNumber(position++)} ${userName} | XP: \`${top_xp.userslist[i].xp}\` ${top_xp.userslist[i].id === interaction.member.id ? '**<**' : ''}\n`
+        description += `<:estrella2:1303859148877987880> ${formatNumber(position++)} ${userName} | XP: \`${top_xp.userlist[i].xp}\` ${top_xp.userlist[i].id === interaction.member.id ? '**<**' : ''}\n`
     }
 
     embed.setDescription(description)
