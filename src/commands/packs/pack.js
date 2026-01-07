@@ -149,6 +149,30 @@ async function saveUsernameToLeaderboard(message, repliedMessage, embedData) {
 	if (!isDmClosed)
 		await message.react('📧')
 	await message.react('✅')
+
+	// assign a role to the user
+	try {
+		const guild = message.guild
+		if (guild) {
+			// TODO: the nmane of the role may be different or similar to the pack name
+			const role = guild.roles.cache.find(role => role.name.toLowerCase() === embedData.packname.toLowerCase())
+			if (role) {
+				const member = await guild.members.fetch(embedData.userId).catch(() => null);
+				if (member && !member.roles.cache.has(role.id)) {
+					await member.roles.add(role, 'User accepted on the leaderboard')
+				}
+			}
+		}
+	} catch (error) {
+		logger.ERR(error)
+
+		try {
+			await message.reply('El usuario se ha agregado al leaderboard del pack, \
+				pero no se ha podido asignar el rol automáticamente')
+		} catch (e) {
+			
+		}
+	}
 }
 
 /**
@@ -167,8 +191,9 @@ async function handlePack(message, condition) {
 			return await message.reply('Has respondido a un mensaje no válido o inexistente.')
 		}
 
+
 		const embedData = getEmbedData(repliedMessage)
-		if (!embedData || !embedData.packname || !embedData.userId || !embedData.username) {
+		if (!embedData || Object.values(embedData).some(value => value === null)) {
 			return await message.reply(`Embed no válido`)
 		}
 
@@ -178,13 +203,13 @@ async function handlePack(message, condition) {
 			return await saveUsernameToLeaderboard(message, repliedMessage, embedData)
 		} else {
 			const content = message.content.substring('--rechazar'.length).trim()
-			let isDmClosed = await sendMessage(message.client, embedData.userId, 
+			let isDmClosed = await sendMessage(message.client, embedData.userId,
 				`Tu solicitud ha sido rechazada para entrar en la clasificacion del pack **${embedData.packname}**.\n` +
 				`Razón: ${content.length === 0 ? '*el moderador no especificó una razón.*' : content}`)
-			
+
 			await repliedMessage.react('❌')
 
-			if (!isDmClosed) 
+			if (!isDmClosed)
 				await message.react('📧')
 			await message.react('✅')
 		}

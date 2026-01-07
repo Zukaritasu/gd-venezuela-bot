@@ -23,10 +23,6 @@ const gdvzlalistapi = require('../../gdvzlalistapi');
 const { COLL_GDVZLA_LIST_PROFILES } = require('../../../.botconfig/database-info.json')
 const { Db } = require('mongodb')
 
-//////////////////////////////////////////////
-
-const GD_VENEZUELA_GUILD_ID = '1119795689984102455';
-const VENEZUELAN_ROLE_ID = '1119804850620866600';
 
 /**
  * 
@@ -41,7 +37,7 @@ async function verifyConditionsToContinue(client, interaction) {
 		return false
 	}
 
-	const guild = client.guilds.cache.get(GD_VENEZUELA_GUILD_ID);
+	const guild = client.guilds.cache.get(process.env.SERVER_GD_VENEZUELA_ID);
 	if (guild) {
 		try {
 			const member = await guild.members.fetch(interaction.user.id);
@@ -51,9 +47,9 @@ async function verifyConditionsToContinue(client, interaction) {
 				});
 			}
 
-			if (member.roles.cache.has(VENEZUELAN_ROLE_ID))
+			if (member.roles.cache.has(process.env.ID_ROL_VENEZOLANO))
 				return true
-			return await interaction.editReply({
+			await interaction.editReply({
 				content: 'Comando disponible solo para Venezolanos.'
 			});
 		} catch (err) {
@@ -72,7 +68,7 @@ async function verifyConditionsToContinue(client, interaction) {
  * @param {string} packName 
  */
 async function sendPack(client, levels, interaction, profile, packName) {
-	const guild = client.guilds.cache.get(GD_VENEZUELA_GUILD_ID);
+	const guild = client.guilds.cache.get(process.env.SERVER_GD_VENEZUELA_ID);
 	if (guild) {
 		const channel = await guild.channels.fetch(channels.SUBMITS)
 		if (!channel) {
@@ -165,7 +161,8 @@ async function execute(client, database, interaction) {
 
 			// If the user already has the role assigned to the requested package,
 			// they do not need to send proof of their levels; they will be approved directly.
-			const member = await client.guilds.cache.get(GD_VENEZUELA_GUILD_ID).members.fetch(interaction.user.id)
+			const member = await client.guilds.cache.get(process.env.SERVER_GD_VENEZUELA_ID)
+				.members.fetch(interaction.user.id)
 			if (!member) {
 				return await interaction.editReply({
 					content: 'No se pudo verificar tu membresía. Asegúrate de estar en el servidor de GD Venezuela'
