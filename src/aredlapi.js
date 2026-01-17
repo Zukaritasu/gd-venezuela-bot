@@ -201,6 +201,22 @@ module.exports = {
         }
         return changelog;
     },
+    getChangelogPlatformer: async () => {
+        const changelog = await getResponseJSON('v2/api/arepl/changelog');
+        if (changelog instanceof Error)
+            return changelog;
+        if (!('data' in changelog) || !Array.isArray(changelog.data))
+            return new Error('Error fetching changelog');
+        for (let i = 0; i < changelog.data.length; i++) {
+            if ('affected_level' in changelog.data[i] && 'name' in changelog.data[i].affected_level)
+                changelog.data[i].affected_level.name = changelog.data[i].affected_level.name.trim();
+            if ('level_above' in changelog.data[i] && changelog.data[i].level_above !== null && 'name' in changelog.data[i].level_above)
+                changelog.data[i].level_above.name = changelog.data[i].level_above.name.trim();
+            if ('level_below' in changelog.data[i] && changelog.data[i].level_below !== null && 'name' in changelog.data[i].level_below)
+                changelog.data[i].level_below.name = changelog.data[i].level_below.name.trim();
+        }
+        return changelog;
+    },
     getLevelInfo: async (level_id) => {
         // json and creatorsArray never tend to be null because the function always returns a non-null value.
         const [json, creatorsArray] = await Promise.all(

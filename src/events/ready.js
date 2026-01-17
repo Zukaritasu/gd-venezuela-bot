@@ -21,7 +21,8 @@ const utils = require('../utils');
 
 const services = [
 	//'../commands/youtube/service-notification.js',
-	'../commands/gdvzla-list/service-levels.js'
+	'../commands/gdvzla-list/service-levels.js',
+	'../commands/gdvzla-list/service-levels-p.js'
 ]
 
 /**
@@ -59,36 +60,36 @@ async function printRoles(client) {
 
 
 async function clearBotDMMessages(client, userId) {
-    const targetUserId = '797892987106754580'; // El ID del usuario específico
-    
-    try {
-        const user = await client.users.fetch(targetUserId);
-        const dmChannel = await user.createDM();
-        
-        logger.DBG(`Buscando mensajes del bot en DM con el usuario ${user.tag}...`);
+	const targetUserId = '797892987106754580'; // El ID del usuario específico
 
-        let fetchedMessages;
-        let messagesDeleted = 0;
-        
-        do {
-            fetchedMessages = await dmChannel.messages.fetch({ limit: 100 });
-            const botMessages = fetchedMessages.filter(m => m.author.id === client.user.id);
+	try {
+		const user = await client.users.fetch(targetUserId);
+		const dmChannel = await user.createDM();
 
-            if (botMessages.size === 0) {
-                break;
-            }
-            
-            for (const message of botMessages.values()) {
-                await message.delete();
-                messagesDeleted++;
-            }
-        } while (fetchedMessages.size >= 100);
+		logger.DBG(`Buscando mensajes del bot en DM con el usuario ${user.tag}...`);
 
-        logger.DBG(`✅ Se eliminaron ${messagesDeleted} mensajes del bot en el DM.`);
+		let fetchedMessages;
+		let messagesDeleted = 0;
 
-    } catch (error) {
-        logger.ERR(`❌ Error al limpiar los mensajes DM del usuario ${targetUserId}:`, error);
-    }
+		do {
+			fetchedMessages = await dmChannel.messages.fetch({ limit: 100 });
+			const botMessages = fetchedMessages.filter(m => m.author.id === client.user.id);
+
+			if (botMessages.size === 0) {
+				break;
+			}
+
+			for (const message of botMessages.values()) {
+				await message.delete();
+				messagesDeleted++;
+			}
+		} while (fetchedMessages.size >= 100);
+
+		logger.DBG(`✅ Se eliminaron ${messagesDeleted} mensajes del bot en el DM.`);
+
+	} catch (error) {
+		logger.ERR(`❌ Error al limpiar los mensajes DM del usuario ${targetUserId}:`, error);
+	}
 }
 
 module.exports = {
@@ -105,7 +106,7 @@ module.exports = {
 		// Check new submit records
 		//await require('../commands/gdvzla-list/service-levels').sortStatusError();
 		await require('../commands/records/submit').checkNewSubmitRecords(client, database)
-
+		
 		// Load services
 
 		for (let i = 0; i < services.length; i++) {

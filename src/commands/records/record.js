@@ -175,14 +175,15 @@ async function createRecordFile(message, fileName, levelName, jsonInfo, userId) 
         throw new Error(`El archivo **${fileNameList}.json** no existe en el repositorio.`);
 
     const levelLists = listRespose.content;
+    const currentLevels = isPlatformer ? levelsPlat : levels;
     if (!levelLists.includes(fileName)) {
         let insertIndex = levelLists.length;
-        const levelIndex = levels.findIndex(lvl => lvl.name === levelName);
+        const levelIndex = currentLevels.findIndex(lvl => lvl.name === levelName);
 
         for (let i = 0; i < levelLists.length; i++) {
-            const currentLevelName = levels.find(lvl => getFileName(lvl.name) === levelLists[i])?.name;
+            const currentLevelName = currentLevels.find(lvl => getFileName(lvl.name) === levelLists[i])?.name;
             if (currentLevelName) {
-                const currentIndex = levels.findIndex(lvl => lvl.name === currentLevelName);
+                const currentIndex = currentLevels.findIndex(lvl => lvl.name === currentLevelName);
                 if (levelIndex < currentIndex) {
                     insertIndex = i;
                     break;
@@ -197,16 +198,16 @@ async function createRecordFile(message, fileName, levelName, jsonInfo, userId) 
 
         if (insertIndex - 1 >= 0)
             changes.levelNameUp =
-                levels.find(lvl => getFileName(lvl.name) === levelLists[insertIndex - 1])?.name || null;
+                currentLevels.find(lvl => getFileName(lvl.name) === levelLists[insertIndex - 1])?.name || null;
         if (insertIndex + 1 < levelLists.length)
             changes.levelNameDown =
-                levels.find(lvl => getFileName(lvl.name) === levelLists[insertIndex + 1])?.name || null;
+                currentLevels.find(lvl => getFileName(lvl.name) === levelLists[insertIndex + 1])?.name || null;
         if (levelLists.length > 150)
             changes.levelLegacy =
-                levels.find(lvl => getFileName(lvl.name) === levelLists[150])?.name || null;
+                currentLevels.find(lvl => getFileName(lvl.name) === levelLists[150])?.name || null;
         if (insertIndex < 75)
             changes.levelExtended =
-                levels.find(lvl => getFileName(lvl.name) === levelLists[75])?.name || null;
+                currentLevels.find(lvl => getFileName(lvl.name) === levelLists[75])?.name || null;
 
         const fileEditedList = Buffer.from(JSON.stringify(levelLists, null, 4)).toString("base64");
         await axios.put(`https://api.github.com/repos/Abuigsito/gdvzla/contents/public/data/${fileNameList}.json`, {
