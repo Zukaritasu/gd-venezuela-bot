@@ -111,14 +111,27 @@ async function getBotMessage(message) {
  * indexInserted: number, levelLegacy: string|null, levelExtended: string|null}>}
  */
 async function createRecordFile(message, fileName, levelName, jsonInfo, userId) {
-    const levels = await aredlapi.getLevels();
-    const matchingLevels = levels.filter(lvl => lvl.name === levelName)[0];
-    const levelInfo = await aredlapi.getLevelInfo(matchingLevels.level_id);
+    const [levels, levelsPlat] = await Promise.all([
+        aredlapi.getLevels(),
+        aredlapi.getLevelsPlatformer()
+    ]);
+
+    let isPlatformer = false;
+    let matchingLevel = levels.find(lvl => lvl.name === levelName);
+    if (!matchingLevel) {
+        matchingLevel = levelsPlat.find(lvl => lvl.name === levelName);
+        if (!matchingLevel)
+            throw new Error(`The level **${levelName}** does not exist in AREDL`);
+        isPlatformer = true;
+    }
+
+    const levelInfo = isPlatformer ? await aredlapi.getLevelPlatformerInfo(matchingLevel.level_id)
+        : await aredlapi.getLevelInfo(matchingLevel.level_id);
     const creators = levelInfo.creators;
 
     const fileContent = {
-        id: matchingLevels.level_id,
-        name: matchingLevels.name,
+        id: matchingLevel.level_id,
+        name: matchingLevel.name,
         author: levelInfo.publisher.global_name,
         verifier: jsonInfo.user,
         creators: creators.map(creator => creator.global_name),
@@ -150,15 +163,16 @@ async function createRecordFile(message, fileName, levelName, jsonInfo, userId) 
         }
     });
 
-    // Add level to _list.json
+    // Add level to _list.json or _list-plat.json
 
     /**
      * @type {{sha: string, content: string[]}}
      */
 
-    const listRespose = await getGitHubFile('_list');
+    const fileNameList = isPlatformer ? '_list-plat' : '_list';
+    const listRespose = await getGitHubFile(fileNameList);
     if (!listRespose)
-        throw new Error('El archivo **_list.json** no existe en el repositorio.');
+        throw new Error(`El archivo **${fileNameList}.json** no existe en el repositorio.`);
 
     const levelLists = listRespose.content;
     if (!levelLists.includes(fileName)) {
@@ -195,8 +209,8 @@ async function createRecordFile(message, fileName, levelName, jsonInfo, userId) 
                 levels.find(lvl => getFileName(lvl.name) === levelLists[75])?.name || null;
 
         const fileEditedList = Buffer.from(JSON.stringify(levelLists, null, 4)).toString("base64");
-        await axios.put(`https://api.github.com/repos/Abuigsito/gdvzla/contents/public/data/_list.json`, {
-            message: `Updated _list.json by ${message.author.username}`,
+        await axios.put(`https://api.github.com/repos/Abuigsito/gdvzla/contents/public/data/${fileNameList}.json`, {
+            message: `Updated ${fileNameList}.json by ${message.author.username}`,
             content: fileEditedList,
             sha: listRespose.sha,
             branch: 'main'
@@ -211,21 +225,38 @@ async function createRecordFile(message, fileName, levelName, jsonInfo, userId) 
 
     await addPlayerToStateList(message, jsonInfo);
 
-    return changes;
+    return {changes: changes, isPlatformer: isPlatformer};
 }
 
-/** * Prints the changes made to the record file.
+/**
+ * Prints the changes made to the record file.
  * @param {{levelNameUp: string|null, levelNameDown: string|null, levelInserted: string|null, indexInserted: number, 
  * levelLegacy: string|null, levelExtended: string|null}} changes
  * - The changes made to the record file.
  * @param {Guild} guild - The Discord guild where the changes occurred.
  * @returns {Promise<void>}
  */
-async function printChanges(changes, guild) {
-    const message = `**${changes.levelInserted}** ha sido agregado al top #${changes.indexInserted + 1}, ${changes.levelNameUp ?
-        `por encima de **${changes.levelNameDown}** y por debajo de **${changes.levelNameUp}**` : `por encima de **${changes.levelNameDown}**`}.` +
-        `\n${changes.levelExtended ? `Este cambio empuja a **${changes.levelExtended}** a la extended list y a **${changes.levelLegacy}** a la legacy list`
-            : `Este cambio empuja a **${changes.levelLegacy}** a la legacy list`}.`
+async function printChanges(changes, guild, isPlatformer) {
+    let message = isPlatformer ? `(Plat.) ` : ``;
+    message += `**${changes.levelInserted}** ha sido agregado al top #${changes.indexInserted + 1}`;
+
+    if (changes.levelNameDown && changes.levelNameUp) {
+        message += `, por encima de **${changes.levelNameDown}** y por debajo de **${changes.levelNameUp}**.`;
+    } else if (changes.levelNameDown) {
+        message += `, por encima de **${changes.levelNameDown}**.`;
+    } else if (changes.levelNameUp) {
+        message += `, por debajo de **${changes.levelNameUp}**.`;
+    } else {
+        message += `.`;
+    }
+
+    if (changes.levelExtended && changes.levelLegacy) {
+        message += `\nEste cambio empuja a **${changes.levelExtended}** a la extended list y a **${changes.levelLegacy}** a la legacy list.`;
+    } else if (changes.levelLegacy) {
+        message += `\nEste cambio empuja a **${changes.levelLegacy}** a la legacy list.`;
+    } else if (changes.levelExtended) {
+        message += `\nEste cambio empuja a **${changes.levelExtended}** a la extended list.`;
+    }
 
     /** @type {TextChannel} */
     const channel = await guild.channels.fetch(channels.LIST_CHANGES); // lista-cambios
@@ -356,9 +387,9 @@ async function handleProgress(message, isAccept) {
             const fileName = getFileName(levelName);
             let file = await getGitHubFile(fileName);
             if (!file) { // File doesn't exist, create it
-                const changes = await createRecordFile(message, fileName, levelName, jsonInfo, userId);
+                const report = await createRecordFile(message, fileName, levelName, jsonInfo, userId);
                 await message.reply(`El archivo **${fileName}.json** no existe, por lo que se ha creado uno nuevo.`);
-                await printChanges(changes, message.guild);
+                await printChanges(report.changes, message.guild, report.isPlatformer);
             } else if (file.content.verifier === jsonInfo.user ||
                 file.content.records.some(record => record.user === jsonInfo.user && record.percent >= 100)) {
                 await botRecord.react('✅');

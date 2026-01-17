@@ -19,12 +19,7 @@ const { SlashCommandBuilder, ChatInputCommandInteraction } = require('discord.js
 const aredlapi = require('../aredlapi');
 const logger = require('../logger');
 
-//
-// +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-//
-
 /**
- * 
  * @param {*} client 
  * @param {*} database 
  * @param {ChatInputCommandInteraction} interaction 
@@ -112,7 +107,12 @@ module.exports = {
         const focusedValue = interaction.options.getFocused();
 
         try {
-            const levels = await aredlapi.getLevels();
+            const [levels, levelsPlat] = await Promise.all([
+                aredlapi.getLevels(),
+                aredlapi.getLevelsPlatformer()
+            ]);
+            levels.push(...levelsPlat);
+
             const filteredLevels = levels
                 .filter(level => level.name.toLowerCase().includes(focusedValue.toLowerCase()))
                 .map(level => ({ name: level.name, value: level.name }))

@@ -169,6 +169,13 @@ module.exports = {
                 levels[i].name = levels[i].name.trim();
         return levels;
     },
+    getLevelsPlatformer: async () => {
+        const levels = await getResponseJSON('v2/api/arepl/levels');
+        if (!(levels instanceof Error))
+            for (let i = 0; i < levels.length; i++)
+                levels[i].name = levels[i].name.trim();
+        return levels;
+    },
     getLevelCreators: (level_id) => getResponseJSON(`v2/api/aredl/levels/${level_id}/creators`),
     getLevel: async (level_id) => {
         const level = await getResponseJSON(`v2/api/aredl/levels/${level_id}`);
@@ -215,4 +222,26 @@ module.exports = {
         json['creators'] = creatorsArray.length > 0 ? creatorsArray : [json.publisher];
         return json;
     },
+
+    getLevelPlatformerInfo: async (level_id) => {
+        // json and creatorsArray never tend to be null because the function always returns a non-null value.
+        const [json, creatorsArray] = await Promise.all(
+            [
+                getResponseJSON(`v2/api/arepl/levels/${level_id}`),
+                getResponseJSON(`v2/api/arepl/levels/${level_id}/creators`)
+            ]
+        );
+
+        if (json instanceof Error)
+            throw json;
+        if (creatorsArray instanceof Error)
+            throw creatorsArray;
+        if (!Array.isArray(creatorsArray))
+            throw new Error('Error fetching creators');
+
+        if ('name' in json)
+            json.name = json.name.trim();
+        json['creators'] = creatorsArray.length > 0 ? creatorsArray : [json.publisher];
+        return json;
+    }
 }

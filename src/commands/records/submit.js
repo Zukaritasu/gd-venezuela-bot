@@ -90,7 +90,12 @@ async function getPlayerName(interaction, player) {
  */
 async function getLevelName(message, level) {
     let levelName = level.trim().toLowerCase();
-    const levels = await aredlapi.getLevels();
+    const [levels, levelsPlat] = await Promise.all([
+        aredlapi.getLevels(),
+        aredlapi.getLevelsPlatformer()
+    ]);
+    
+    levels.push(...levelsPlat);
     const matchingLevels = levels.filter(lvl => lvl.name.toLowerCase() === levelName);
 
     if (matchingLevels.length !== 1) {
