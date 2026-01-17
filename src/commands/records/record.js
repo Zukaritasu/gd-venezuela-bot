@@ -339,7 +339,7 @@ async function sendMessageToUser(message, member, content) {
 }
 
 /**
- * Maneja la aceptación o rechazo de un progreso.
+ * 
  * @param {Message} message 
  * @param {boolean} isAccept 
  */
