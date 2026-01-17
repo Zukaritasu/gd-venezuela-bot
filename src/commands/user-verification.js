@@ -21,7 +21,7 @@ const logger = require('../logger');
 const utils = require('../utils');
 const channels = require('../../.botconfig/channels.json');
 const { COLL_SERVER_NEW_ACCOUNTS } = require('../../.botconfig/database-info.json');
-const { RESTJSONErrorCodes } = require('discord-api-types/v10')
+const { RESTJSONErrorCodes, MessageFlags } = require('discord-api-types/v10')
 
 /**
  * Checks if the user is inside the server
@@ -78,10 +78,10 @@ async function getUserIDAux(message) {
  * to the moderation channel notifying the staff of the verification request.
  * 
  * @param {Client} client 
- * @param {Db} _database 
+ * @param {Db} db 
  * @param {ChatInputCommandInteraction} interaction 
  */
-async function execute(client, _database, interaction) {
+async function execute(client, db, interaction) {
     try {
         await interaction.deferReply();
         // Check if the user is inside the server
@@ -93,13 +93,28 @@ async function execute(client, _database, interaction) {
         }
 
         // Check if the user is in the blacklist
-        const blacklist = await _database.collection(COLL_SERVER_NEW_ACCOUNTS).findOne({ type: 'blacklist' });
+        const blacklist = await db.collection(COLL_SERVER_NEW_ACCOUNTS).findOne({ type: 'blacklist' });
         if (blacklist && Array.isArray(blacklist.accounts) && blacklist.accounts.includes(interaction.user.id)) {
             await interaction.editReply({
                 content: '¡Acción denegada! / Action denied!'
             });
             return;
         }
+
+        const verPending = await db.collection(COLL_SERVER_NEW_ACCOUNTS).findOne({ type: 'pending' });
+        if (verPending && Array.isArray(verPending.accounts) && verPending.accounts.includes(interaction.user.id)) {
+            await interaction.editReply({
+                content: 'Ya has solicitado verificación. Por favor, espera a que el staff revise tu solicitud.',
+                flags: MessageFlags.Ephemeral
+            });
+            return;
+        }
+
+        // Add user to pending verifications
+        await db.collection(COLL_SERVER_NEW_ACCOUNTS).updateOne(
+            { type: 'pending' },
+            { $addToSet: { accounts: interaction.user.id } },
+            { upsert: true });
 
         const channel = (await client.guilds.fetch(utils.GD_VENEZUELA_SERVER_ID))
             .channels.cache.get(channels.MODERATION);
@@ -173,6 +188,11 @@ async function denyUser(client, database, message, messageParts) {
             { $addToSet: { accounts: userId } },
             { upsert: true });
 
+        // Remove userId from the pending verifications
+        await database.collection(COLL_SERVER_NEW_ACCOUNTS).updateOne(
+            { type: 'pending' },
+            { $pull: { accounts: userId } });
+
         // Try to fetch the user object
         const user = await client.users.fetch(userId);
         let dbClose = false;
@@ -239,6 +259,11 @@ async function approveUser(client, database, message, messageParts) {
             { type: 'whitelist' },
             { $addToSet: { accounts: userId } },
             { upsert: true });
+
+        // Remove userId from the pending verifications
+        await database.collection(COLL_SERVER_NEW_ACCOUNTS).updateOne(
+            { type: 'pending' },
+            { $pull: { accounts: userId } });
 
         // Notify the user
         const user = await client.users.fetch(userId);
