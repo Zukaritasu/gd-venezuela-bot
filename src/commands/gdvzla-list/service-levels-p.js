@@ -160,7 +160,7 @@ function generateChangeMessage(changeEvents) {
     } = changeEvents;
 
     const direction = to < from ? 'subido' : 'bajado';
-    const base = `**${levelName}** ha ${direction} desde el top #${from} al top #${to}`;
+    const base = `*(Platformer)* **${levelName}** ha ${direction} desde el top #${from} al top #${to}`;
 
     let context = '';
     if (to === 1) {

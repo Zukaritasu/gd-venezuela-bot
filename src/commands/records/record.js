@@ -238,7 +238,7 @@ async function createRecordFile(message, fileName, levelName, jsonInfo, userId) 
  * @returns {Promise<void>}
  */
 async function printChanges(changes, guild, isPlatformer) {
-    let message = isPlatformer ? `(Plat.) ` : ``;
+    let message = isPlatformer ? `*(Platformer)* ` : ``;
     message += `**${changes.levelInserted}** ha sido agregado al top #${changes.indexInserted + 1}`;
 
     if (changes.levelNameDown && changes.levelNameUp) {
