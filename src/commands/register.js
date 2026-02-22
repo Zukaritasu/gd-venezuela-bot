@@ -163,9 +163,11 @@ function extractKeyValuePairs(str) {
 
     const addProperty = () => {
         const item = keysValues.find(item => item.key == parseInt(key));
-        if (item.value === 'message')
-            value = Buffer.from(value, 'base64').toString('utf-8')
-        map.set(item.value, value);
+        if (item) {
+            if (item.value === 'message')
+                value = Buffer.from(value, 'base64').toString('utf-8')
+            map.set(item.value, value);
+        }
     }
 
     for (let i = 0; i < str.length; i++) {
