@@ -381,7 +381,7 @@ async function service(db, client) {
 
         description: 'Self-organizing service of levels of GD Venezuela List (Platformer)',
         name: 'service-levels',
-        fullname: 'GD Venezuela List Service Levels'
+        fullname: 'GD Venezuela List Service Levels (Platformer)'
     }
 }
 
