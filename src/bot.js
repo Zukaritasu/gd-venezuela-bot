@@ -51,9 +51,12 @@ process.chdir(__dirname);
 
     try {
         await redisClient.connect();
-        logger.INF('Redis client connected')
+        logger.INF('Redis client connected!')
         
         modules.forEach(module => require(module).setRedisClientObject(redisClient))
+        
+        // Initialize activity module with Redis and database
+        await require('./commands/leveling/activity').setRedisClientObject(redisClient, database)
     } catch (e) {
         logger.ERR(e)
 		return
