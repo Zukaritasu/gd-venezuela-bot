@@ -15,89 +15,147 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-const { ChatInputCommandInteraction, EmbedBuilder, Message } = require("discord.js")
+const { ChatInputCommandInteraction, EmbedBuilder, Message, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require("discord.js")
 const { Db } = require("mongodb")
 const logger = require('../../logger')
+const activity = require("../leveling/activity")
 const topLimits = require('../../../.botconfig/top-limits.json')
-const { COLL_TEXT_XP } = require('../../../.botconfig/database-info.json')
 
 /**
+ * Generates an Embed with the top users based on their XP/Points.
  * 
- * @param {Db} database 
- * @param {ChatInputCommandInteraction | Message} interaction 
- * @returns {Promise<EmbedBuilder>}
+ * @param {Db} database MongoDB database instance.
+ * @param {ChatInputCommandInteraction | Message} interaction The Discord interaction or message that triggered the command.
+ * @param {number} page The page number to display.
+ * @returns {Promise<{embed: EmbedBuilder, totalPages: number}>} An object containing the Embed and the total number of pages.
  */
-async function getTopXPEmbed(database, interaction) {
-    const top_xp = await database.collection(COLL_TEXT_XP).findOne(
-        {
-            type: 'userlist'
-        });
+async function getTopXPEmbed(database, interaction, page) {
+    const data = await activity.getTopUsersData(database, page);
 
-    if (!top_xp || !('userlist' in top_xp))
-        return null
-        
     const embed = new EmbedBuilder()
-    embed.setColor(0x2b2d31)
-    embed.setTitle(`TOP ${topLimits.positions} XP TEXTO`)
-    embed.setFooter({ text: `GD Venezuela` })
-    embed.setTimestamp()
-    embed.setThumbnail(`https://cdn.discordapp.com/icons/1119795689984102455/${interaction.guild.icon}.png`)
+        .setColor(0x2b2d31)
+        .setTitle(`TOP XP TEXTO`)
+        .setFooter({ text: `Page ${page} / ${data.totalPages || 1}` })
+        .setTimestamp();
 
-    embed.setAuthor({
-        name: 'Venezuela',
-        iconURL: 'https://flagcdn.com/w640/ve.png'
-    })
+    const padEnd = (text, len) => text.toString().padEnd(len, ' ');
+    const padStart = (text, len) => text.toString().padStart(len, ' ');
 
-    let description = '';
-    let position = 1
+    let table = '```\n';
+    let position = (page - 1) * 10 + 1;
 
-    const formatNumber = (num) => {
-        const str = num.toString();
-        if (str.length === 1) {
-            return `\u2002\`${str}\``;
-        }
-        return `\`${str}\``;
+    for (let i = 0; i < data.users.length; i++) {
+        const user = data.users[i];
+
+        // Sanitization to prevent markdown injection (especially backticks)
+        const name = (user.userName || '<Unknown>').replace(/`/g, '´').substring(0, 15);
+        const pts = user.points?.toLocaleString() || '0';
+        const isMe = user.userId === interaction.user.id ? '»' : ' ';
+
+        table += `${isMe}${padStart(position++, 2)} | ${padEnd(name, 15)} | ${padEnd(pts, 8)}\n`;
     }
 
-    for (let i = 0; i < top_xp.userlist.length && i < topLimits.positions; i++) {
-        const member = await interaction.guild.members.fetch(top_xp.userlist[i].id)
-        let userName = '';
-        if (!member) {
-            userName = '<Usuario desconocido>';
-        } else {
-            userName = `[${member.user.username}](${member.user.displayAvatarURL({ dynamic: true })})`;
-        }
-        description += `<:estrella2:1303859148877987880> ${formatNumber(position++)} ${userName} | XP: \`${top_xp.userlist[i].xp}\` ${top_xp.userlist[i].id === interaction.member.id ? '**<**' : ''}\n`
-    }
+    table += '```';
 
-    embed.setDescription(description)
-    return embed
+    embed.setDescription(table);
+    return { embed, totalPages: data.totalPages };
 }
 
 /**
+ * Creates the button row for leaderboard navigation.
  * 
- * @param {Db} database 
- * @param {ChatInputCommandInteraction} interaction 
+ * @param {number} page Current page.
+ * @param {number} totalPages Total available pages.
+ * @returns {ActionRowBuilder} An action row with navigation buttons.
+ */
+function createButtonRow(page, totalPages) {
+    const row = new ActionRowBuilder()
+
+    const prev = new ButtonBuilder()
+    prev.setCustomId('prev')
+    prev.setEmoji('<:retroceder:1436857028092887091>')
+    prev.setStyle(ButtonStyle.Secondary)
+    prev.setDisabled(totalPages <= 1 || page === 1)
+
+    const next = new ButtonBuilder()
+    next.setCustomId('next')
+    next.setEmoji('<:siguiente:1436857026876538900>')
+    next.setStyle(ButtonStyle.Secondary)
+    next.setDisabled(totalPages <= 1 || page === totalPages)
+
+    const close = new ButtonBuilder()
+    close.setCustomId('close')
+    close.setEmoji('<:close:1320737181358227551>')
+    close.setStyle(ButtonStyle.Danger)
+    close.setDisabled(totalPages == -1)
+
+    row.addComponents(prev, next, close)    
+
+    return row
+}
+
+/**
+ * Main entry point to execute the leaderboard command.
+ * Handles the initial response, component collector, and pagination logic.
+ * 
+ * @param {Db} database Database instance.
+ * @param {ChatInputCommandInteraction} interaction The Discord command interaction.
  */
 async function execute(database, interaction) {
     try {
-        const embed = await getTopXPEmbed(database, interaction)
+        await interaction.deferReply()
+
+        // Input validation: Ensure page is at least 1
+        let page = Math.max(1, interaction.options.getNumber('pagina') ?? 1)
+
+        const { embed, totalPages } = await getTopXPEmbed(database, interaction, page)
         if (!embed)
-            return await interaction.reply('La lista de usuarios no está disponible <:ani_okitathinking:1244840221376512021>')
-        await interaction.reply({ embeds: [embed] })
+            return await interaction.editReply('The user list is unavailable <:ani_okitathinking:1244840221376512021>')
+
+        const row = createButtonRow(page, totalPages)
+        await interaction.editReply({ embeds: [embed], components: [row] })
+
+        // Filter so only the command author can interact with buttons
+        const filter = i => i.user.id === interaction.user.id
+        const collector = interaction.channel.createMessageComponentCollector({ filter, time: 300000 }) // 5 minutes timeout
+
+        collector.on('collect', async i => {
+            if (i.customId === 'prev') {
+                if (page > 1) page--;
+            } else if (i.customId === 'next') {
+                if (page < totalPages) page++;
+            } else if (i.customId === 'close') {
+                // Disable buttons upon closing
+                await i.update({ embeds: [embed], components: [createButtonRow(0, -1)] })
+                collector.stop()
+                return;
+            }
+
+            const { embed: newEmbed } = await getTopXPEmbed(database, interaction, page)
+            const newRow = createButtonRow(page, totalPages)
+            await i.update({ embeds: [newEmbed], components: [newRow] })
+        })
+
+        collector.on('end', async () => {
+            try {
+                // Clear buttons when collector expires
+                await interaction.editReply({ components: [createButtonRow(0, -1)] })
+            } catch (e) {
+                // Ignore errors if message was deleted
+            }
+        })
     } catch (error) {
         logger.ERR(error);
         try {
-            await interaction.reply({ 
-                content: 'Ups! Ha ocurrido un error. Intenta mas tarde... <:birthday2:1249345278566465617>' 
+            await interaction.editReply({
+                content: 'Oops! An error occurred. Please try again later... <:birthday2:1249345278566465617>'
             })
         } catch (e) {
-            
+            // Ignore errors when failing gracefully
         }
     }
 }
 
 module.exports = {
-    getTop15XPEmbed: getTopXPEmbed,
     execute
 }
