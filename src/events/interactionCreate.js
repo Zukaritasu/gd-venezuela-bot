@@ -18,6 +18,7 @@
 const { Events, Client, ChatInputCommandInteraction } = require('discord.js');
 const { Db } = require('mongodb');
 const logger = require('../logger')
+const activity = require('../commands/leveling/activity');
 
 module.exports = {
     name: Events.InteractionCreate,
@@ -32,6 +33,7 @@ module.exports = {
         try {
             if (interaction.isChatInputCommand()) {
                 if (interaction.guild) {
+                    activity.log(database, interaction.guild, "", false, interaction.user.id, interaction.user.username);
                     await interaction.client.commands
                         .get(interaction.commandName)
                         ?.execute(client, database, interaction);

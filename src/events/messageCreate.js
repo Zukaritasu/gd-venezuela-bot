@@ -19,6 +19,7 @@ const { Events, Client, ChatInputCommandInteraction, Message, GuildMember, Attac
 const { Db } = require('mongodb');
 const logger = require('../logger');
 const utils = require('../utils');
+const activity = require('../commands/leveling/activity');
 const channels = require('../../.botconfig/channels.json');
 const submit = require('../commands/records/submit');
 const checkAttachments = require('../checkAttachments')
@@ -79,6 +80,9 @@ module.exports = {
                     // Handle direct messages here if needed
                     return
                 }
+
+                activity.log(database, message.guild, message.content, message.attachments.size > 0, 
+                    message.author.id, message.author.username);
 
                 if (message.content.startsWith('--scan')) {
                     if (utils.hasUserPermissions(message.member))
