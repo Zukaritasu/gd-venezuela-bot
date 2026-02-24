@@ -63,6 +63,12 @@ module.exports = {
             subcommand
                 .setName('leaderboard')
                 .setDescription('Tabla de clasificación de los usuarios')
+                .addNumberOption(option =>
+                    option
+                        .setName('pagina')
+                        .setDescription('Número de página del leaderboard')
+                        .setMinValue(1)
+                )
         )
         .addSubcommandGroup(subcommandGroup =>
             subcommandGroup
@@ -71,7 +77,7 @@ module.exports = {
                 .addSubcommand(subcommand =>
                     subcommand
                         .setName('posicion')
-                        .setDescription(`Muestra tu posición en el Top ${topLimits.limit}`)
+                        .setDescription(`Muestra tu posición en el Top`)
                 )
                 .addSubcommand(subcommand =>
                     subcommand
