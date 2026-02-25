@@ -162,12 +162,32 @@ async function generateAltServerInvite(client) {
  * @param {Guild} guild
  * @param {Db} database
  * @param {GuildMember} member 
- * @returns {Promise<boolean>} true if the account is older than 21 days, false otherwise
+ * @returns {Promise<boolean>} true if the account is older than XX days, false otherwise
  */
 async function checkUserAccountAge(guild, database, member) {
 	const accountAgeMs = Date.now() - member.user.createdAt.getTime();
 	if (accountAgeMs < ACCOUNT_MINIMUM_AGE && !(await verifyAccountInWhiteList(database, member))) {
 		try {
+			const viewPending = await database.collection(COLL_SERVER_NEW_ACCOUNTS).findOne({ type: 'pending' });
+			if (viewPending && Array.isArray(viewPending.accounts) && viewPending.accounts.includes(member.user.id)) {
+				try {
+					await member.send('Tu solicitud de verificación ya está pendiente. Por favor, espera a que el staff revise tu solicitud.');
+					await member.kick('Account pending verification');
+				} catch (e) {
+					if (e.code !== RESTJSONErrorCodes.CannotSendMessagesToThisUser) {
+						logger.ERR(e);
+					} else {
+						try {
+							await member.kick('Account pending verification (DM failed)');
+						} catch (error) {
+							logger.ERR(error);
+						}
+					}
+				}
+
+				return false;
+			}
+
 			const inviteUrl = await generateAltServerInvite(guild.client);
 			await member.send(`Hola! Tu cuenta de Discord no cumple con la antigüedad mínima requerida para ingresar directamente al servidor **GD Venezuela**.\n\nPara verificar tu acceso, únete al siguiente servidor alternativo: ${inviteUrl}\n\nEsto permitirá que el bot y tú compartan un servidor en común y puedas ejecutar el comando /verify por mensaje directo. Un moderador revisará tu solicitud, y si es aprobada, recibirás el enlace al servidor principal, de lo contrario serás baneado del servidor. ***Este proceso puede tardar unas pocas horas o un día***\n\nGracias por tu comprensión.`);
 		} catch (e) {
