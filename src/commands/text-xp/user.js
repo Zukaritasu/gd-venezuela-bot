@@ -20,6 +20,8 @@ const topLimits = require("../../../.botconfig/top-limits.json")
 const { COLL_TEXT_XP } = require('../../../.botconfig/database-info.json');
 const { Db } = require("mongodb");
 const { ChatInputCommandInteraction, GuildMember, MessageFlags } = require("discord.js");
+const activity = require("../leveling/activity");
+const activityFrame = require("./activity-frame");
 const topxpBacklist = require('../text-commands/topxp-blacklist')
 
 /////////////////////////////////////////
@@ -33,20 +35,24 @@ const topxpBacklist = require('../text-commands/topxp-blacklist')
  */
 
 /**
- * @param {Db} database 
- * @param {GuildMember} member 
- * @returns {Promise<UserInfo | undefined>}
+ * @param {Db} db 
+ * @param {ChatInputCommandInteraction} interaction 
+ * @returns {Promise<{ position: number } | null>}
  */
-async function getUserInfo(database, member) {
-    /** @type {{_id: string, type: string, userlist: UserInfo[] | undefined}} */
-    const top_xp = await database.collection(COLL_TEXT_XP).findOne(
+async function getUserInfo(db, interaction) {
+    /* const top_xp = await database.collection(COLL_TEXT_XP).findOne(
         {
             type: 'userlist'
         });
 
     if (!top_xp || !('userlist' in top_xp))
         return undefined;
-    return top_xp.userlist.find(user => user.id === member.id)
+    return top_xp.userlist.find(user => user.id === member.id) */
+
+    const userActivity = await activity.getUserActivityData(db, interaction)
+    if (userActivity === null) return null;
+
+    return { position: userActivity.position }
 }
 
 /**
@@ -80,8 +86,10 @@ async function leave(database, interaction) {
         if (!interaction.guild || !interaction.member) return
         await interaction.deferReply({ flags: MessageFlags.Ephemeral })
 
+        await interaction.editReply(`Opcion en mantenimiento...`)
+
         /** @type {GuildMember} */
-        const member = interaction.member
+        /* const member = interaction.member
         const userInfo = await getUserInfo(database, member)
 
         if (!userInfo) {
@@ -94,7 +102,7 @@ async function leave(database, interaction) {
 
         await member.roles.remove(topLimits.starsRoleID, `The user unsubscribed with the Estrellas role`)
         await addOrRemoveUser(database, member.id, true)
-        await interaction.editReply(`Se ha procesado la solicitud con éxito! Tu rol de Estrellas ha sido removido.`)
+        await interaction.editReply(`Se ha procesado la solicitud con éxito! Tu rol de Estrellas ha sido removido.`) */
     } catch (error) {
         logger.ERR(error)
         try {
@@ -117,7 +125,8 @@ async function join(database, interaction) {
         if (!interaction.guild || !interaction.member) return
         await interaction.deferReply({ flags: MessageFlags.Ephemeral })
 
-        const exits = await database.collection(COLL_TEXT_XP).findOne(
+        await interaction.editReply(`Opcion en mantenimiento...`)
+        /* const exits = await database.collection(COLL_TEXT_XP).findOne(
             {
                 type: 'blacklist',
                 blacklist: interaction.member.id
@@ -128,7 +137,7 @@ async function join(database, interaction) {
         }
 
         addOrRemoveUser(database, interaction.member.id, false)
-        await interaction.editReply(`Se ha procesado la solicitud con éxito! Tu rol se asignará en la proxima actualización del Top ${topLimits.limit}`)
+        await interaction.editReply(`Se ha procesado la solicitud con éxito! Tu rol se asignará en la proxima actualización del Top ${topLimits.limit}`) */
     } catch (error) {
         logger.ERR(error)
         try {
@@ -143,18 +152,18 @@ async function join(database, interaction) {
 
 /**
  * 
- * @param {Db} database 
+ * @param {Db} db 
  * @param {ChatInputCommandInteraction} interaction 
  * @returns 
  */
-async function position(database, interaction) {
+async function position(db, interaction) {
     try {
         if (!interaction.guild || !interaction.member) return
         await interaction.deferReply({ flags: MessageFlags.Ephemeral })
-        const userInfo = await getUserInfo(database, interaction.member)
+        const userInfo = await getUserInfo(db, interaction)
         if (!userInfo)
-            return await interaction.editReply(`Tu posición no existe dentro del Top ${topLimits.limit} <:ani_chibiqiqipeek:1244839483581403138>`)
-        return await interaction.editReply(`Tu posición actual es **${userInfo.position}** <:steamunga:1298001230790135939>`)
+            return await interaction.editReply(`Aún no tienes XP. Si crees que fue un error, vuelve a intentarlo pasados 15 minutos <:ani_chibiqiqipeek:1244839483581403138>`)
+        return await interaction.editReply(`Tu posición actual es **#${userInfo.position}** <:steamunga:1326787243490148442>`)
     } catch (error) {
         logger.ERR(error)
         try {
@@ -167,8 +176,36 @@ async function position(database, interaction) {
     }
 }
 
+async function memberActivity(db, interaction) {
+    try {
+        if (!interaction.guild || !interaction.member) return
+        
+        await interaction.deferReply()
+
+        const user = interaction.options.getUser('usuario') || interaction.user
+        const member = await interaction.guild.members.fetch(user.id).catch(() => null)
+        if (!member) {
+            return await interaction.editReply(`No se pudo encontrar al usuario en el servidor.`)
+        }
+
+        const attachment = await activityFrame.getActivityFrame(db, { user })
+        await interaction.editReply({
+            files: [attachment]
+        })
+    } catch (error) {
+        logger.ERR(error)
+        try {
+            await interaction.editReply({
+                content: 'Ups! Ha ocurrido un error. Intenta mas tarde... <:birthday2:1249345278566465617>'
+            })
+        } catch {
+            
+        }
+    }
+}
 module.exports = {
     leave,
     join,
-    position
+    position,
+    memberActivity
 }
