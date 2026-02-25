@@ -101,6 +101,8 @@ module.exports = {
 		/*await require('./voiceStateUpdate').scanAndDisconnectUsers(client)
 		await require('./voiceStateUpdate').scanVoiceChannels(client)*/
 
+		await require('./voiceStateUpdate').scanVoiceChannelsActivity(client)
+
 		//await printRoles(client);
 
 		// Check new submit records

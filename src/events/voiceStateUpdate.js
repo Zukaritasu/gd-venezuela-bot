@@ -1,10 +1,16 @@
 const { Events, VoiceState, Client, ChannelType, GuildMember } = require('discord.js');
 const logger = require('../logger')
+const activity = require('../commands/leveling/activity');
+
+
 
 const AFK_CHANNEL_ID = '1268126026974629919';
-
 const timeoutList = new Map();
 
+/**
+ * 
+ * @param {*} userId 
+ */
 function deleteTimeout(userId) {
     const timeout = timeoutList.get(userId);
     if (timeout) {
@@ -26,6 +32,11 @@ module.exports = {
      * @returns {Promise<void>}
      */
     async execute(_client, _database, oldState, newState) {
+        try {
+            await activity.voiceEvent(oldState, newState);
+        } catch (error) {
+            logger.ERR(error);
+        }
         /*if (newState.member === null || newState.member.user.id !== '591640548490870805') {
             return;
         }*/
@@ -137,5 +148,29 @@ module.exports = {
         } else {
             logger.DBG(`Channel with ID ${AFK_CHANNEL_ID} not found or is not a voice channel`);
         }
+    },
+
+    /**
+     * Scans all voice channels in the server except the AFK channel and triggers
+     * the voice event for each member.
+     *
+     * @param {Client} client - The Discord client instance.
+     */
+    async scanVoiceChannelsActivity(client) {
+        const guild = client.guilds.cache.get(process.env.SERVER_GD_VENEZUELA_ID);
+        if (!guild) {
+            logger.ERR('No guild found for the client.');
+            return;
+        }
+
+        guild.channels.cache
+            .filter(channel => channel.type === ChannelType.GuildVoice && channel.id !== AFK_CHANNEL_ID)
+            .forEach(channel => {
+                channel.members.forEach(member => {
+                    activity.voiceEvent({ channelId: null }, { channelId: channel.id, member: member }).catch(error => {
+                        logger.ERR(error);
+                    })
+                });
+            });
     }
 };
