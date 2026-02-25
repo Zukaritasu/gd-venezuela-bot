@@ -39,6 +39,7 @@ process.chdir(__dirname);
 	try {
 		database = (await (mongodb = new MongoClient(URI_DATABASE)).connect())
 			.db(DATABASE_NAME)
+        global.database = database
         logger.INF('Database connection successful!');
 	} catch (e) {
         logger.ERR(e)
@@ -51,12 +52,13 @@ process.chdir(__dirname);
 
     try {
         await redisClient.connect();
+        global.redisClient = redisClient
         logger.INF('Redis client connected!')
         
         modules.forEach(module => require(module).setRedisClientObject(redisClient))
         
         // Initialize activity module with Redis and database
-        await require('./commands/leveling/activity').setRedisClientObject(redisClient, database)
+        await require('./commands/leveling/activity').setRedisClientObject(database)
     } catch (e) {
         logger.ERR(e)
 		return
