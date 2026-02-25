@@ -27,14 +27,16 @@ const topLimits = require('../../../.botconfig/top-limits.json')
  * @param {Db} database MongoDB database instance.
  * @param {ChatInputCommandInteraction | Message} interaction The Discord interaction or message that triggered the command.
  * @param {number} page The page number to display.
+ * @param {string} type The type of leaderboard to generate ('text', 'voice', etc.).
  * @returns {Promise<{embed: EmbedBuilder, totalPages: number}>} An object containing the Embed and the total number of pages.
  */
-async function getTopXPEmbed(database, interaction, page) {
-    const data = await activity.getTopUsersData(database, page);
+async function getTopXPEmbed(database, interaction, page, type = 'text') {
+    const limit = 15
+    const data = await activity.getTopUsersData(database, page, type, limit);
 
     const embed = new EmbedBuilder()
         .setColor(0x2b2d31)
-        .setTitle(`TOP XP TEXTO`)
+        .setTitle(`TOP XP ${ type === 'voice' ? 'VOZ' : 'TEXT' }`)
         .setFooter({ text: `Page ${page} / ${data.totalPages || 1}` })
         .setTimestamp();
 
@@ -42,7 +44,7 @@ async function getTopXPEmbed(database, interaction, page) {
     const padStart = (text, len) => text.toString().padStart(len, ' ');
 
     let table = '```\n';
-    let position = (page - 1) * 10 + 1;
+    let position = (page - 1) * limit + 1;
 
     for (let i = 0; i < data.users.length; i++) {
         const user = data.users[i];
@@ -108,7 +110,9 @@ async function execute(database, interaction) {
         // Input validation: Ensure page is at least 1
         let page = Math.max(1, interaction.options.getNumber('pagina') ?? 1)
 
-        const { embed, totalPages } = await getTopXPEmbed(database, interaction, page)
+        const typeBoard = interaction.options.getString('tipo') || 'text';
+
+        const { embed, totalPages } = await getTopXPEmbed(database, interaction, page, typeBoard)
         if (!embed)
             return await interaction.editReply('The user list is unavailable <:ani_okitathinking:1244840221376512021>')
 
@@ -125,13 +129,12 @@ async function execute(database, interaction) {
             } else if (i.customId === 'next') {
                 if (page < totalPages) page++;
             } else if (i.customId === 'close') {
-                // Disable buttons upon closing
-                await i.update({ embeds: [embed], components: [createButtonRow(0, -1)] })
-                collector.stop()
+                await i.message.delete();
+                collector.stop();
                 return;
             }
 
-            const { embed: newEmbed } = await getTopXPEmbed(database, interaction, page)
+            const { embed: newEmbed } = await getTopXPEmbed(database, interaction, page, typeBoard)
             const newRow = createButtonRow(page, totalPages)
             await i.update({ embeds: [newEmbed], components: [newRow] })
         })
