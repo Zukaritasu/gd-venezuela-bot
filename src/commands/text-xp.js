@@ -95,6 +95,12 @@ module.exports = {
                     subcommand
                         .setName('actividad')
                         .setDescription('Muestra tu actividad actual en el servidor')
+                        .addUserOption(option =>
+                            option
+                                .setName('usuario')
+                                .setDescription('El usuario del que deseas ver la actividad')
+                                .setRequired(false)
+                        )
                 )
         ),
     execute,
