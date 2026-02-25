@@ -65,6 +65,16 @@ module.exports = {
             subcommand
                 .setName('leaderboard')
                 .setDescription('Tabla de clasificación de los usuarios')
+                .addStringOption(option =>
+                    option
+                        .setName('tipo')
+                        .setDescription('Tipo de leaderboard a mostrar')
+                        .setRequired(false)
+                        .addChoices(
+                            { name: 'Texto', value: 'text' },
+                            { name: 'Voz', value: 'voice' }
+                        )
+                )
                 .addNumberOption(option =>
                     option
                         .setName('pagina')
