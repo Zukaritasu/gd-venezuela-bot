@@ -40,6 +40,8 @@ async function execute(_client, database, interaction) {
             await require('./text-xp/user').leave(database, interaction)
         } else if (subcommand === 'unirse') {
             await require('./text-xp/user').join(database, interaction)
+        } else if (subcommand === 'actividad') {
+            await require('./text-xp/user').memberActivity(database, interaction)
         }
     } else {
         if (subcommand === 'help') {
@@ -88,6 +90,11 @@ module.exports = {
                     subcommand
                         .setName('unirse')
                         .setDescription('Unirse al sistema de experiencia de texto')
+                )
+                .addSubcommand(subcommand =>
+                    subcommand
+                        .setName('actividad')
+                        .setDescription('Muestra tu actividad actual en el servidor')
                 )
         ),
     execute,
