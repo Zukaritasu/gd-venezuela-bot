@@ -52,7 +52,10 @@ async function getUserInfo(db, interaction) {
     const userActivity = await activity.getUserActivityData(db, interaction)
     if (userActivity === null) return null;
 
-    return { position: userActivity.position }
+    return { 
+        position: userActivity.position === 1 && userActivity.points === 0 ? 0 : userActivity.position, 
+        voicePosition: userActivity.voicePosition === 1 && userActivity.voicePoints === 0 ? 0 : userActivity.voicePosition,
+    }
 }
 
 /**
@@ -160,10 +163,12 @@ async function position(db, interaction) {
     try {
         if (!interaction.guild || !interaction.member) return
         await interaction.deferReply({ flags: MessageFlags.Ephemeral })
+
+        const typeBoard = interaction.options.getString('tipo') || 'text';
         const userInfo = await getUserInfo(db, interaction)
         if (!userInfo)
             return await interaction.editReply(`Aún no tienes XP. Si crees que fue un error, vuelve a intentarlo pasados 15 minutos <:ani_chibiqiqipeek:1244839483581403138>`)
-        return await interaction.editReply(`Tu posición actual es **#${userInfo.position}** <:steamunga:1326787243490148442>`)
+        return await interaction.editReply(`Tu posición actual es **#${typeBoard === 'voice' ? userInfo.voicePosition : userInfo.position}** <:steamunga:1326787243490148442>`)
     } catch (error) {
         logger.ERR(error)
         try {

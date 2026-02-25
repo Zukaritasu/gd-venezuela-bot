@@ -90,6 +90,16 @@ module.exports = {
                     subcommand
                         .setName('posicion')
                         .setDescription(`Muestra tu posición en el Top`)
+                        .addStringOption(option =>
+                            option
+                                .setName('tipo')
+                                .setDescription('Tipo de posicion a mostrar')
+                                .setRequired(false)
+                                .addChoices(
+                                    { name: 'Texto', value: 'text' },
+                                    { name: 'Voz', value: 'voice' }
+                                )
+                        )
                 )
                 .addSubcommand(subcommand =>
                     subcommand
