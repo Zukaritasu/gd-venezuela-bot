@@ -545,6 +545,6 @@ module.exports = {
 			} catch (error) {
 				logger.ERR(error);
 			}
-		}, 900000); // 15 minute in milliseconds
+		}, 300000); // 5 minute in milliseconds
 	}
 }
