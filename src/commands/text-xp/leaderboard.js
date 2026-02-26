@@ -123,36 +123,43 @@ async function execute(database, interaction) {
             return await interaction.editReply('The user list is unavailable <:ani_okitathinking:1244840221376512021>')
 
         const row = createButtonRow(page, totalPages)
-        await interaction.editReply({ embeds: [embed], components: [row] })
+        const message = await interaction.editReply({ embeds: [embed], components: [row] })
 
         // Filter so only the command author can interact with buttons
         const filter = i => i.user.id === interaction.user.id
-        const collector = interaction.channel.createMessageComponentCollector({ filter, time: 300000 }) // 5 minutes timeout
 
-        collector.on('collect', async i => {
-            if (i.customId === 'prev') {
-                if (page > 1) page--;
-            } else if (i.customId === 'next') {
-                if (page < totalPages) page++;
-            } else if (i.customId === 'close') {
-                await i.message.delete();
-                collector.stop();
-                return;
+        let currentPage = page;
+        let currentTotalPages = totalPages;
+        let currentType = typeBoard;
+
+        try {
+            while (true) {
+                const confirmation = await message.awaitMessageComponent({ filter, time: 30000 });
+
+                await confirmation.deferUpdate();
+
+                if (confirmation.customId === 'close') {
+                    await message.delete();
+                    break;
+                } else if (confirmation.customId === 'prev') {
+                    if (currentPage > 1) currentPage--;
+                } else if (confirmation.customId === 'next') {
+                    if (currentPage < currentTotalPages) currentPage++;
+                }
+
+                const { embed: newEmbed, totalPages: newTotalPages } = await getTopXPEmbed(database, interaction, currentPage, currentType);
+                currentTotalPages = newTotalPages;
+                const newRow = createButtonRow(currentPage, currentTotalPages);
+                await confirmation.editReply({ embeds: [newEmbed], components: [newRow] });
             }
-
-            const { embed: newEmbed } = await getTopXPEmbed(database, interaction, page, typeBoard)
-            const newRow = createButtonRow(page, totalPages)
-            await i.update({ embeds: [newEmbed], components: [newRow] })
-        })
-
-        collector.on('end', async () => {
-            try {
-                // Clear buttons when collector expires
-                await interaction.editReply({ components: [createButtonRow(0, -1)] })
-            } catch (e) {
-                // Ignore errors if message was deleted
+        } catch (e) {
+            if (e.message === 'Collector received no interactions before ending with reason: time') {
+                // Disable buttons when timeout
+                await message.edit({ components: [createButtonRow(0, -1)] });
+            } else {
+                logger.ERR(e);
             }
-        })
+        }
     } catch (error) {
         logger.ERR(error);
         try {
