@@ -134,7 +134,7 @@ async function execute(database, interaction) {
 
         try {
             while (true) {
-                const confirmation = await message.awaitMessageComponent({ filter, time: 30000 });
+                const confirmation = await message.awaitMessageComponent({ filter, time: 300000 }) // 5 minutes timeout;
 
                 await confirmation.deferUpdate();
 
