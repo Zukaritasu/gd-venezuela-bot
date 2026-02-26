@@ -526,10 +526,8 @@ module.exports = {
 
 					try {
 						const result = await global.database.collection(COLL_USERS_ACTIVITY).bulkWrite(operations);
-						let deletedCount = 0;
 						if (result.modifiedCount > 0 && xorResult.length > 0)
-							deletedCount = await global.redisClient.sRem(KEY_DIRTY_USERS, xorResult);
-						logger.INF(`[Backup] Synchronized ${operations.length} users to MongoDB (${deletedCount} users removed from dirty set)`);
+							await global.redisClient.sRem(KEY_DIRTY_USERS, xorResult);
 					} catch (error) {
 						logger.ERR(error);
 					}
