@@ -22,6 +22,7 @@ const StackBlur = require('stackblur-canvas');
 const logger = require('../../logger');
 const channels = require('../../../.botconfig/channels.json');
 const topLimits = require("../../../.botconfig/top-limits.json")
+const activity = require('../leveling/activity');
 const { COLL_TEXT_XP } = require("../../../.botconfig/database-info.json")
 
 /**
@@ -154,9 +155,6 @@ async function sendImage(channel, member, user, position) {
                     primary: highestRole.color,
                     secondary: highestRole.color
                 };
-                logger.INF(`Role color found: ${highestRole.name} - ${highestRole.color}`);
-            } else {
-                logger.INF(`No color found for role: ${highestRole.name}`);
             }
         } else {
             const fallbackRole = member.guild.roles.cache.get('1302401396133466246');
@@ -237,7 +235,7 @@ async function sendImage(channel, member, user, position) {
 
     ctx.font = '12px Sans-serif';
     ctx.fillStyle = '#aaa';
-    ctx.fillText(`XP: ${user.xp}`, nameX, 28);
+    ctx.fillText(`XP: ${user.points}`, nameX, 28);
 
     await channel.send({
         files: [{
@@ -254,13 +252,10 @@ module.exports = {
      */
     update: async (database, message) => {
         try {
-            const top_xp = await database.collection(COLL_TEXT_XP).findOne(
-                {
-                    type: 'userlist'
-                });
-
-            if (!top_xp || !('userlist' in top_xp)) {
-                await message.reply('The list of XP users has not been found. Try again later...');
+            const top_xp = await activity.getTopUsersData(database, 1, 'text',topLimits.positions);
+            
+            if (top_xp.users.length === 0) {
+                await message.reply('No text XP data available to display the leaderboard');
                 return;
             }
 
@@ -274,10 +269,10 @@ module.exports = {
             await cleanChannelTop15(channel);
             await channel.send(`**TOP ${topLimits.positions} USUARIOS CON MAS XP DE TEXTO EN EL SERVIDOR!**\n\nPara ganar experiencia (XP), solo tienes que participar activamente en los canales de texto del servidor enviando mensajes de __texto, emojis, stickers__, etc. Todo lo referente a los canales de texto.\n\n**Para mas información puedes usar los siguientes comandos**\n- \`/topxp leaderboard\` Muestra el Top ${topLimits.positions}\n- \`/topxp usuario posicion\` Muestra tu posición en el Top ${topLimits.limit} \n\n*Si sales del Top ${topLimits.positions}, el rol se mantendrá contigo hasta que llegues al Top ${topLimits.limit}; si bajas otro nivel, lamentablemente perderás el rol, así que mantente activo!!!\nY si logras llegar al Top 1 el rol se vuelve permanente!!!*`);
 
-            for (let i = 0; i < top_xp.userlist.length && i < topLimits.positions; i++) {
-                const member = await message.guild.members.fetch(top_xp.userlist[i].id).catch(() => null);
+            for (let i = 0; i < top_xp.users.length && i < topLimits.positions; i++) {
+                const member = await message.guild.members.fetch(top_xp.users[i].userId).catch(() => null);
                 if (member) {
-                    await sendImage(channel, member, top_xp.userlist[i], i + 1);
+                    await sendImage(channel, member, top_xp.users[i], i + 1);
                 }
             }
 
