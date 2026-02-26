@@ -18,6 +18,7 @@
 const { Client, ChatInputCommandInteraction, MessageFlags, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
 const logger = require('../../logger');
 const utils = require('../../utils');
+const activity = require('../leveling/activity');
 const { Db } = require('mongodb');
 const { COLL_PROFILES, COLL_TEXT_XP } = require('../../../.botconfig/database-info.json');
 const { roleIcons } = require('../../../.botconfig/roleIcons.json');
@@ -74,16 +75,14 @@ async function view(client, database, interaction) {
 			});
 		}
 
-		const [profileRaw, responseRaw] = await Promise.all([
+		const [profileRaw, userActivity] = await Promise.all([
 			database.collection(COLL_PROFILES).findOne({ userId: user.id }),
-			database.collection(COLL_TEXT_XP).findOne({ type: 'userlist' })
+			activity.getUserActivityData(database, interaction)
 		]);
 
 		/** @type {Profile} */
 		const profile = profileRaw ?? {};
-		const response = responseRaw?.userlist ? responseRaw : { userlist: [] };
-		const userEntry = response.userlist.find(u => u.id === member.id);
-
+		
 		const embed = new EmbedBuilder()
 		embed.setTitle(user.tag)
 		embed.setColor(profile?.borderColor ? profile.borderColor : 0x2b2d31)
@@ -113,10 +112,10 @@ async function view(client, database, interaction) {
 					value: profile.hardestName,
 					inline: true
 				} : null,
-			userEntry ?
+			userActivity ?
 				{
 					name: 'XP Posición',
-					value: `#${userEntry.position.toString().padStart(2, '0')}`,
+					value: `#${userActivity.position.toString().padStart(2, '0')}`,
 					inline: true
 				} : null,
 			{
