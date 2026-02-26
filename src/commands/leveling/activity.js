@@ -64,7 +64,7 @@ async function getUserActivity(userId) {
 	if (response) {
 		return JSON.parse(response)
 	}
-	
+
 	return null
 }
 
@@ -112,7 +112,7 @@ async function updateUserActivity(userActivity) {
 			}
 		}
 
-		logger.ERR('Failed to update user activity after retries due to conflicts ' + 
+		logger.ERR('Failed to update user activity after retries due to conflicts ' +
 			`for userId: ${userActivity.userId}`);
 		return false;
 	} catch (error) {
@@ -174,7 +174,7 @@ async function loadBackupData(db) {
 		// if it exists, prevents the backup from being loaded, but if it does not
 		// exist, the backup is loaded (for example, in the event of a power outage).
 		const isLoaded = await global.redisClient.get(KEY_IS_LOADED_ACTIVITY);
-		if (isLoaded) return
+		if (isLoaded) return true
 
 		await global.redisClient.set(KEY_IS_LOADED_ACTIVITY, "true");
 
@@ -184,10 +184,6 @@ async function loadBackupData(db) {
 		if (allUsers.length > 0) {
 			for (const user of allUsers) {
 				const userId = user.userId;
-				if (user.isBooster === undefined || user.isBooster === null)
-					user.isBooster = false;
-				if (user.version === undefined)
-					user.version = 0;
 				await global.redisClient.set(PREFIX_USER_ACTIVITY + userId, JSON.stringify(user));
 				await global.redisClient.hSet(KEY_USERS_BOOSTERS, userId, user.isBooster.toString());
 			}
@@ -268,11 +264,7 @@ async function getTopUsers(db, page = 1, type = 'text', limit = 10) {
 					points: 1,
 					voicePoints: 1
 				}
-			})
-			.sort({ [sortField]: -1 })
-			.skip(skip)
-			.limit(limit)
-			.toArray();
+			}).skip(skip).limit(limit).toArray();
 
 		return topUsers;
 	} catch (error) {
@@ -418,32 +410,25 @@ async function voiceEvent(oldState, newState) {
 		// To proceed with monitoring the user connected to the voice
 		// channel, the user must have an instantiated userActivity object.
 		let userActivity = await getUserActivity(user.id);
-		if (userActivity === null) {
+		if (userActivity === null)
 			userActivity = getDefaultUserActivityObject(user.username, user.id);
-			if (!await updateUserActivity(userActivity)) {
-				return; // error updating user activity, do not proceed
-			}
-		}
 
-		await global.redisClient.set(PREFIX_USER_ACTIVITY_VOICE + user.id, JSON.stringify({
-			userId: user.id,
-			joinedAt: Date.now()
-		}));
+		userActivity['voiceStatus'] = {
+			joinedAt: Date.now(), isConnected: true
+		};
+
+		await updateUserActivity(userActivity)
 	} else {
 		// User left the voice channel, calculate the time spent and update points
-		const temp = await global.redisClient.get(PREFIX_USER_ACTIVITY_VOICE + user.id);
-		if (temp) {
-			const voiceStatus = JSON.parse(temp);
-			const userActivity = await getUserActivity(user.id);
-			if (userActivity) {
-				// Calculate voice points based on the time spent in the voice channel
-				if (userActivity.voicePoints === undefined)
-					userActivity.voicePoints = 0;
+		const userActivity = await getUserActivity(user.id);
+		if (userActivity) {
+			const voiceStatus = userActivity.voiceStatus;
+			if (voiceStatus) {
 				userActivity.voicePoints += Math.floor((Date.now() - voiceStatus.joinedAt) / 60000) * 4;
+				voiceStatus.isConnected = false;
 				await updateUserActivity(userActivity);
 			}
 		}
-		await global.redisClient.del(PREFIX_USER_ACTIVITY_VOICE + user.id);
 	}
 }
 
@@ -481,10 +466,9 @@ module.exports = {
 	 * allowing it to interact with the Redis cache for storing and retrieving user
 	 * activity data. It also sets up a periodic backup of the user activity data every 15 minutes.
 	 * 
-	 * @param {Db} db - The database object used for backing up user activity data.
 	 */
-	setRedisClientObject: async (db) => {
-		const error = await loadBackupData(db);
+	setRedisClientObject: async () => {
+		const error = await loadBackupData(global.database);
 
 		// If there is a Redis, network, or MongoDB error, for security reasons,
 		// the timer is not started to avoid errors
@@ -493,25 +477,21 @@ module.exports = {
 		// sync dirty user activity data to MongoDB every 15 minutes
 		setInterval(async () => {
 			try {
-				if (!global.redisClient || !db) return;
+				if (!global.redisClient || !global.database) return;
 
 				// Get all dirty users
 				const dirtyUserIds = await global.redisClient.sMembers(KEY_DIRTY_USERS);
 				if (dirtyUserIds.length === 0) return;
 
 				const operations = [];
+				const usersConnectedToVoice = [];
 
 				for (const userId of dirtyUserIds) {
-					const data = await global.redisClient.get(PREFIX_USER_ACTIVITY + userId);
-					if (data) {
-						const jsonData = JSON.parse(data);
-						const voiceStatusData = await global.redisClient.get(PREFIX_USER_ACTIVITY_VOICE + userId);
-						if (voiceStatusData) {
-							const voiceStatus = JSON.parse(voiceStatusData);
-							// Calculate voice points based on the time spent in the voice channel
-							if (jsonData.voicePoints === undefined)
-								jsonData.voicePoints = 0;
-							jsonData.voicePoints += Math.floor((Date.now() - voiceStatus.joinedAt) / 60000) * 4;
+					const userActivity = await getUserActivity(userId);
+					if (userActivity) {
+						if (userActivity.voiceStatus && userActivity.voiceStatus.isConnected) {
+							userActivity.voicePoints += Math.floor((Date.now() - userActivity.voiceStatus.joinedAt) / 60000) * 4;
+							usersConnectedToVoice.push(userId);
 						}
 
 						operations.push({
@@ -519,14 +499,14 @@ module.exports = {
 								filter: { userId: userId },
 								update: {
 									$set: {
-										userId: jsonData.userId,
-										userName: jsonData.userName,
-										points: jsonData.points,
-										voicePoints: jsonData.voicePoints,
-										lastActivity: jsonData.lastActivity,
-										lastBoostCheck: jsonData.lastBoostCheck,
-										isBooster: jsonData.isBooster,
-										version: jsonData.version,
+										userId: userActivity.userId,
+										userName: userActivity.userName,
+										points: userActivity.points,
+										voicePoints: userActivity.voicePoints,
+										lastActivity: userActivity.lastActivity,
+										lastBoostCheck: userActivity.lastBoostCheck,
+										isBooster: userActivity.isBooster,
+										version: userActivity.version,
 										lastUpdate: new Date()
 									}
 								},
@@ -537,10 +517,22 @@ module.exports = {
 				}
 
 				if (operations.length > 0) {
-					await db.collection(COLL_USERS_ACTIVITY).bulkWrite(operations);
-					// Clear dirty set after successful sync
-					await global.redisClient.del(KEY_DIRTY_USERS);
-					logger.INF(`[Backup] Synchronized ${operations.length} users to MongoDB`);
+					const setDirty = new Set(dirtyUserIds);
+					const setVoice = new Set(usersConnectedToVoice);
+
+					const xorResult = [...setDirty].filter(x => !setVoice.has(x)).concat(
+						[...setVoice].filter(x => !setDirty.has(x))
+					);
+
+					try {
+						const result = await global.database.collection(COLL_USERS_ACTIVITY).bulkWrite(operations);
+						let deletedCount = 0;
+						if (result.modifiedCount > 0 && xorResult.length > 0)
+							deletedCount = await global.redisClient.sRem(KEY_DIRTY_USERS, xorResult);
+						logger.INF(`[Backup] Synchronized ${operations.length} users to MongoDB (${deletedCount} users removed from dirty set)`);
+					} catch (error) {
+						logger.ERR(error);
+					}
 				}
 			} catch (error) {
 				logger.ERR(error);
