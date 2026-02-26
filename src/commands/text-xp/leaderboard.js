@@ -51,7 +51,13 @@ async function getTopXPEmbed(database, interaction, page, type = 'text') {
 
         // Sanitization to prevent markdown injection (especially backticks)
         const name = (user.userName || '<Unknown>').replace(/`/g, '´').substring(0, 15);
-        const pts = user.points?.toLocaleString() || '0';
+        let pts = 0
+        if (type === 'voice') {
+            pts = user.voicePoints || 0
+        } else {
+            pts = user.points || 0
+        }
+
         const isMe = user.userId === interaction.user.id ? '»' : ' ';
 
         table += `${isMe}${padStart(position++, 2)} | ${padEnd(name, 15)} | ${padEnd(pts, 8)}\n`;
