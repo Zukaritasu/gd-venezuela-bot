@@ -267,7 +267,7 @@ module.exports = {
             }
 
             await cleanChannelTop15(channel);
-            await channel.send(`**TOP ${topLimits.positions} USUARIOS CON MAS XP DE TEXTO EN EL SERVIDOR!**\n\nPara ganar experiencia (XP), solo tienes que participar activamente en los canales de texto del servidor enviando mensajes de __texto, emojis, stickers__, etc. Todo lo referente a los canales de texto.\n\n**Para mas información puedes usar los siguientes comandos**\n- \`/topxp leaderboard\` Muestra el Top ${topLimits.positions}\n- \`/topxp usuario posicion\` Muestra tu posición en el Top ${topLimits.limit} \n\n*Si sales del Top ${topLimits.positions}, el rol se mantendrá contigo hasta que llegues al Top ${topLimits.limit}; si bajas otro nivel, lamentablemente perderás el rol, así que mantente activo!!!\nY si logras llegar al Top 1 el rol se vuelve permanente!!!*`);
+            await channel.send(`**TOP ${topLimits.positions} USUARIOS CON MAS XP DE TEXTO EN EL SERVIDOR!**\n\nPara ganar experiencia (XP), solo tienes que participar activamente en los canales de texto del servidor enviando mensajes de __texto, emojis, stickers__, etc. Todo lo referente a los canales de texto.\n\n*Si sales del Top ${topLimits.positions}, el rol se mantendrá contigo hasta que llegues al Top ${topLimits.limit}; si bajas otro nivel, lamentablemente perderás el rol, así que mantente activo!!!\nY si logras llegar al Top 1 el rol se vuelve permanente!!!*`);
 
             for (let i = 0; i < top_xp.users.length && i < topLimits.positions; i++) {
                 const member = await message.guild.members.fetch(top_xp.users[i].userId).catch(() => null);
