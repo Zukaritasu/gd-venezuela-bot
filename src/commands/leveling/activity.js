@@ -42,6 +42,9 @@ const COOLDOWN_TIME = 60000;
  * @property {number|undefined} lastActivity - The timestamp of the user's last activity.
  * @property {number|undefined} lastBoostCheck - The timestamp of the last time the user's booster status was checked.
  * @property {boolean|undefined} isBooster - Whether the user is currently a booster.
+ * @property {number|undefined} voicePoints - The total voice points earned by the user.
+ * @property {number|undefined} position - The user's position in the text leaderboard.
+ * @property {number|undefined} voicePosition - The user's position in the voice leaderboard.
  * @property {number} version - Version number for optimistic locking.
  */
 
@@ -215,7 +218,7 @@ async function getUserActivityData(db, interaction) {
 		const userId = interaction.user.id;
 
 		const currentUser = await db.collection(COLL_USERS_ACTIVITY).findOne(
-			{ userId: userId },
+			{ userId: userId, banned: { $ne: true } },
 			{ projection: { userId: 1, points: 1, voicePoints: 1, userName: 1 } }
 		);
 
@@ -256,7 +259,7 @@ async function getTopUsers(db, page = 1, type = 'text', limit = 10) {
 		const sortField = type === 'voice' ? 'voicePoints' : 'points';
 
 		const topUsers = await db.collection(COLL_USERS_ACTIVITY)
-			.find({ [sortField]: { $gt: 0 } }, {
+			.find({ [sortField]: { $gt: 0 }, banned: { $ne: true } }, {
 				projection: {
 					_id: 0,
 					userId: 1,
@@ -297,7 +300,9 @@ async function getTopUsersData(db, page = 1, type = 'text', limit = 10) {
 	const sortField = type === 'voice' ? 'voicePoints' : 'points';
 
 	const [users, totalUsers] = await Promise.all([
-		getTopUsers(db, page, type, limit), collection.countDocuments({ [sortField]: { $gt: 0 } })
+		getTopUsers(db, page, type, limit), collection.countDocuments({ 
+			[sortField]: { $gt: 0 }, banned: { $ne: true } 
+		})
 	]);
 
 	return {
