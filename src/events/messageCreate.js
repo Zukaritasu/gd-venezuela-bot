@@ -84,16 +84,16 @@ module.exports = {
                 activity.log(database, message.guild, message.content, message.attachments.size > 0, 
                     message.author.id, message.author.username);
 
-                if (message.content.startsWith('--scan')) {
+                /* if (message.content.startsWith('--scan')) {
                     if (utils.hasUserPermissions(message.member))
                         await require('../commands/text-commands/scan').scan(database, message, getCommandParameters(message.content))
-                }/* else if (message.content.startsWith('--update')) {
+                } else */ if (message.content.startsWith('--update')) {
                     if (utils.hasUserPermissions(message.member))
-                        await require('../commands/text-commands/update-leaderboard').update(database, message)
-                }*/ else if (message.content.startsWith('--clean')) {
+                        await require('../commands/text-commands/update-leaderboard').update(database, message.guild)
+                } /* else if (message.content.startsWith('--clean')) {
                     if (utils.hasUserPermissions(message.member))
                         await require('../commands/text-commands/clean').clean(message)
-                } else if (message.content.startsWith('--blacklist')) {
+                } */ else if (message.content.startsWith('--blacklist')) {
                     if (utils.hasUserPermissions(message.member))
                         await require('../commands/text-commands/topxp-blacklist').process(getCommandParameters(message.content), database, message)
                 } else if (message.content.startsWith('--users-exception')) {
