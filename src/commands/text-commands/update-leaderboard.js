@@ -15,7 +15,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-const { Message, GuildChannel } = require('discord.js');
+const { Message, GuildChannel, Guild, TextChannel, ThreadAutoArchiveDuration } = require('discord.js');
 const { Db } = require('mongodb');
 const Canvas = require('canvas');
 const StackBlur = require('stackblur-canvas');
@@ -75,14 +75,18 @@ function getDominantColor(image) {
 }
 
 /**
- * Generates and sends an image with the top XP user in the specified channel.
+ * Sends a formatted image to the channel for a specific member, showing their position,
+ * username, and XP points.
+ * The image includes the member's avatar, a blurred background, and a role icon if available.
  * 
- * @param {import('discord.js').GuildBasedChannel} channel 
- * @param {import('discord.js').GuildMember} member 
- * @param {Object} user - User data containing XP.
- * @param {number} user.xp - The XP of the user.
+ * @param {import('discord.js').TextChannel} channel - The channel to send the image to
+ * @param {import('discord.js').GuildMember} member - The guild member for whom the image is
+ * being generated
+ * @param {number} points - The XP points of the member
+ * @param {number} position - The position of the member in the leaderboard
+ * @returns {Promise<void>}
  */
-async function sendImage(channel, member, user, position) {
+async function sendImage(channel, member, points, position) {
     const width = 478, height = 48, radius = 6;
     const canvas = Canvas.createCanvas(width, height);
     const ctx = canvas.getContext('2d');
@@ -235,7 +239,7 @@ async function sendImage(channel, member, user, position) {
 
     ctx.font = '12px Sans-serif';
     ctx.fillStyle = '#aaa';
-    ctx.fillText(`XP: ${user.points}`, nameX, 28);
+    ctx.fillText(`XP: ${points}`, nameX, 28);
 
     await channel.send({
         files: [{
@@ -245,36 +249,95 @@ async function sendImage(channel, member, user, position) {
 }
 
 /**
- * Updates the text XP leaderboard by fetching the top users and sending an image for each in the designated channel.
+ * Updates the text XP leaderboard by fetching the top users and sending an image for
+ * each in the designated channel.
  * It also manages the "stars" role for users in the top positions or exceptions.
  * 
  * @param {Db} db - The MongoDB database instance to fetch user data.
- * @param {Guild} guild - The Discord guild where the leaderboard is displayed and roles are managed.
+ * @param {Guild} guild - The Discord guild where the leaderboard is displayed and
+ * roles managed.
+ * @returns {Promise<void>}
+ */
+async function textLeaderboardUpdate(db, guild) {
+    const top_xp = await activity.getTopUsersData(db, 1, 'text', topLimits.positions);
+
+    if (top_xp.users.length === 0) {
+        return logger.DBG('No text XP data available to display the leaderboard');
+    }
+
+    //const channel = await message.guild.channels.fetch('1294668385950498846')
+    const channel = await guild.channels.fetch(channels.TEXT_XP_LEADERBOARD)
+    if (!channel || !(channel instanceof GuildChannel)) {
+        return logger.ERR(`Channel with ID ${channels.TEXT_XP_LEADERBOARD} not found or is not a text channel`);
+    }
+
+    await cleanChannel(channel);
+    await channel.send(`**TOP ${topLimits.positions} USUARIOS CON MAS XP DE TEXTO EN EL SERVIDOR!**\n\nPara ganar experiencia (XP), solo tienes que participar activamente en los canales de texto del servidor enviando mensajes de __texto, emojis, stickers__, etc. Todo lo referente a los canales de texto.\n\n*Si sales del Top ${topLimits.positions}, el rol se mantendrá contigo hasta que llegues al Top ${topLimits.limit}; si bajas otro nivel, lamentablemente perderás el rol, así que mantente activo!!!\nY si logras llegar al Top 1 el rol se vuelve permanente!!!*`);
+
+    for (let i = 0; i < top_xp.users.length && i < topLimits.positions; i++) {
+        const member = await guild.members.fetch(top_xp.users[i].userId).catch(() => null);
+        if (member) {
+            await sendImage(channel, member, top_xp.users[i].points, i + 1);
+        }
+    }
+}
+
+/**
+ * Placeholder function for updating the voice XP leaderboard.
+ * This function is currently not implemented and serves as a stub for future development.
+ * 
+ * @param {Db} db - The MongoDB database instance to fetch user data.
+ * @param {Guild} guild - The Discord guild where the leaderboard is displayed and roles managed.
+ * @returns {Promise<void>}
+ */
+async function voiceLeaderboardUpdate(db, guild) {
+    const top_voice_xp = await activity.getTopUsersData(db, 1, 'voice', topLimits.positions);
+
+    if (top_voice_xp.users.length === 0) {
+        return logger.DBG('No voice XP data available to display the leaderboard');
+    }
+
+    /** @type {TextChannel} */
+    const channel = await guild.channels.fetch(channels.TEXT_XP_LEADERBOARD)
+    if (!channel || !(channel instanceof GuildChannel)) {
+        return logger.ERR(`Channel with ID ${channels.TEXT_XP_LEADERBOARD} not found or is not a text channel`);
+    }
+
+    const threadName = `🔥・voice・top・${topLimits.positions}`
+    // get Thread or create it if it doesn't exist
+    let thread = channel.threads.cache.find(t => t.name === threadName);
+    if (!thread) {
+        thread = await channel.threads.create({
+            name: threadName,
+            autoArchiveDuration: ThreadAutoArchiveDuration.OneWeek,
+            reason: `Thread for voice top ${topLimits.positions}`
+        });
+    } else {
+        await cleanChannel(thread);
+    }
+
+    await thread.send(`**TOP ${topLimits.positions} USUARIOS CON MAS XP DE VOZ EN EL SERVIDOR!**\n\nPara ganar experiencia (XP), solo tienes que participar activamente en los canales de voz del servidor hablando, compartiendo pantalla, etc. Todo lo referente a los canales de voz.\n\n***NOTA: El rol de Estrellas no se asigna si eres más activo en canales de voz. Solo está disponible para XP en texto.***`);
+
+    for (let i = 0; i < top_voice_xp.users.length && i < topLimits.positions; i++) {
+        const member = await guild.members.fetch(top_voice_xp.users[i].userId).catch(() => null);
+        if (member) {
+            await sendImage(thread, member, top_voice_xp.users[i].voicePoints, i + 1);
+        }
+    }
+}
+
+/**
+ * Main function to update both text and voice XP leaderboards. It calls the respective
+ * update functions and handles any errors that may occur during the process.
+ * 
+ * @param {Db} db - The MongoDB database instance to fetch user data.
+ * @param {Guild} guild - The Discord guild where the leaderboard is displayed and roles managed.
  * @returns {Promise<void>}
  */
 async function update(db, guild) {
     try {
-        const top_xp = await activity.getTopUsersData(db, 1, 'text', topLimits.positions);
-
-        if (top_xp.users.length === 0) {
-            return logger.DBG('No text XP data available to display the leaderboard');
-        }
-
-        //const channel = await message.guild.channels.fetch('1294668385950498846')
-        const channel = await guild.channels.fetch(channels.TEXT_XP_LEADERBOARD)
-        if (!channel || !(channel instanceof GuildChannel)) {
-            return logger.ERR(`Channel with ID ${channels.TEXT_XP_LEADERBOARD} not found or is not a text channel`);
-        }
-
-        await cleanChannel(channel);
-        await channel.send(`**TOP ${topLimits.positions} USUARIOS CON MAS XP DE TEXTO EN EL SERVIDOR!**\n\nPara ganar experiencia (XP), solo tienes que participar activamente en los canales de texto del servidor enviando mensajes de __texto, emojis, stickers__, etc. Todo lo referente a los canales de texto.\n\n*Si sales del Top ${topLimits.positions}, el rol se mantendrá contigo hasta que llegues al Top ${topLimits.limit}; si bajas otro nivel, lamentablemente perderás el rol, así que mantente activo!!!\nY si logras llegar al Top 1 el rol se vuelve permanente!!!*`);
-
-        for (let i = 0; i < top_xp.users.length && i < topLimits.positions; i++) {
-            const member = await guild.members.fetch(top_xp.users[i].userId).catch(() => null);
-            if (member) {
-                await sendImage(channel, member, top_xp.users[i], i + 1);
-            }
-        }
+        await textLeaderboardUpdate(db, guild);
+        await voiceLeaderboardUpdate(db, guild);
     } catch (error) {
         logger.ERR(error);
     }
