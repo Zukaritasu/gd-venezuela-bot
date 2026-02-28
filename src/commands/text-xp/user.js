@@ -17,12 +17,11 @@
 
 const logger = require("../../logger")
 const topLimits = require("../../../.botconfig/top-limits.json")
-const { COLL_TEXT_XP } = require('../../../.botconfig/database-info.json');
+const { COLL_USERS_ACTIVITY_CONFIG, doc_types } = require('../../../.botconfig/database-info.json');
 const { Db } = require("mongodb");
 const { ChatInputCommandInteraction, GuildMember, MessageFlags } = require("discord.js");
 const activity = require("../leveling/activity");
 const activityFrame = require("./activity-frame");
-const topxpBacklist = require('../text-commands/topxp-blacklist')
 
 /////////////////////////////////////////
 
@@ -58,11 +57,11 @@ async function getUserInfo(db, interaction) {
  * @param {boolean} add
  */
 async function addOrRemoveUser(database, id, add) {
-    const blacklistCollection = database.collection(COLL_TEXT_XP);
+    const blacklist = database.collection(COLL_USERS_ACTIVITY_CONFIG);
     
-    const result = await blacklistCollection.updateOne(
-        { type: 'blacklist' },
-        add ? { $addToSet: { blacklist: id } } : { $pull: { blacklist: id } },
+    const result = await blacklist.updateOne(
+        { type: doc_types.SAU_TYPE_USERS_BLACKLIST },
+        add ? { $addToSet: { users: id } } : { $pull: { users: id } },
         { upsert: true }
     );
 
@@ -118,10 +117,10 @@ async function join(database, interaction) {
         if (!interaction.guild || !interaction.member) return
         await interaction.deferReply({ flags: MessageFlags.Ephemeral })
 
-        const exits = await database.collection(COLL_TEXT_XP).findOne(
+        const exits = await database.collection(COLL_USERS_ACTIVITY_CONFIG).findOne(
             {
-                type: 'blacklist',
-                blacklist: interaction.member.id
+                type: doc_types.SAU_TYPE_USERS_BLACKLIST,
+                users: interaction.member.id
             });
 
         if (!exits) {

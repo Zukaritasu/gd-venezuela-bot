@@ -19,7 +19,7 @@ const { Message } = require("discord.js");
 const { Db } = require("mongodb");
 const topLimits = require("../../../.botconfig/top-limits.json")
 const logger = require("../../logger");
-const { COLL_TEXT_XP } = require('../../../.botconfig/database-info.json');
+const { COLL_USERS_ACTIVITY_CONFIG, doc_types } = require('../../../.botconfig/database-info.json');
 
 /**
  * @param {string} userId
@@ -50,12 +50,12 @@ async function removeRole(userId, message) {
  */
 async function addUser(userId, database, message) {
     try {
-        const collection = database.collection(COLL_TEXT_XP);
+        const collection = database.collection(COLL_USERS_ACTIVITY_CONFIG);
         const { acknowledged, upsertedCount } = await collection.updateOne(
-            { type: 'blacklist' },
+            { type: doc_types.SAU_TYPE_USERS_BLACKLIST },
             {
                 $setOnInsert: {
-                    type: 'blacklist', blacklist: []
+                    type: doc_types.SAU_TYPE_USERS_BLACKLIST, users: []
                 }
             },
             { upsert: true }
@@ -63,10 +63,10 @@ async function addUser(userId, database, message) {
 
         if (acknowledged || upsertedCount) {
             const updateResult = await collection.updateOne(
-                { type: 'blacklist' },
+                { type: doc_types.SAU_TYPE_USERS_BLACKLIST },
                 {
                     $addToSet: {
-                        blacklist: userId
+                        users: userId
                     }
                 }
             );
@@ -94,12 +94,12 @@ async function addUser(userId, database, message) {
  */
 async function removeUser(userId, database, message) {
     try {
-        const collection = database.collection(COLL_TEXT_XP);
+        const collection = database.collection(COLL_USERS_ACTIVITY_CONFIG);
         const { acknowledged, upsertedCount } = await collection.updateOne(
-            { type: 'blacklist' },
+            { type: doc_types.SAU_TYPE_USERS_BLACKLIST },
             {
                 $setOnInsert: {
-                    type: 'blacklist', blacklist: []
+                    type: doc_types.SAU_TYPE_USERS_BLACKLIST, users: []
                 }
             },
             { upsert: true }
@@ -107,10 +107,10 @@ async function removeUser(userId, database, message) {
 
         if (acknowledged || upsertedCount) {
             const updateResult = await collection.updateOne(
-                { type: 'blacklist' },
+                { type: doc_types.SAU_TYPE_USERS_BLACKLIST },
                 {
                     $pull: {
-                        blacklist: userId
+                        users: userId
                     }
                 }
             );
