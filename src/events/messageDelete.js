@@ -15,7 +15,7 @@ module.exports = {
 		try {
 			if (message.author.bot || message.channel.id !== '1272033491390828574')
 				return;
-			logger.DBG(`Message deleted in [${message.channel.name}] by ${message.author.tag}: ${message.content}`);
+			//logger.DBG(`Message deleted in [${message.channel.name}] by ${message.author.tag}: ${message.content}`);
 		} catch (error) {
 			logger.ERR(error);
 		}
