@@ -22,7 +22,8 @@ const utils = require('../utils');
 const services = [
 	//'../commands/youtube/service-notification.js',
 	'../commands/gdvzla-list/service-levels.js',
-	'../commands/gdvzla-list/service-levels-p.js'
+	'../commands/gdvzla-list/service-levels-p.js',
+	'../commands/leveling/service-auto-update.js',
 ]
 
 /**

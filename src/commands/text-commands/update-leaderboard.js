@@ -29,7 +29,7 @@ const { COLL_TEXT_XP } = require("../../../.botconfig/database-info.json")
  * Cleans the top 25 channel by deleting the last 100 messages.
  * @param {import('discord.js').TextChannel} channel 
  */
-async function cleanChannelTop15(channel) {
+async function cleanChannel(channel) {
     const fetched = await channel.messages.fetch({ limit: 100 });
     if (fetched.size > 0) {
         for (let i = fetched.size - 1; i >= 0; i--) {
@@ -244,48 +244,40 @@ async function sendImage(channel, member, user, position) {
     });
 }
 
-module.exports = {
-    /**
-     * @param {Db} database 
-     * @param {Message} message 
-     * @returns {Promise<void>}
-     */
-    update: async (database, message) => {
-        try {
-            const top_xp = await activity.getTopUsersData(database, 1, 'text',topLimits.positions);
-            
-            if (top_xp.users.length === 0) {
-                await message.reply('No text XP data available to display the leaderboard');
-                return;
-            }
+/**
+ * Updates the text XP leaderboard by fetching the top users and sending an image for each in the designated channel.
+ * It also manages the "stars" role for users in the top positions or exceptions.
+ * 
+ * @param {Db} db - The MongoDB database instance to fetch user data.
+ * @param {Guild} guild - The Discord guild where the leaderboard is displayed and roles are managed.
+ * @returns {Promise<void>}
+ */
+async function update(db, guild) {
+    try {
+        const top_xp = await activity.getTopUsersData(db, 1, 'text', topLimits.positions);
 
-            //const channel = await message.guild.channels.fetch('1294668385950498846')
-            const channel = await message.guild.channels.fetch(channels.TEXT_XP_LEADERBOARD)
-            if (!channel || !(channel instanceof GuildChannel)) {
-                await message.reply(`The Top ${topLimits.positions} XP channel was not found. Try again later...`);
-                return;
-            }
+        if (top_xp.users.length === 0) {
+            return logger.DBG('No text XP data available to display the leaderboard');
+        }
 
-            await cleanChannelTop15(channel);
-            await channel.send(`**TOP ${topLimits.positions} USUARIOS CON MAS XP DE TEXTO EN EL SERVIDOR!**\n\nPara ganar experiencia (XP), solo tienes que participar activamente en los canales de texto del servidor enviando mensajes de __texto, emojis, stickers__, etc. Todo lo referente a los canales de texto.\n\n*Si sales del Top ${topLimits.positions}, el rol se mantendrá contigo hasta que llegues al Top ${topLimits.limit}; si bajas otro nivel, lamentablemente perderás el rol, así que mantente activo!!!\nY si logras llegar al Top 1 el rol se vuelve permanente!!!*`);
+        //const channel = await message.guild.channels.fetch('1294668385950498846')
+        const channel = await guild.channels.fetch(channels.TEXT_XP_LEADERBOARD)
+        if (!channel || !(channel instanceof GuildChannel)) {
+            return logger.ERR(`Channel with ID ${channels.TEXT_XP_LEADERBOARD} not found or is not a text channel`);
+        }
 
-            for (let i = 0; i < top_xp.users.length && i < topLimits.positions; i++) {
-                const member = await message.guild.members.fetch(top_xp.users[i].userId).catch(() => null);
-                if (member) {
-                    await sendImage(channel, member, top_xp.users[i], i + 1);
-                }
-            }
+        await cleanChannel(channel);
+        await channel.send(`**TOP ${topLimits.positions} USUARIOS CON MAS XP DE TEXTO EN EL SERVIDOR!**\n\nPara ganar experiencia (XP), solo tienes que participar activamente en los canales de texto del servidor enviando mensajes de __texto, emojis, stickers__, etc. Todo lo referente a los canales de texto.\n\n*Si sales del Top ${topLimits.positions}, el rol se mantendrá contigo hasta que llegues al Top ${topLimits.limit}; si bajas otro nivel, lamentablemente perderás el rol, así que mantente activo!!!\nY si logras llegar al Top 1 el rol se vuelve permanente!!!*`);
 
-            await message.react('✅')
-        } catch (error) {
-            logger.ERR(error);
-            try {
-                await message.reply({
-                    content: `Se ha producido un error al actualizar el Top ${topLimits.positions}. ` + error.message,
-                })
-            } catch (e) {
-                logger.ERR(e);
+        for (let i = 0; i < top_xp.users.length && i < topLimits.positions; i++) {
+            const member = await guild.members.fetch(top_xp.users[i].userId).catch(() => null);
+            if (member) {
+                await sendImage(channel, member, top_xp.users[i], i + 1);
             }
         }
+    } catch (error) {
+        logger.ERR(error);
     }
 }
+
+module.exports = { update }

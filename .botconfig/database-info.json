@@ -13,5 +13,10 @@
 	"COLL_PROFILES": "profiles",
 	"COLL_USER_KICKS": "user_kicks",
 	"COLL_USERS_ACTIVITY": "users_activity",
-	"COLL_USERS_ACTIVITY_CONFIG": "users_activity_config"
+	"COLL_USERS_ACTIVITY_CONFIG": "users_activity_config",
+	"doc_types": {
+		"SAU_TYPE_USERS_BLACKLIST": "usersBlacklist",
+		"SAU_TYPE_USER_EXCEPTION_LIST": "usersExceptionList",
+		"SAU_TYPE_LAST_UPDATE_QUERY": "lastUpdateQuery"
+	}
 }

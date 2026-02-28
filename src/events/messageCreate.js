@@ -87,10 +87,10 @@ module.exports = {
                 if (message.content.startsWith('--scan')) {
                     if (utils.hasUserPermissions(message.member))
                         await require('../commands/text-commands/scan').scan(database, message, getCommandParameters(message.content))
-                } else if (message.content.startsWith('--update')) {
+                }/* else if (message.content.startsWith('--update')) {
                     if (utils.hasUserPermissions(message.member))
                         await require('../commands/text-commands/update-leaderboard').update(database, message)
-                } else if (message.content.startsWith('--clean')) {
+                }*/ else if (message.content.startsWith('--clean')) {
                     if (utils.hasUserPermissions(message.member))
                         await require('../commands/text-commands/clean').clean(message)
                 } else if (message.content.startsWith('--blacklist')) {
