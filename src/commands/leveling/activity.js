@@ -18,7 +18,7 @@
 const { Events, Client, ChatInputCommandInteraction, Message, GuildMember, AttachmentBuilder, ChannelType, Guild, VoiceChannel, VoiceState } = require('discord.js');
 const { Db } = require('mongodb');
 const logger = require('../../logger');
-const { COLL_USERS_ACTIVITY } = require('../../../.botconfig/database-info.json')
+const { COLL_USERS_ACTIVITY, COLL_USERS_ACTIVITY_CONFIG, doc_types } = require('../../../.botconfig/database-info.json')
 
 /** Prefix for Redis keys to store user activity data */
 const PREFIX_USER_ACTIVITY = 'gdvzla-user-activity:';
@@ -251,15 +251,16 @@ async function getUserActivityData(db, interaction) {
  * @param {number} page - The page number for pagination (default is 1).
  * @param {string} type - The type of leaderboard to generate ('text', 'voice').
  * @param {number} limit - The number of users to return per page (default is 10).
+ * @param {string[]} blacklistIds - An array of user IDs to exclude from the leaderboard.
  * @returns {Promise<UserActivity[]>} - Returns an array of top users in the leaderboard.
  */
-async function getTopUsers(db, page = 1, type = 'text', limit = 10) {
+async function getTopUsers(db, page = 1, type = 'text', limit = 10, blacklistIds = []) {
 	try {
 		const skip = (page - 1) * limit;
 		const sortField = type === 'voice' ? 'voicePoints' : 'points';
 
 		const topUsers = await db.collection(COLL_USERS_ACTIVITY)
-			.find({ [sortField]: { $gt: 0 }, banned: { $ne: true } }, {
+			.find({ [sortField]: { $gt: 0 }, banned: { $ne: true }, userId: { $nin: blacklistIds } }, {
 				projection: {
 					_id: 0,
 					userId: 1,
@@ -299,9 +300,16 @@ async function getTopUsersData(db, page = 1, type = 'text', limit = 10) {
 	const collection = db.collection(COLL_USERS_ACTIVITY);
 	const sortField = type === 'voice' ? 'voicePoints' : 'points';
 
+	const blacklistDoc = await db.collection(COLL_USERS_ACTIVITY_CONFIG).findOne(
+        { type: doc_types.SAU_TYPE_USERS_BLACKLIST },
+        { projection: { users: 1, _id: 0 } }
+    );
+
+	const blacklistIds = blacklistDoc?.users || [];
+
 	const [users, totalUsers] = await Promise.all([
-		getTopUsers(db, page, type, limit), collection.countDocuments({ 
-			[sortField]: { $gt: 0 }, banned: { $ne: true } 
+		getTopUsers(db, page, type, limit, blacklistIds), collection.countDocuments({ 
+			[sortField]: { $gt: 0 }, banned: { $ne: true }, userId: { $nin: blacklistIds } 
 		})
 	]);
 
