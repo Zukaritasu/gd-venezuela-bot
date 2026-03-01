@@ -75,8 +75,8 @@ async function removeRoleFromInvalidMembers(guild, blMembers, currentTopUserIds)
 
 	for (const [id] of role.members) {
 		if (blMembers.has(id) || !currentTopUserIds.includes(id)) {
-			//await member.roles.remove(role.id, 'The member is blacklisted or not in top users');
-			logger.DBG(`Would remove role from member ${id} (blacklisted: ${blMembers.has(id)}, in top users: ${currentTopUserIds.includes(id)})`);
+			//await member.roles.remove(role.id, 'The user has dropped out of the TOP ${topLimits.limit} or is on the blacklist');
+			//logger.DBG(`Would remove role from member ${id} (blacklisted: ${blMembers.has(id)}, in top users: ${currentTopUserIds.includes(id)})`);
 		}
 	}
 
@@ -127,8 +127,8 @@ async function processUsersStarsRole(db, guild) {
 	for (const userId of candidates) {
 		const member = await guild.members.fetch(userId).catch(() => null);
 		if (member && !member.roles.cache.has(process.env.ID_ROL_ESTRELLAS)) {
-			//await member.roles.add(process.env.ID_ROL_ESTRELLAS, `Entró al Top ${topLimits.limit} o es Excepción`);
-			logger.DBG(`Would add role to member ${userId} (in top users: ${currentTopXp.users.some(u => u.userId === userId)}, is exception: ${excMembers.has(userId)})`);
+			//await member.roles.add(process.env.ID_ROL_ESTRELLAS, `The user has entered the TOP 25 ${topLimits.limit}`);
+			//logger.DBG(`Would add role to member ${userId} (in top users: ${currentTopXp.users.some(u => u.userId === userId)}, is exception: ${excMembers.has(userId)})`);
 		}
 	}
 }

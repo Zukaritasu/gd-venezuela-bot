@@ -18,7 +18,7 @@
 const { Message } = require("discord.js");
 const { Db } = require("mongodb");
 const logger = require("../../logger");
-const { COLL_TEXT_XP } = require('../../../.botconfig/database-info.json');
+const { COLL_USERS_ACTIVITY_CONFIG, doc_types } = require('../../../.botconfig/database-info.json');
 
 ///////////////////////////////////
 
@@ -31,12 +31,12 @@ const DB_TYPE_OBJECT = 'usersException'
  */
 async function addUser(userId, database, message) {
 	try {
-		const collection = database.collection(COLL_TEXT_XP);
+		const collection = database.collection(COLL_USERS_ACTIVITY_CONFIG);
 		const { acknowledged, upsertedCount } = await collection.updateOne(
-			{ type: DB_TYPE_OBJECT },
+			{ type: doc_types.SAU_TYPE_USER_EXCEPTION_LIST },
 			{
 				$setOnInsert: {
-					type: DB_TYPE_OBJECT, users: []
+					type: doc_types.SAU_TYPE_USER_EXCEPTION_LIST, users: []
 				}
 			},
 			{ upsert: true }
@@ -44,7 +44,7 @@ async function addUser(userId, database, message) {
 
 		if (acknowledged || upsertedCount) {
 			const updateResult = await collection.updateOne(
-				{ type: DB_TYPE_OBJECT },
+				{ type: doc_types.SAU_TYPE_USER_EXCEPTION_LIST },
 				{
 					$addToSet: {
 						users: userId
@@ -75,12 +75,12 @@ async function addUser(userId, database, message) {
  */
 async function removeUser(userId, database, message) {
 	try {
-		const collection = database.collection(COLL_TEXT_XP);
+		const collection = database.collection(COLL_USERS_ACTIVITY_CONFIG);
 		const { acknowledged, upsertedCount } = await collection.updateOne(
-			{ type: DB_TYPE_OBJECT },
+			{ type: doc_types.SAU_TYPE_USER_EXCEPTION_LIST },
 			{
 				$setOnInsert: {
-					type: DB_TYPE_OBJECT, users: []
+					type: doc_types.SAU_TYPE_USER_EXCEPTION_LIST, users: []
 				}
 			},
 			{ upsert: true }
@@ -88,7 +88,7 @@ async function removeUser(userId, database, message) {
 
 		if (acknowledged || upsertedCount) {
 			const updateResult = await collection.updateOne(
-				{ type: DB_TYPE_OBJECT },
+				{ type: doc_types.SAU_TYPE_USER_EXCEPTION_LIST },
 				{
 					$pull: {
 						users: userId
@@ -115,9 +115,9 @@ async function removeUser(userId, database, message) {
  * @param {Db} database 
  * @returns {Promise<string[]>}
  */
-async function getUsersException(database) {
-	const collTextXP = await database.collection(COLL_TEXT_XP).findOne(
-		{ type: DB_TYPE_OBJECT },
+async function getUsersExceptions(database) {
+	const excUsers = await database.collection(COLL_USERS_ACTIVITY_CONFIG).findOne(
+		{ type: doc_types.SAU_TYPE_USER_EXCEPTION_LIST },
 		{
 			projection: 
 			{ 
@@ -127,7 +127,7 @@ async function getUsersException(database) {
 		}
 	);
 
-	return collTextXP ? collTextXP.users : [];
+	return excUsers ? excUsers.users : [];
 }
 
 /** 
@@ -169,6 +169,6 @@ async function process(params, database, message) {
 module.exports = {
 	addUser,
 	removeUser,
-	getUsersException,
+	getUsersExceptions,
 	process
 }

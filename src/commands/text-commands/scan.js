@@ -21,7 +21,7 @@ const topLimits = require("../../../.botconfig/top-limits.json")
 const logger = require("../../logger.js");
 const channels = require("../../../.botconfig/channels.json");
 const { COLL_TEXT_XP } = require("../../../.botconfig/database-info.json");
-const { getUsersException } = require('../text-commands/users-exception.js')
+const { getUsersExceptions } = require('./user-exception.js')
 
 ///////////////////////////////////
 
@@ -200,7 +200,7 @@ async function scan(database, message, parameters) {
 
         const guildMembers = message.guild.members.cache;
         const blacklist = await getBlacklistMembers(database)
-        const usersException = await getUsersException(database)
+        const usersException = await getUsersExceptions(database)
 
         const users = getProBotTopUsers(blacklist, guildMembers, message, await message.channel.messages.fetch({
             limit: parameters.length >= 1 ? parseInt(parameters[0]) + 1 : 5

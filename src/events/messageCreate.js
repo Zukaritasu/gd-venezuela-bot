@@ -96,9 +96,9 @@ module.exports = {
                 } */ else if (message.content.startsWith('--blacklist')) {
                     if (utils.hasUserPermissions(message.member))
                         await require('../commands/text-commands/topxp-blacklist').process(getCommandParameters(message.content), database, message)
-                } else if (message.content.startsWith('--users-exception')) {
+                } else if (message.content.startsWith('--user-exception')) {
                     if (utils.hasUserPermissions(message.member))
-                        await require('../commands/text-commands/users-exception').process(getCommandParameters(message.content), database, message)
+                        await require('../commands/text-commands/user-exception').process(getCommandParameters(message.content), database, message)
                 } else if (message.content.startsWith('--test-command')) {
                     if (utils.hasUserPermissions(message.member))
                         await require('../commands/youtube/service-notification').testCommand(message.channel)
