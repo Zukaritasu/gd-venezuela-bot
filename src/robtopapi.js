@@ -16,6 +16,7 @@
  */
 
 const axios = require('axios');
+const logger = require('./logger')
 
 const robtopUser = require('../resources/robtop_objects/user.json')
 
@@ -54,9 +55,13 @@ function extractKeyValuePairs(str) {
 
     const addProperty = () => {
         const item = robtopUser.find(item => item.key == parseInt(key));
-        if (item.value === 'message')
-            value = Buffer.from(value, 'base64').toString('utf-8')
-        map.set(item.value, value);
+        if (!item) {
+            logger.DBG(`extractKeyValuePairs: unknown key ${key}`)
+        } else {
+            if (item.value === 'message')
+                value = Buffer.from(value, 'base64').toString('utf-8')
+            map.set(item.value, value);
+        }
     }
 
     for (let i = 0; i < str.length; i++) {
