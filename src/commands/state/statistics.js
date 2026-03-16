@@ -69,9 +69,9 @@ async function getUserStadistic(database, userId, stadistic) {
  */
 async function showStadistic(database, response, confirmation, interaction, collectorFilter, stadistic) {
     const grinders = interaction.guild.members.cache.filter(member =>
-        member.roles.cache.find(role => role.id === '1119804850620866600' /* vnzl role */) !== undefined &&
+        member.roles.cache.find(role => role.id === process.env.ID_ROL_VENEZOLANO /* vnzl role */) !== undefined &&
         member.roles.cache.find(role => role.id === confirmation.values[0] /* state role id*/) !== undefined &&
-        member.roles.cache.find(role => role.id === stadistic.roleId) !== undefined)
+        member.roles.cache.find(role => stadistic.roleId.indexOf(role.id) !== -1) !== undefined)
 
     //************** create embed **************/
 
