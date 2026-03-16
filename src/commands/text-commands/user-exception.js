@@ -20,10 +20,6 @@ const { Db } = require("mongodb");
 const logger = require("../../logger");
 const { COLL_USERS_ACTIVITY_CONFIG, doc_types } = require('../../../.botconfig/database-info.json');
 
-///////////////////////////////////
-
-const DB_TYPE_OBJECT = 'usersException'
-
 /**
  * @param {string} userId 
  * @param {Db} database
@@ -56,8 +52,6 @@ async function addUser(userId, database, message) {
 		} else {
 			await message.react('❌');
 		}
-
-		await removeRole(userId, message)
 	} catch (error) {
 		logger.ERR(error);
 		try {
