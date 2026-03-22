@@ -128,7 +128,7 @@ async function processUsersStarsRole(db, guild) {
 	for (const userId of candidates) {
 		const member = await guild.members.fetch(userId).catch(() => null);
 		if (member && !member.roles.cache.has(process.env.ID_ROL_ESTRELLAS)) {
-			await member.roles.add(process.env.ID_ROL_ESTRELLAS, `The user has entered the TOP 25 ${topLimits.limit}`);
+			await member.roles.add(process.env.ID_ROL_ESTRELLAS, `The user has entered the TOP ${topLimits.positions}`);
 			//logger.DBG(`Would add role to member ${userId} (in top users: ${currentTopXp.users.some(u => u.userId === userId)}, is exception: ${excMembers.has(userId)})`);
 		}
 	}
