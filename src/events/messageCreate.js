@@ -112,7 +112,12 @@ module.exports = {
                     const submitPack = await repliedMessageContainsEmbedSubmitPack(client, message)
                     if (utils.hasUserPermissions(message.member) || usersWhitelist.includes(message.member.id))
                         await require(submitPack ? '../commands/packs/pack' : '../commands/records/record').decline(message)
-                } 
+                }
+
+                else if (message.content.startsWith('--winner')) {
+                    if (utils.hasUserPermissions(message.member))
+                        await require('../commands/text-commands/winner').winner(message, getCommandParameters(message.content))
+                }
                 
                 else if (message.content.startsWith('--denegar') && message.channel.id === /*'1119807234076049428'*/ channels.MODERATION) {
                     if (utils.hasUserPermissions(message.member))
