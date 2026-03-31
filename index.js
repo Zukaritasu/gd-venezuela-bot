@@ -104,7 +104,7 @@ async function verifyClockIntegrity() {
                 if (!RETRYABLE_STATUS_CODES.includes(response.status))
                     throw new Error(`Non-retryable HTTP status: ${response.status}`);
             } catch (e) {
-                if (e?.message !== 'TypeError: fetch failed')
+                if (e?.message !== 'fetch failed')
                     logger.ERR(e);
                 return null;
             }
