@@ -54,6 +54,7 @@ The last feature that has been added to the bot is a small user XP monitoring sy
 | --aprobar | The bot adds the user ID to the whitelist to grant access to the server if the user has a new account |
 | --denegar | The bot adds the user ID to the blacklist that prohibits access to the server, which results in the user being banned from the server even if they are not a member of the server. |
 | --dm | Send a message to the user's DM. The command only works in the server's moderation channel
+| --winner | A winner will be chosen at random based on the giveaway message ID, channel, and emoji (or name)
 
 
 ## Contribution

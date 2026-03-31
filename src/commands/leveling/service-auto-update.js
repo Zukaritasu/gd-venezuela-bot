@@ -77,7 +77,33 @@ async function removeRoleFromInvalidMembers(guild, blMembers, currentTopUserIds)
 		const member = await guild.members.fetch(id).catch(() => null);
 		if (member && blMembers.has(id) || !currentTopUserIds.includes(id)) {
 			await member.roles.remove(role.id, `The user has dropped out of the TOP ${topLimits.limit} or is on the blacklist`);
-			//logger.DBG(`Would remove role from member ${id} (blacklisted: ${blMembers.has(id)}, in top users: ${currentTopUserIds.includes(id)})`);
+		}
+	}
+
+	return true
+}
+
+/**
+ * 
+ * @param {Guild} guild - The Discord guild where the role is assigned.
+ * @param {import('./activity').UserActivity[]} currentTopUsers - The list of current
+ * top users with their activity data, including the "isSuperStar" property.
+ */
+async function removeSuperStarRoleFromInvalidMembers(guild, currentTopUsers) {
+	const role = await guild.roles.fetch(process.env.ID_ROL_SUPER_ESTRELLA);
+	
+	if (!role) {
+		logger.ERR('Guild or role not found for processing superstar role');
+		return false
+	}
+
+	for (const [id] of role.members) {
+		const member = await guild.members.fetch(id).catch(() => null);
+		const isSuperStar = currentTopUsers.find(u => u.userId === id)?.isSuperStar;
+		if (member && !isSuperStar) {
+			await member.roles.remove(role.id, `The user has dropped out of the TOP ${topLimits.maxSuperStars} `
+				+ `with more than ${topLimits.superStarThreshold} points`
+			);
 		}
 	}
 
@@ -116,6 +142,9 @@ async function processUsersStarsRole(db, guild) {
     const currentTopXp = await activity.getTopUsersData(db, 1, 'text', topLimits.limit);
 	const currentTopUserIds = currentTopXp.users.map(u => u.userId);
 
+	if (!await removeSuperStarRoleFromInvalidMembers(guild, currentTopXp.users))
+		return;
+
     if (!await removeRoleFromInvalidMembers(guild, blMembers, currentTopUserIds))
 		return
 
@@ -129,7 +158,13 @@ async function processUsersStarsRole(db, guild) {
 		const member = await guild.members.fetch(userId).catch(() => null);
 		if (member && !member.roles.cache.has(process.env.ID_ROL_ESTRELLAS)) {
 			await member.roles.add(process.env.ID_ROL_ESTRELLAS, `The user has entered the TOP ${topLimits.positions}`);
-			//logger.DBG(`Would add role to member ${userId} (in top users: ${currentTopXp.users.some(u => u.userId === userId)}, is exception: ${excMembers.has(userId)})`);
+		}
+
+		const isSuperStar = currentTopXp.users.find(u => u.userId === userId)?.isSuperStar;
+		if (member && isSuperStar && !member.roles.cache.has(process.env.ID_ROL_SUPER_ESTRELLA)) {
+			await member.roles.add(process.env.ID_ROL_SUPER_ESTRELLA, `The user has entered the TOP ${topLimits.maxSuperStars} `
+				+ `with more than ${topLimits.superStarThreshold} points`
+			);
 		}
 	}
 }

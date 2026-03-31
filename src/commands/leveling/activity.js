@@ -18,6 +18,7 @@
 const { Events, Client, ChatInputCommandInteraction, Message, GuildMember, AttachmentBuilder, ChannelType, Guild, VoiceChannel, VoiceState } = require('discord.js');
 const { Db } = require('mongodb');
 const logger = require('../../logger');
+const topLimits = require('../../../.botconfig/top-limits.json');
 const { COLL_USERS_ACTIVITY, COLL_USERS_ACTIVITY_CONFIG, doc_types } = require('../../../.botconfig/database-info.json')
 
 /** Prefix for Redis keys to store user activity data */
@@ -46,6 +47,7 @@ const COOLDOWN_TIME = 60000;
  * @property {number|undefined} position - The user's position in the text leaderboard.
  * @property {number|undefined} voicePosition - The user's position in the voice leaderboard.
  * @property {number} version - Version number for optimistic locking.
+ * @property {boolean|undefined} isSuperStar - Whether the user is considered a "superstar" based on their points.
  */
 
 /**
@@ -269,6 +271,13 @@ async function getTopUsers(db, page = 1, type = 'text', limit = 10, blacklistIds
 					voicePoints: 1
 				}
 			}).skip(skip).limit(limit).toArray();
+
+		for (let i = 0; i < topUsers.length && i < topLimits.maxSuperStars; i++) {
+			// Mark the top users with more than 30,000 points as "superstars"
+			if (topUsers[i].points >= topLimits.superStarThreshold) { 
+				topUsers[i].isSuperStar = true;
+			}
+		}
 
 		return topUsers;
 	} catch (error) {

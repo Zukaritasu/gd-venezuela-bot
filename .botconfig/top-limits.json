@@ -1,6 +1,8 @@
 {
     "positions": 25,
     "limit": 35,
+    "superStarThreshold": 30000,
+    "maxSuperStars": 5,
     "starsRoleID": "1302401396133466246",
     "usersException": [
         "555969393570611211",
