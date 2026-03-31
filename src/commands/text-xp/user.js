@@ -88,11 +88,15 @@ async function leave(database, interaction) {
             return await interaction.editReply(`Tu posición no existe dentro del Top ${topLimits.limit} <:ani_chibiqiqipeek:1244839483581403138>`)
         }
 
-        if (!member.roles.cache.has(topLimits.starsRoleID)) {
+        if (!member.roles.cache.has(process.env.ID_ROL_ESTRELLAS)) {
             return await interaction.editReply(`No tienes asignado el rol Estrellas`)
         }
 
-        await member.roles.remove(topLimits.starsRoleID, `The user unsubscribed with the Estrellas role`)
+        await member.roles.remove(process.env.ID_ROL_ESTRELLAS, `The user unsubscribed with the Estrellas role`)
+        if (member.roles.cache.has(process.env.ID_ROL_SUPER_ESTRELLA)) {
+            await member.roles.remove(process.env.ID_ROL_SUPER_ESTRELLA, `The user unsubscribed with the Super Estrella role`)
+        }
+
         await addOrRemoveUser(database, member.id, true)
         await interaction.editReply(`Se ha procesado la solicitud con éxito! Tu rol de Estrellas ha sido removido.`)
     } catch (error) {
