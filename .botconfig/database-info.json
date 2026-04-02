@@ -12,7 +12,7 @@
 	"COLL_GDVZLA_LIST_CONFIG": "gdvzla_list_config",
 	"COLL_PROFILES": "profiles",
 	"COLL_USER_KICKS": "user_kicks",
-	"COLL_USERS_ACTIVITY": "users_activity",
+	"COLL_USERS_ACTIVITY": "users_activity_v2",
 	"COLL_USERS_ACTIVITY_CONFIG": "users_activity_config",
 	"doc_types": {
 		"SAU_TYPE_USERS_BLACKLIST": "usersBlacklist",

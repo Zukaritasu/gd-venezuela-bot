@@ -58,7 +58,8 @@ process.chdir(__dirname);
         modules.forEach(module => require(module).setRedisClientObject(redisClient))
         
         // Initialize activity module with Redis and database
-        await require('./commands/leveling/activity').setRedisClientObject()
+        
+        await require('./commands/leveling/activity').initializeActivityLog()
     } catch (e) {
         logger.ERR(e)
 		return

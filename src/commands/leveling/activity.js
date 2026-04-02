@@ -489,7 +489,7 @@ module.exports = {
 	 * activity data. It also sets up a periodic backup of the user activity data every 15 minutes.
 	 * 
 	 */
-	setRedisClientObject: async () => {
+	initializeActivityLog: async () => {
 		const error = await loadBackupData(global.database);
 
 		// If there is a Redis, network, or MongoDB error, for security reasons,
