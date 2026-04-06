@@ -316,14 +316,13 @@ async function addPlayerToStateList(message, jsonInfo) {
  * @param {object} file 
  * @param {object} jsonInfo 
  * @param {string} fileName
+ * @returns {Promise<boolean>}
  */
 async function addRecord(message, file, jsonInfo, fileName, isMobile) {
     const oldRecord = file.content.records.find(record => record.user === jsonInfo.user);
-    if (oldRecord) {
-        if (jsonInfo.percent <= oldRecord.percent) {
-            throw new Error(`El usuario **${jsonInfo.user}** ya tiene un progreso mayor o igual aceptado (${oldRecord.percent}%)`);
-        }
 
+    let isNewRecord = false;
+    if (oldRecord) {
         if (oldRecord?.time && jsonInfo?.time) {
             const [hoursOld, minutesOld, secondsOld, millisecondOld] = oldRecord.time.split(/[:.]/).map(Number);
             const [hoursNew, minutesNew, secondsNew, millisecondNew] = jsonInfo.time.split(/[:.]/).map(Number);
@@ -332,7 +331,7 @@ async function addRecord(message, file, jsonInfo, fileName, isMobile) {
             const totalMillisecondsNew = (((hoursNew * 60 + minutesNew) * 60) + secondsNew) * 1000 + millisecondNew;
 
             if (totalMillisecondsNew <= totalMillisecondsOld) {
-                throw new Error(`El usuario **${jsonInfo.user}** ya tiene un tiempo mejor aceptado (${oldRecord.time})`);
+                throw new Error(`El usuario **${jsonInfo.user}** ya tiene un tiempo mayor o igual aceptado (\`${oldRecord.time}\`)`);
             }
         }
 
@@ -347,11 +346,12 @@ async function addRecord(message, file, jsonInfo, fileName, isMobile) {
     } else {
         jsonInfo.mobile = isMobile;
         file.content.records.push(jsonInfo);
+        isNewRecord = true;
     }
 
     const fileEdited = Buffer.from(JSON.stringify(file.content, null, 4)).toString("base64");
     await axios.put(`https://api.github.com/repos/Abuigsito/gdvzla/contents/public/data/${fileName}.json`, {
-        message: `Added record for ${jsonInfo.user} by ${message.author.username}`,
+        message: `${isNewRecord ? 'Added' : 'Updated'} record for ${jsonInfo.user} by ${message.author.username}`,
         content: fileEdited,
         sha: file.sha,
         branch: 'main'
@@ -364,6 +364,8 @@ async function addRecord(message, file, jsonInfo, fileName, isMobile) {
     if (!oldRecord) {
         await addPlayerToStateList(message, jsonInfo);
     }
+
+    return isNewRecord;
 }
 
 /**
@@ -408,16 +410,18 @@ async function handleProgress(message, isAccept) {
 
         if (isAccept) {
             const fileName = getFileName(levelName);
+            let isUpdate = false;
+
             let file = await getGitHubFile(fileName);
             if (!file) { // File doesn't exist, create it
                 const report = await createRecordFile(message, fileName, levelName, jsonInfo, userId);
                 await message.reply(`El archivo **${fileName}.json** no existe, por lo que se ha creado uno nuevo.`);
                 await printChanges(report.changes, message.guild, report.isPlatformer);
             } else if (file.content.verifier === jsonInfo.user ||
-                file.content.records.some(record => record.user === jsonInfo.user && record.percent >= 100)) {
+                file.content.records.some(oldRecord => oldRecord.user === jsonInfo.user && !('time' in jsonInfo) && oldRecord.percent >= jsonInfo.percent)) {
                 await botRecord.react('✅');
                 await message.react('⚠️');
-                return await message.reply('El progreso ya ha sido aceptado anteriormente.');
+                return await message.reply('Este progreso ya ha sido aceptado previamente o el usuario tiene un progreso/tiempo igual o mejor aceptado.');
             } else {
                 const parts = message.content.split(' ');
                 let isMobile = false;
@@ -428,12 +432,15 @@ async function handleProgress(message, isAccept) {
                     }
                 }
 
-                await addRecord(message, file, jsonInfo, fileName, isMobile)
+                isUpdate = !await addRecord(message, file, jsonInfo, fileName, isMobile)
             }
 
-            await sendMessageToUser(message, user, `Tu progreso en el nivel **${levelName}** ha sido aceptado :white_check_mark:. ¡Felicidades!`);
+            await sendMessageToUser(message, user, `Tu progreso en el nivel **${levelName}** ha sido ${isUpdate ? 'actualizado' : 'aceptado'} :white_check_mark:. ¡Felicidades!`);
             await botRecord.react('✅');
-
+            if (isUpdate) {
+                // update emoji
+                 await message.react('🔄');
+            }
         } else {
             await sendMessageToUser(message, user, `Tu progreso en el nivel **${levelName}** ha sido rechazado :x:\n**Razón:** ${message.content.substring(11).trim()}`);
             await botRecord.react('❌');
