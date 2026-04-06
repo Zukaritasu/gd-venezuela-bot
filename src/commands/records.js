@@ -65,6 +65,10 @@ module.exports = {
                         .setDescription('Enlace del video de YouTube')
                         .setRequired(true))
                 .addStringOption(option =>
+                    option.setName('time')
+                        .setDescription('Tiempo del record')
+                        .setRequired(false))
+                .addStringOption(option =>
                     option.setName('comment')
                         .setDescription('Agrega un comentario')
                         .setRequired(false))

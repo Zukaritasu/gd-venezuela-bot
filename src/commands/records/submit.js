@@ -24,15 +24,46 @@ const aredlapi = require('../../aredlapi');
 const channels = require('../../../.botconfig/channels.json');
 const { COLL_GDVZLA_LIST_PROFILES } = require('../../../.botconfig/database-info.json');
 
-///////////////////////////////////////////////////////////
+/**
+ * 
+ * @param {Message} message 
+ * @param {string} param 
+ * @return {Promise<{time: string, timestamp: number, isValid: boolean}>} - Returns an object
+ * containing the original time string and its equivalent in milliseconds, or null if th
+ *  format is invalid.
+ */
+async function getLevelPlatformTime(message, param) {
+    const timeStr = param.trim();
+    const errorMessage = 'El formato del tiempo es inválido. Debe ser `00:00:00.000`.';
 
+    if (!/^\d+:\d+:\d+\.\d+$/.test(timeStr)) {
+        await sendErrorDM(message, errorMessage);
+        return { isValid: false };
+    }
+
+    const timeParts = timeStr.split(/[:.]/);
+    if (timeParts.length !== 4) {
+        await sendErrorDM(message, errorMessage);
+        return { isValid: false };
+    }
+
+    const [hours, minutes, seconds, milliseconds] = timeParts.map(part => parseInt(part));
+    if (isNaN(hours) || isNaN(minutes) || isNaN(seconds) || isNaN(milliseconds)) {
+        await sendErrorDM(message, errorMessage);
+        return { isValid: false };
+    }
+
+    const totalMilliseconds = (seconds * 1000) + milliseconds;
+    return { time: timeStr, timestamp: totalMilliseconds, isValid: true };
+}
 
 /**
  * @param {ChatInputCommandInteraction | Message} interaction 
  * @param {Db} db 
  * @param {string} username 
  * 
- * @returns {Promise<{_id: string, userId: string, username: string, state: string} | null>} Returns the profile object if found, otherwise null.
+ * @returns {Promise<{_id: string, userId: string, username: string, state: string} | null>} - Returns
+ * the profile object if found, otherwise null.
  */
 async function getProfile(interaction, db, username) {
     try {
@@ -86,7 +117,8 @@ async function getPlayerName(interaction, player) {
 /**
  * @param {Message} message 
  * @param {string} level 
- * @returns 
+ * @returns {Promise<{name: string, isPlatformer: boolean} | null>} Returns the level
+ * object if found, otherwise null.
  */
 async function getLevelName(message, level) {
     let levelName = level.trim().toLowerCase();
@@ -103,7 +135,23 @@ async function getLevelName(message, level) {
         return null;
     }
 
-    return matchingLevels[0].name;
+    return {
+        name: matchingLevels[0].name,
+        isPlatformer: matchingLevels[0]?.isPlatformer || false
+    };
+}
+
+/**
+ * Checks if the given level name corresponds to a platformer level by fetching
+ * the list of platformer levels from the API and comparing the names.
+ * 
+ * @param {string} levelName - The name of the level to check.
+ * @returns {Promise<boolean>} Returns true if the level is a platformer 
+ * level, otherwise false.
+ */
+async function isPlatformLevel(levelName) {
+    const levelsPlat = await aredlapi.getLevelsPlatformer();
+    return levelsPlat.some(lvl => lvl.name.toLowerCase() === levelName.trim().toLowerCase());
 }
 
 /**
@@ -159,11 +207,38 @@ async function execute(_client, database, interaction) {
 
         const level = interaction.options.getString('level');
 
+        const recordTime = interaction.options.getString('time');
+        let time = null;
+        if (recordTime) {
+            time = await getLevelPlatformTime(interaction, recordTime);
+            if (!time.isValid) {
+                return;
+            }
+        }
+
+        if (time && !await isPlatformLevel(level)) {
+            await sendErrorDM(interaction, 'El nivel proporcionado no es un nivel de platformer.');
+            return;
+        }
+
         const ytvideo = await getVideoLink(interaction, interaction.options.getString('ytvideo'));
         if (!ytvideo) return;
 
         const comment = interaction.options.getString('comment');
         const mobile = interaction.options.getBoolean('mobile') || false;
+
+        let recordObject = {
+            user: profile.username,
+            link: ytvideo,
+            percent: 100,
+            mobile: mobile,
+            flag: `/assets/flags/${profile.state}.png`
+        }
+
+        if (time) {
+            recordObject.time = time.time;
+            recordObject.timestamp = time.timestamp;
+        }
 
         const stringJson =
             `
@@ -172,13 +247,7 @@ Level: ${level}
 Video: ${ytvideo}
 Comentario: ${comment ?? ""}
         \`\`\`json
-{
-    "user": "${profile.username}",
-    "link": "${ytvideo}",
-    "percent": 100,
-    "mobile": ${mobile},
-    "flag": "/assets/flags/${profile.state}.png"
-}
+${JSON.stringify(recordObject, null, 4)}
 \`\`\``;
 
         await channel.send(stringJson);
@@ -240,29 +309,48 @@ async function processSubmitRecord(database, message, parts) {
             return;
         }
 
-        const level = await getLevelName(message, parts[0]);
+        let indexPart = 0;
+
+        const level = await getLevelName(message, parts[indexPart++]);
         if (!level) return;
-        const player = await getPlayerName(message, parts[1]);
+        
+        /** @type {{time: string, timestamp: number, isValid: boolean} | null} */
+        let time = null;
+        if (level.isPlatformer) {
+            time = await getLevelPlatformTime(message, parts[indexPart++]);
+            if (!time.isValid) {
+                return;
+            }
+        }
+
+        const player = await getPlayerName(message, parts[indexPart++]);
         if (!player) return;
         const profile = await getProfile(message, database, player);
         if (!profile) return;
-        const ytvideo = await getVideoLink(message, parts[2]);
+        const ytvideo = await getVideoLink(message, parts[indexPart]);
         if (!ytvideo) return;
+
+        let recordObject = {
+            user: profile.username,
+            link: ytvideo,
+            percent: 100,
+            mobile: false,
+            flag: `/assets/flags/${profile.state}.png`
+        }
+
+        if (time) {
+            recordObject.time = time.time;
+            recordObject.timestamp = time.timestamp;
+        }
         
         const stringJson =
             `
 User ID: ${profile.userId}
-Level: ${level}
+Level: ${level.name}
 Video: ${ytvideo}
-Comentario: ${parts.length > 2 ? parts.slice(3).join(' ') : parts[3].trim()}
+Comentario: ${parts.length > indexPart ? parts.slice(++indexPart).join(' ') : parts[indexPart].trim()}
         \`\`\`json
-{
-    "user": "${profile.username}",
-    "link": "${ytvideo}",
-    "percent": 100,
-    "mobile": false,
-    "flag": "/assets/flags/${profile.state}.png"
-}
+${JSON.stringify(recordObject, null, 4)}
 \`\`\``;
 
         await channel.send(stringJson);

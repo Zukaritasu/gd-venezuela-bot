@@ -171,9 +171,12 @@ module.exports = {
     },
     getLevelsPlatformer: async () => {
         const levels = await getResponseJSON('v2/api/arepl/levels');
-        if (!(levels instanceof Error))
-            for (let i = 0; i < levels.length; i++)
+        if (!(levels instanceof Error)) {
+            for (let i = 0; i < levels.length; i++) {
                 levels[i].name = levels[i].name.trim();
+                levels[i].isPlatformer = true; // Add a property to indicate it's a platformer level
+            }
+        }
         return levels;
     },
     getLevelCreators: (level_id) => getResponseJSON(`v2/api/aredl/levels/${level_id}/creators`),

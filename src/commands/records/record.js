@@ -141,6 +141,11 @@ async function createRecordFile(message, fileName, levelName, jsonInfo, userId) 
         records: []
     }
 
+    if (jsonInfo?.time && jsonInfo?.timestamp) {
+        fileContent.time = jsonInfo.time;
+        fileContent.timestamp = jsonInfo.timestamp;
+    }
+
     let changes = {
         levelNameUp: null,
         levelNameDown: null,
@@ -317,6 +322,23 @@ async function addRecord(message, file, jsonInfo, fileName, isMobile) {
     if (oldRecord) {
         if (jsonInfo.percent <= oldRecord.percent) {
             throw new Error(`El usuario **${jsonInfo.user}** ya tiene un progreso mayor o igual aceptado (${oldRecord.percent}%)`);
+        }
+
+        if (oldRecord?.time && jsonInfo?.time) {
+            const [hoursOld, minutesOld, secondsOld, millisecondOld] = oldRecord.time.split(/[:.]/).map(Number);
+            const [hoursNew, minutesNew, secondsNew, millisecondNew] = jsonInfo.time.split(/[:.]/).map(Number);
+
+            const totalMillisecondsOld = (((hoursOld * 60 + minutesOld) * 60) + secondsOld) * 1000 + millisecondOld;
+            const totalMillisecondsNew = (((hoursNew * 60 + minutesNew) * 60) + secondsNew) * 1000 + millisecondNew;
+
+            if (totalMillisecondsNew <= totalMillisecondsOld) {
+                throw new Error(`El usuario **${jsonInfo.user}** ya tiene un tiempo mejor aceptado (${oldRecord.time})`);
+            }
+        }
+
+        if (jsonInfo?.time && jsonInfo?.timestamp) {
+            oldRecord.time = jsonInfo.time;
+            oldRecord.timestamp = jsonInfo.timestamp;
         }
 
         oldRecord.percent = jsonInfo.percent;
