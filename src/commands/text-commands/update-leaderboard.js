@@ -272,7 +272,7 @@ async function textLeaderboardUpdate(db, guild) {
     }
 
     await cleanChannel(channel);
-    await channel.send(`**TOP ${topLimits.positions} USUARIOS CON MAS XP DE TEXTO EN EL SERVIDOR!**\n\nPara ganar experiencia (XP), solo tienes que participar activamente en los canales de texto del servidor enviando mensajes de __texto, emojis, stickers__, etc. Todo lo referente a los canales de texto.\n\nRequisitos para obtener el rol **Super Estrella**:\n- Tener un mínimo de ${topLimits.superStarThreshold} de puntos de xp de texto\n- Estar dentro del **TOP ${topLimits.maxSuperStars}**\n\n*Si sales del Top ${topLimits.positions}, el rol se mantendrá contigo hasta que llegues al Top ${topLimits.limit}; si bajas otro nivel, lamentablemente perderás el rol, así que mantente activo!!! Y si logras llegar al Top 1 el rol se vuelve permanente!!!*`);
+    await channel.send(`**TOP ${topLimits.positions} USUARIOS CON MAS XP DE TEXTO EN EL SERVIDOR!**\n\nPara ganar experiencia (XP), solo tienes que participar activamente en los canales de texto del servidor enviando mensajes de __texto, emojis, stickers__, etc. Todo lo referente a los canales de texto.\n\nRequisitos para obtener el rol **Super Estrella**:\n- Tener un mínimo de ${topLimits.superStarThreshold} de puntos de xp de texto\n- Estar dentro del **TOP ${topLimits.maxSuperStars}**\n\n*Si sales del Top ${topLimits.positions}, el rol se mantendrá contigo hasta que llegues al Top ${topLimits.limit}; si bajas otro nivel, lamentablemente perderás el rol, así que mantente activo!!! Y si logras llegar al Top 1 el rol se vuelve permanente!!! (Solo es válido si tienes como mínimo ${topLimits.superStarThreshold} puntos de xp de texto)*`);
 
     for (let i = 0; i < top_xp.users.length && i < topLimits.positions; i++) {
         const member = await guild.members.fetch(top_xp.users[i].userId).catch(() => null);
@@ -316,7 +316,7 @@ async function voiceLeaderboardUpdate(db, guild) {
         await cleanChannel(thread);
     }
 
-    await thread.send(`**TOP ${topLimits.positions} USUARIOS CON MAS XP DE VOZ EN EL SERVIDOR!**\n\nPara ganar experiencia (XP), solo tienes que participar activamente en los canales de voz del servidor hablando, compartiendo pantalla, etc. Todo lo referente a los canales de voz.\n\n***NOTA: El rol de Estrellas no se asigna si eres más activo en canales de voz. Solo está disponible para XP en texto.***`);
+    await thread.send(`**TOP ${topLimits.positions} USUARIOS CON MAS XP DE VOZ EN EL SERVIDOR!**\n\nPara ganar experiencia (XP), solo tienes que participar activamente en los canales de voz del servidor hablando, compartiendo pantalla, etc. Todo lo referente a los canales de voz.\n\n***NOTA: El rol de Estrellas o Super Estrella no se asigna si eres más activo en canales de voz. Solo está disponible para XP en texto.***`);
 
     for (let i = 0; i < top_voice_xp.users.length && i < topLimits.positions; i++) {
         const member = await guild.members.fetch(top_voice_xp.users[i].userId).catch(() => null);
