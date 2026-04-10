@@ -255,6 +255,8 @@ function getEventsFromLevelChange(change, normalizedLevels, oldNormalizedLevels)
         events.pushedTarget = 'main';
         events.pushed2 = normalizedLevels.find(level => oldNormalizedLevels.content[150] == level.name).originName;
         events.pushed2Target = 'extended';
+    } else if (events.from > 150 && events.to > 150) {
+        return null;
     }
 
     return events
