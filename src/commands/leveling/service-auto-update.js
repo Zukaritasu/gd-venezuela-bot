@@ -65,7 +65,7 @@ async function isListUpdatable(db) {
  * @param {string[]} currentTopUserIds - The list of current top user IDs who should retain the role.
  * @return {Promise<boolean>} - Returns true if the operation was successful, false otherwise.
  */
-async function removeRoleFromInvalidMembers(guild, blMembers, currentTopUserIds) {
+async function removeStarRoleFromInvalidMembers(guild, blMembers, currentTopUserIds) {
     const role = await guild.roles.fetch(process.env.ID_ROL_ESTRELLAS);
 
 	if (!role) {
@@ -99,7 +99,7 @@ async function removeSuperStarRoleFromInvalidMembers(guild, currentTopUsers) {
 
 	for (const [id] of role.members) {
 		const member = await guild.members.fetch(id).catch(() => null);
-		const isSuperStar = currentTopUsers.find(u => u.userId === id)?.isSuperStar;
+		const isSuperStar = currentTopUsers.find(u => u.userId === id)?.isSuperStar || false;
 		if (member && !isSuperStar) {
 			await member.roles.remove(role.id, `The user has dropped out of the TOP ${topLimits.maxSuperStars} `
 				+ `with more than ${topLimits.superStarThreshold} points`
@@ -145,7 +145,7 @@ async function processUsersStarsRole(db, guild) {
 	if (!await removeSuperStarRoleFromInvalidMembers(guild, currentTopXp.users))
 		return;
 
-    if (!await removeRoleFromInvalidMembers(guild, blMembers, currentTopUserIds))
+    if (!await removeStarRoleFromInvalidMembers(guild, blMembers, currentTopUserIds))
 		return
 
 	const candidates = new Set([
@@ -160,7 +160,7 @@ async function processUsersStarsRole(db, guild) {
 			await member.roles.add(process.env.ID_ROL_ESTRELLAS, `The user has entered the TOP ${topLimits.positions}`);
 		}
 
-		const isSuperStar = currentTopXp.users.find(u => u.userId === userId)?.isSuperStar;
+		const isSuperStar = currentTopXp.users.find(u => u.userId === userId)?.isSuperStar || false;
 		if (member && isSuperStar && !member.roles.cache.has(process.env.ID_ROL_SUPER_ESTRELLA)) {
 			await member.roles.add(process.env.ID_ROL_SUPER_ESTRELLA, `The user has entered the TOP ${topLimits.maxSuperStars} `
 				+ `with more than ${topLimits.superStarThreshold} points`
