@@ -16,6 +16,7 @@
  */
 
 const https = require('https');
+const logger = require('./logger');
 
 ////////////////////////////////////////////////////////
 
@@ -44,25 +45,23 @@ async function getResponseJSON(url) {
         const key = `${options.hostname}${options.path}`
 
         try {
-            const response = await redisObject.get(key)
-            if (response)
-                return resolve(JSON.parse(response));
-            https.get(options, res => {
-                let data = [];
-                res.on('error', error => {
-                    resolve(error);
-                });
-                res.on('data', chunk => { data.push(chunk); });
-                res.on('end', async () => {
-                    try {
-                        const jsonResponseData = JSON.parse(Buffer.concat(data).toString())
-                            await redisObject.set(key, JSON.stringify(jsonResponseData), { EX: 21600 })
-                        resolve(jsonResponseData)
-                    } catch (error) {
-                        resolve(error);
-                    }
-                });
+            const redisValue = await redisObject.get(key)
+            if (redisValue)
+                return resolve(JSON.parse(redisValue));
+
+            const response = await fetch(`https://${options.hostname}${options.path}`, {
+                method: options.method,
+                headers: options.headers
             });
+
+            if (!response.ok) {
+                logger.ERR(`Error fetching data from pointercrate for URL: https://${options.hostname}${options.path}\nStatus: ${response.status} ${response.statusText}`);
+                return resolve(new Error(`HTTP error! Status: ${response.status} ${response.statusText}`));
+            }
+
+            const jsonResponseData = await response.json();
+            await redisObject.set(key, JSON.stringify(jsonResponseData), { EX: 21600 })
+            resolve(jsonResponseData)
         } catch (error) {
             resolve(error);
         }
