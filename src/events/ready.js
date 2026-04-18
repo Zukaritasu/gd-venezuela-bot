@@ -110,19 +110,6 @@ module.exports = {
 		//await require('../commands/gdvzla-list/service-levels').sortStatusError();
 		await require('../commands/records/submit').checkNewSubmitRecords(client, database)
 		
-		// Load services
-
-		for (let i = 0; i < services.length; i++) {
-			try {
-				const info = await require(services[i]).start(database, client)
-				logger.INF(`Service ${info.fullname} has been loaded!`)
-			} catch (error) {
-				logger.ERR(`Error loading service: ${error.message}`)
-			}
-		}
-
-		logger.INF(`Ready! Logged in as ${client.user.tag}`)
-
 		// Load server members into the cache
 		const guild = client.guilds.cache.get(process.env.SERVER_GD_VENEZUELA_ID)
 		if (guild) {
@@ -135,6 +122,19 @@ module.exports = {
 				logger.ERR(e)
 			}
 		}
+
+		// Load services
+
+		for (let i = 0; i < services.length; i++) {
+			try {
+				const info = await require(services[i]).start(database, client)
+				logger.INF(`Service ${info.fullname} has been loaded!`)
+			} catch (error) {
+				logger.ERR(`Error loading service: ${error.message}`)
+			}
+		}
+
+		logger.INF(`Ready! Logged in as ${client.user.tag}`)
 
 		//clearBotDMMessages(client)
 	},
