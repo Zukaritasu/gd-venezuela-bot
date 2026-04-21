@@ -117,6 +117,7 @@ module.exports = {
 				const allMembers = await utils.getAllMembers(guild)
 				if (allMembers) {
 					await require('../checkAccounts').checkAllUsersAccountAge(guild, database, allMembers);
+					await require('../commands/leveling/activity').verifyGuildMembers(allMembers);
 				}
 			} catch (e) {
 				logger.ERR(e)

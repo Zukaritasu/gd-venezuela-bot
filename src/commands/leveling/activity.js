@@ -220,7 +220,7 @@ async function getUserActivityData(db, interaction) {
 		const userId = interaction.user.id;
 
 		const currentUser = await db.collection(COLL_USERS_ACTIVITY).findOne(
-			{ userId: userId, banned: { $ne: true } },
+			{ userId: userId, banned: { $ne: true }, isMember: { $ne: false } },
 			{ projection: { userId: 1, points: 1, voicePoints: 1, userName: 1 } }
 		);
 
@@ -262,7 +262,7 @@ async function getTopUsers(db, page = 1, type = 'text', limit = 10, blacklistIds
 		const sortField = type === 'voice' ? 'voicePoints' : 'points';
 
 		const topUsers = await db.collection(COLL_USERS_ACTIVITY)
-			.find({ [sortField]: { $gt: 0 }, banned: { $ne: true }, userId: { $nin: blacklistIds } }, {
+			.find({ [sortField]: { $gt: 0 }, banned: { $ne: true }, isMember: { $ne: false }, userId: { $nin: blacklistIds } }, {
 				projection: {
 					_id: 0,
 					userId: 1,
@@ -318,7 +318,7 @@ async function getTopUsersData(db, page = 1, type = 'text', limit = 10) {
 
 	const [users, totalUsers] = await Promise.all([
 		getTopUsers(db, page, type, limit, blacklistIds), collection.countDocuments({ 
-			[sortField]: { $gt: 0 }, banned: { $ne: true }, userId: { $nin: blacklistIds } 
+			[sortField]: { $gt: 0 }, banned: { $ne: true }, isMember: { $ne: false }, userId: { $nin: blacklistIds } 
 		})
 	]);
 
@@ -350,6 +350,7 @@ function getDefaultUserActivityObject(userName, userId) {
 		lastActivity: 0,
 		lastBoostCheck: Date.now(),
 		isBooster: false,
+		isMember: true,
 		version: 0
 	};
 }
@@ -379,6 +380,7 @@ async function log(_db, guild, message, containsAttachment, userId, userName) {
 		}
 
 		userActivity.lastActivity = Date.now();
+		userActivity.isMember = true;
 
 		let points = 0;
 		if (message.length < 100) {
@@ -454,11 +456,34 @@ async function voiceEvent(oldState, newState) {
 	}
 }
 
+/**
+ * @param {Map<string, GuildMember>} members 
+ */
+async function verifyGuildMembers(members) {
+	const keys = await global.redisClient.keys(PREFIX_USER_ACTIVITY + '*');
+	for (const key of keys) {
+		const userData = await global.redisClient.get(key);
+		if (userData) {
+			const userActivity = JSON.parse(userData);
+			if (!members.has(userActivity.userId)) {
+				if (userActivity.isMember) {
+					userActivity.isMember = false;
+					await updateUserActivity(userActivity);
+				}
+			} else if (!('isMember' in userActivity)) {
+				userActivity.isMember = true;
+				await updateUserActivity(userActivity);
+			}
+		}
+	}
+}
+
 module.exports = {
 	log,
 	getUserActivityData,
 	getTopUsersData,
 	voiceEvent,
+	verifyGuildMembers,
 
 	/**
 	 * Sets the user as a booster in the Redis cache.
@@ -529,6 +554,7 @@ module.exports = {
 										lastBoostCheck: userActivity.lastBoostCheck,
 										isBooster: userActivity.isBooster,
 										version: userActivity.version,
+										isMember: userActivity?.isMember ?? true,
 										lastUpdate: new Date()
 									}
 								},

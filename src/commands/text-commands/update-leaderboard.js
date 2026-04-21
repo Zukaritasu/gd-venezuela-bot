@@ -303,12 +303,15 @@ async function voiceLeaderboardUpdate(db, guild) {
         return logger.ERR(`Channel with ID ${channels.VOICE_XP_LEADERBOARD} not found or is not a text channel`);
     }
 
+    await cleanChannel(channel);
     await channel.send(`**TOP ${topLimits.positions} USUARIOS CON MAS XP DE VOZ EN EL SERVIDOR!**\n\nPara ganar experiencia (XP), solo tienes que participar activamente en los canales de voz del servidor hablando, compartiendo pantalla, etc. Todo lo referente a los canales de voz.\n\n***NOTA: El rol de Estrellas o Super Estrella no se asigna si eres más activo en canales de voz. Solo está disponible para XP en texto.***`);
 
     for (let i = 0; i < top_voice_xp.users.length && i < topLimits.positions; i++) {
         const member = await guild.members.fetch(top_voice_xp.users[i].userId).catch(() => null);
         if (member) {
             await sendImage(channel, member, top_voice_xp.users[i].voicePoints, i + 1);
+        } else {
+            logger.DBG(`User with ID ${top_voice_xp.users[i].userId} not found in guild while updating voice leaderboard`);
         }
     }
 }
