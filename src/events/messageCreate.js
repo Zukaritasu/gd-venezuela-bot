@@ -31,7 +31,8 @@ const checkAttachments = require('../checkAttachments')
  * This is used to restrict access to commands that should only be available to specific users.
  */
 const usersWhitelist = [
-    '318153353555345408' // polenta
+    '318153353555345408', // polenta
+    '480959698347098113'  // krinsi
 ];
 
 /**
@@ -104,11 +105,11 @@ module.exports = {
                         await require('../commands/youtube/service-notification').testCommand(message.channel)
                 } 
                 
-                else if (message.content.startsWith('--aceptar') && message.channel.id === /*'1294668385950498846'*/ channels.SUBMITS) {
+                else if (message.content.startsWith('--aceptar') && (message.channel.id === channels.SUBMITS || message.channel.id === channels.PL_SUBMITS)) {
                     const submitPack = await repliedMessageContainsEmbedSubmitPack(client, message)
                     if (utils.hasUserPermissions(message.member) || usersWhitelist.includes(message.member.id))
                         await require(submitPack ? '../commands/packs/pack' : '../commands/records/record').accept(message)
-                } else if (message.content.startsWith('--rechazar') && message.channel.id === /*'1294668385950498846'*/ channels.SUBMITS) {
+                } else if (message.content.startsWith('--rechazar') && (message.channel.id === channels.SUBMITS || message.channel.id === channels.PL_SUBMITS)) {
                     const submitPack = await repliedMessageContainsEmbedSubmitPack(client, message)
                     if (utils.hasUserPermissions(message.member) || usersWhitelist.includes(message.member.id))
                         await require(submitPack ? '../commands/packs/pack' : '../commands/records/record').decline(message)
@@ -117,6 +118,15 @@ module.exports = {
                 else if (message.content.startsWith('--winner')) {
                     if (utils.hasUserPermissions(message.member))
                         await require('../commands/text-commands/winner').winner(message, getCommandParameters(message.content))
+                }
+
+                else if (message.content.startsWith('--clone-message')) {
+                    if (utils.hasUserPermissions(message.member)) {
+                        const parameters = getCommandParameters(message.content)
+                        if (parameters.length >= 2) {
+                            await require('../commands/text-commands/clone-message').clone(client, message, parameters)
+                        }
+                    }
                 }
                 
                 else if (message.content.startsWith('--denegar') && message.channel.id === /*'1119807234076049428'*/ channels.MODERATION) {
@@ -132,7 +142,7 @@ module.exports = {
                     if (utils.hasUserPermissions(message.member))
                         await require('../commands/text-commands/save-hashes').saveHashes(database, message)
                 } else if (message.channel.id === channels.SEND_RECORD) {
-                    if (message.member.roles.cache.has('1119804850620866600') /* rol venezolado id */) {
+                    if (message.member.roles.cache.has(process.env.ID_ROL_VENEZOLADO)) {
                         const command = message.content.split('\n');
                         if (command.length >= 3) {
                             await submit.processSubmitRecord(database, message, command);
@@ -140,7 +150,7 @@ module.exports = {
                             await message.react('❌');
                         }
                     }
-                } else if (message.attachments.size > 0 && !utils.hasUserPermissions(message.member) && !message.member.roles.cache.has(process.env.ID_ROL_NOTABLE) /* rol Notable */) {
+                } else if (message.attachments.size > 0 && !utils.hasUserPermissions(message.member) && !message.member.roles.cache.has(process.env.ID_ROL_NOTABLE)) {
                     await checkAttachments.check(database, message)
                 }
 

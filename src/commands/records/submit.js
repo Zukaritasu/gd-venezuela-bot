@@ -195,11 +195,6 @@ async function execute(_client, database, interaction) {
     try {
         await interaction.deferReply({ ephemeral: true });
 
-        const channel = await interaction.client.channels.fetch(channels.SUBMITS);
-        if (!channel) {
-            await interaction.editReply('No se ha podido encontrar el canal submits');
-            return;
-        }
         const player = await getPlayerName(interaction, interaction.options.getString('player'));
         if (!player) return;
         const profile = await getProfile(interaction, database, player);
@@ -235,9 +230,20 @@ async function execute(_client, database, interaction) {
             flag: `/assets/flags/${profile.state}.png`
         }
 
-        if (time) {
+        let channel = null;
+        if (time) { 
+            // platformer records are sent to a different channel and have a different format, 
+            // so we only add the time if it's a platformer record
+            channel = await interaction.client.channels.fetch(channels.PL_SUBMITS);
             recordObject.time = time.time;
             recordObject.timestamp = time.timestamp;
+        } else {
+            channel = await interaction.client.channels.fetch(channels.SUBMITS);
+        }
+
+        if (!channel) {
+            await interaction.editReply('No se ha podido encontrar el canal submits');
+            return;
         }
 
         const stringJson =
@@ -302,13 +308,6 @@ async function sendErrorDM(message, errorMessage) {
  */
 async function processSubmitRecord(database, message, parts) {
     try {
-        let channel = null;
-        channel = await message.client.channels.fetch(channels.SUBMITS);
-        if (!channel) {
-            await sendErrorDM(message, 'Error interno. No se ha podido encontrar el canal submits');
-            return;
-        }
-
         let indexPart = 0;
 
         const level = await getLevelName(message, parts[indexPart++]);
@@ -338,11 +337,21 @@ async function processSubmitRecord(database, message, parts) {
             flag: `/assets/flags/${profile.state}.png`
         }
 
+        let channel = null;
         if (time) {
+            // platformer records are sent to a different channel and have a different format,
+            // so we only add the time if it's a platformer record
+            channel = await message.client.channels.fetch(channels.PL_SUBMITS);
             recordObject.time = time.time;
             recordObject.timestamp = time.timestamp;
+        } else {
+            channel = await message.client.channels.fetch(channels.SUBMITS);
         }
-        
+        if (!channel) {
+            await sendErrorDM(message, 'No se ha podido encontrar el canal submits');
+            return;
+        }
+
         const stringJson =
             `
 User ID: ${profile.userId}
