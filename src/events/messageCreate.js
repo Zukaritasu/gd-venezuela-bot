@@ -142,7 +142,7 @@ module.exports = {
                     if (utils.hasUserPermissions(message.member))
                         await require('../commands/text-commands/save-hashes').saveHashes(database, message)
                 } else if (message.channel.id === channels.SEND_RECORD) {
-                    if (message.member.roles.cache.has(process.env.ID_ROL_VENEZOLADO)) {
+                    if (message.member.roles.cache.has(process.env.ID_ROL_VENEZOLANO)) {
                         const command = message.content.split('\n');
                         if (command.length >= 3) {
                             await submit.processSubmitRecord(database, message, command);
