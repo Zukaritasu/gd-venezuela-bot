@@ -37,7 +37,8 @@ const { RESTJSONErrorCodes } = require('discord-api-types/v10')
 
 const ModerationAction = {
     KICK: 'active',
-    BAN: 'banned'
+    BAN: 'banned',
+	KICK_NOT_NOTIFY: 'kick_not_notify'
 };
 
 /**
@@ -107,9 +108,14 @@ function createEmbedReport(member, actionText) {
  */
 async function executeModerationAction(guild, database, member, action) {
 	try {
-		let reportChannel = guild.channels.cache.get(channels.MODERATION); // moderation channel
+		let reportChannel = null
+
+		if (action !== ModerationAction.KICK_NOT_NOTIFY) {
+			reportChannel = guild.channels.cache.get(channels.MODERATION);
+		}
+
 		let actionText = '';
-		if (action === ModerationAction.KICK) {
+		if (action === ModerationAction.KICK || action === ModerationAction.KICK_NOT_NOTIFY) {
 			await member.kick('Account too new');
 			actionText = 'expulsado';
 			await userKickManager.trackUserExpulsion(database, member.user);
@@ -117,6 +123,7 @@ async function executeModerationAction(guild, database, member, action) {
 			await member.ban({ reason: 'Account too new' });
 			actionText = 'baneado';
 		}
+		
 		if (reportChannel && actionText) {
 			await reportChannel.send({
 				embeds: [
@@ -167,6 +174,7 @@ async function generateAltServerInvite(client) {
 async function checkUserAccountAge(guild, database, member) {
 	const accountAgeMs = Date.now() - member.user.createdAt.getTime();
 	if (accountAgeMs < ACCOUNT_MINIMUM_AGE && !(await verifyAccountInWhiteList(database, member))) {
+		let action = ModerationAction.KICK;
 		try {
 			const viewPending = await database.collection(COLL_SERVER_NEW_ACCOUNTS).findOne({ type: 'pending' });
 			if (viewPending && Array.isArray(viewPending.accounts) && viewPending.accounts.includes(member.user.id)) {
@@ -188,15 +196,24 @@ async function checkUserAccountAge(guild, database, member) {
 				return false;
 			}
 
-			const inviteUrl = await generateAltServerInvite(guild.client);
-			await member.send(`Hola! Tu cuenta de Discord no cumple con la antigüedad mínima requerida para ingresar directamente al servidor **GD Venezuela**.\n\nPara verificar tu acceso, únete al siguiente servidor alternativo: ${inviteUrl}\n\nEsto permitirá que el bot y tú compartan un servidor en común y puedas ejecutar el comando /verify por mensaje directo. Un moderador revisará tu solicitud, y si es aprobada, recibirás el enlace al servidor principal, de lo contrario serás baneado del servidor. ***Este proceso puede tardar unas pocas horas o un día***\n\nGracias por tu comprensión.`);
+			if (!userKickManager.trackExistsUser(database, member.user)) {
+				const inviteUrl = await generateAltServerInvite(guild.client);
+				await member.send(`Hola! Tu cuenta de Discord no cumple con la antigüedad mínima requerida para `  + 
+					`ingresar directamente al servidor **GD Venezuela**.\n\nPara verificar tu acceso, únete al `   +
+					`siguiente servidor alternativo: ${inviteUrl}\n\nEsto permitirá que el bot y tú compartan un ` +
+					`servidor en común y puedas ejecutar el comando /verify por mensaje directo. Un moderador `    + 
+					`revisará tu solicitud, y si es aprobada, recibirás el enlace al servidor principal, de lo `   + 
+					`contrario serás baneado del servidor. ***Este proceso puede tardar unas pocas horas o un día***\n\nGracias por tu comprensión.`);
+			} else {
+				action = ModerationAction.KICK_NOT_NOTIFY
+			}
 		} catch (e) {
 			logger.ERR(`Unable to send message via DM to ${member.user.tag}: ${e}`);
 			if (e.code === RESTJSONErrorCodes.CannotSendMessagesToThisUser) {
-				return await executeModerationAction(guild, database, member, ModerationAction.BAN);
+				action = ModerationAction.BAN
 			}
 		}
-		return await executeModerationAction(guild, database, member, ModerationAction.KICK);
+		return await executeModerationAction(guild, database, member, action);
 	}
 	return true;
 }
