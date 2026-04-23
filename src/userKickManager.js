@@ -31,7 +31,7 @@ const logger = require("./logger");
  */
 async function trackUserExpulsion(db, user) {
 	if (!db || !user) {
-		return;
+		throw new Error('Invalid arguments')
 	}
 
 	try {
@@ -86,6 +86,27 @@ async function trackUserExpulsion(db, user) {
 	}
 }
 
+/**
+ * @param {Db} db 
+ * @param {User} user 
+ * @returns {boolean}
+ */
+async function trackExistsUser(db, user) {
+	if (!db || !user) {
+		throw new Error('Invalid arguments')
+	}
+
+	try {
+		const userHistory = await db.collection(COLL_USER_KICKS).findOne({ userId: user.id });
+		return userHistory !== null;
+	} catch (error) {
+		logger.ERR(error);
+	}
+
+	return false;
+}
+
 module.exports = {
-	trackUserExpulsion
+	trackUserExpulsion,
+	trackExistsUser
 }
