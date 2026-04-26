@@ -92,18 +92,18 @@ async function trackUserExpulsion(db, user) {
  * @returns {boolean}
  */
 async function trackExistsUser(db, user) {
-	if (!db || !user) {
-		throw new Error('Invalid arguments')
-	}
+    if (!db || !user?.id) {
+        throw new Error('Invalid arguments: db or user.id is missing');
+    }
 
-	try {
-		const userHistory = await db.collection(COLL_USER_KICKS).findOne({ userId: user.id });
-		return userHistory !== null;
-	} catch (error) {
-		logger.ERR(error);
-	}
-
-	return false;
+    try {
+        const userHistory = await db.collection(COLL_USER_KICKS)
+            .findOne({ userId: user.id }, { projection: { _id: 1 } });
+        return !!userHistory; 
+    } catch (error) {
+        logger.ERR(`Database error in trackExistsUser: ${error.message}`);
+        throw error; 
+    }
 }
 
 module.exports = {

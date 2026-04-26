@@ -196,7 +196,7 @@ async function checkUserAccountAge(guild, database, member) {
 				return false;
 			}
 
-			if (!userKickManager.trackExistsUser(database, member.user)) {
+			if (!await userKickManager.trackExistsUser(database, member.user)) {
 				const inviteUrl = await generateAltServerInvite(guild.client);
 				await member.send(`Hola! Tu cuenta de Discord no cumple con la antigüedad mínima requerida para `  + 
 					`ingresar directamente al servidor **GD Venezuela**.\n\nPara verificar tu acceso, únete al `   +
