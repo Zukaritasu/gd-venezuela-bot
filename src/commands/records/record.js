@@ -408,6 +408,10 @@ async function handleProgress(message, isAccept) {
         const user = await message.guild.members.fetch(userId);
         if (!user) return await message.react('❌');
 
+        if (userId === message.member.user.id) {
+            return await message.reply('No puedes aceptar tus propios récords. Otro miembro debe hacerlo.')
+        }
+
         if (isAccept) {
             const fileName = getFileName(levelName);
             let isUpdate = false;
