@@ -203,7 +203,7 @@ async function checkUserAccountAge(guild, database, member) {
 					`siguiente servidor alternativo: ${inviteUrl}\n\nEsto permitirá que el bot y tú compartan un ` +
 					`servidor en común y puedas ejecutar el comando /verify por mensaje directo. Un moderador `    + 
 					`revisará tu solicitud, y si es aprobada, recibirás el enlace al servidor principal, de lo `   + 
-					`contrario serás baneado del servidor. ***Este proceso puede tardar unas pocas horas o un día***\n\nGracias por tu comprensión.`);
+					`contrario serás baneado del servidor. ***Este proceso puede tardar unas pocas horas o un día. Por favor, no te salgas del servidor hasta que seas aprobado, de lo contrario el bot no podrá comunicarse contigo.***\n\nGracias por tu comprensión.`);
 			} else {
 				action = ModerationAction.KICK_NOT_NOTIFY
 			}
