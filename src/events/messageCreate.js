@@ -66,6 +66,23 @@ async function repliedMessageContainsEmbedSubmitPack(client, message) {
     return repliedMessage.embeds.length > 0 ? repliedMessage.embeds[0].fields.find(field => field.name === 'Pack') !== undefined : false
 }
 
+/**
+ * @param {Message} message
+ * @param {string} command
+ * @returns {boolean}
+ */
+function isCommand(message, command) {
+    const isStartingWithCommand = message.content.startsWith(command)
+    if (isStartingWithCommand) {
+        if (message.content.length === command.length)
+            return true
+        const charAfterCommand = message.content.charAt(command.length)
+        return charAfterCommand === ' ' || charAfterCommand === '\n'
+    }
+
+    return false
+}
+
 module.exports = {
     name: Events.MessageCreate,
     once: false,
@@ -85,42 +102,36 @@ module.exports = {
                 activity.log(database, message.guild, message.content, message.attachments.size > 0, 
                     message.author.id, message.author.username);
 
-                /* if (message.content.startsWith('--scan')) {
-                    if (utils.hasUserPermissions(message.member))
-                        await require('../commands/text-commands/scan').scan(database, message, getCommandParameters(message.content))
-                } else */ if (message.content.startsWith('--update')) {
+                if (isCommand(message, '--update')) {
                     if (utils.hasUserPermissions(message.member))
                         await require('../commands/text-commands/update-leaderboard').update(database, message.guild)
-                } /* else if (message.content.startsWith('--clean')) {
-                    if (utils.hasUserPermissions(message.member))
-                        await require('../commands/text-commands/clean').clean(message)
-                } */ else if (message.content.startsWith('--blacklist')) {
+                } else if (isCommand(message, '--blacklist')) {
                     if (utils.hasUserPermissions(message.member))
                         await require('../commands/text-commands/topxp-blacklist').process(getCommandParameters(message.content), database, message)
-                } else if (message.content.startsWith('--user-exception')) {
+                } else if (isCommand(message, '--user-exception')) {
                     if (utils.hasUserPermissions(message.member))
                         await require('../commands/text-commands/user-exception').process(getCommandParameters(message.content), database, message)
-                } else if (message.content.startsWith('--test-command')) {
+                } else if (isCommand(message, '--test-command')) {
                     if (utils.hasUserPermissions(message.member))
                         await require('../commands/youtube/service-notification').testCommand(message.channel)
                 } 
                 
-                else if (message.content.startsWith('--aceptar') && (message.channel.id === channels.SUBMITS || message.channel.id === channels.PL_SUBMITS)) {
+                else if (isCommand(message, '--aceptar') && (message.channel.id === channels.SUBMITS || message.channel.id === channels.PL_SUBMITS)) {
                     const submitPack = await repliedMessageContainsEmbedSubmitPack(client, message)
                     if (utils.hasUserPermissions(message.member) || usersWhitelist.includes(message.member.id))
                         await require(submitPack ? '../commands/packs/pack' : '../commands/records/record').accept(message)
-                } else if (message.content.startsWith('--rechazar') && (message.channel.id === channels.SUBMITS || message.channel.id === channels.PL_SUBMITS)) {
+                } else if (isCommand(message, '--rechazar') && (message.channel.id === channels.SUBMITS || message.channel.id === channels.PL_SUBMITS)) {
                     const submitPack = await repliedMessageContainsEmbedSubmitPack(client, message)
                     if (utils.hasUserPermissions(message.member) || usersWhitelist.includes(message.member.id))
                         await require(submitPack ? '../commands/packs/pack' : '../commands/records/record').decline(message)
                 }
 
-                else if (message.content.startsWith('--winner')) {
+                else if (isCommand(message, '--winner')) {
                     if (utils.hasUserPermissions(message.member))
                         await require('../commands/text-commands/winner').winner(message, getCommandParameters(message.content))
                 }
 
-                else if (message.content.startsWith('--clone-message')) {
+                else if (isCommand(message, '--clone-message')) {
                     if (utils.hasUserPermissions(message.member)) {
                         const parameters = getCommandParameters(message.content)
                         if (parameters.length >= 2) {
@@ -129,16 +140,16 @@ module.exports = {
                     }
                 }
                 
-                else if (message.content.startsWith('--denegar') && message.channel.id === /*'1119807234076049428'*/ channels.MODERATION) {
+                else if (isCommand(message, '--denegar') && message.channel.id === /*'1119807234076049428'*/ channels.MODERATION) {
                     if (utils.hasUserPermissions(message.member))
                         await require('../commands/user-verification').denyUser(client, database, message, getCommandParameters(message.content))
-                } else if (message.content.startsWith('--aprobar') && message.channel.id === /*'1119807234076049428'*/ channels.MODERATION) {
+                } else if (isCommand(message, '--aprobar') && message.channel.id === /*'1119807234076049428'*/ channels.MODERATION) {
                     if (utils.hasUserPermissions(message.member))
                         await require('../commands/user-verification').approveUser(client, database, message, getCommandParameters(message.content))
-                } else if (message.content.startsWith('--dm') && [channels.MODERATION, channels.BOT_TESTING].find(channel => channel === message.channel.id)) {
+                } else if (isCommand(message, '--dm') && [channels.MODERATION, channels.BOT_TESTING].find(channel => channel === message.channel.id)) {
                     if (utils.hasUserPermissions(message.member))
                         await require('../commands/user-verification').sendDM(client, message, message.content)
-                } else if (message.content.startsWith('--save-hash')) {
+                } else if (isCommand(message, '--save-hash')) {
                     if (utils.hasUserPermissions(message.member))
                         await require('../commands/text-commands/save-hashes').saveHashes(database, message)
                 } else if (message.channel.id === channels.SEND_RECORD) {
@@ -154,7 +165,7 @@ module.exports = {
                     await checkAttachments.check(database, message)
                 }
 
-                else if (message.content.startsWith('--test-welcome') && message.member.id === '591640548490870805') {
+                else if (isCommand(message, '--test-welcome') && message.member.id === '591640548490870805') {
                     await require('./guildMemberAdd').welcomeMessageMember(message.member, true)
                 }
             }
