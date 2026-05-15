@@ -25,17 +25,18 @@ const logger = require("../../logger.js");
  * Example: --winner 123456789012345678 987654321098765432 🎉
  * 
  * @param {Message} message 
- * @param {string[]} params
+ * @param {string[]} params - <id_message> <id_channel> <emoji> <count_winners>
  */
 async function winner(message, params) {
-    if (params.length < 3) { 
-        await message.reply("Example: --winner <id_message> <id_channel> <emoji>");
+    if (params.length < 4) { 
+        await message.reply("Example: --winner <id_message> <id_channel> <emoji> <count_winners>");
         return;
     }
 
     const giveawayMessageId = params[0];
     const channelId = params[1];
     let giveawayEmoji = params[2];
+    const countWinners = parseInt(params[3]);
 
     if (giveawayEmoji.includes(':')) {
         giveawayEmoji = giveawayEmoji.split(':').pop().replace('>', '');
@@ -60,14 +61,21 @@ async function winner(message, params) {
         }
 
         const users = await reaction.users.fetch();
-        const winnerUser = users.filter(user => !user.bot).random();
+        const winnerUsers = users.filter(user => !user.bot).random(countWinners);
         
-        if (!winnerUser) {
+        if (!winnerUsers || winnerUsers.length === 0) {
             await message.reply("No valid participants (humans) were found in the reaction.");
             return;
         }
 
-        await channel.send(`¡Felicidades ${winnerUser}! Eres el ganador del sorteo. `
+        if (winnerUsers.length === 1) {
+            await channel.send(`¡Felicidades ${winnerUsers[0]}! Es el ganador del sorteo. `
+                + `Por favor, ponte en contacto con el organizador.`
+            );
+            return;
+        }
+        
+        await channel.send(`¡Felicidades ${winnerUsers.join(', ')}! Son los ganadores del sorteo. `
             + `Por favor, ponte en contacto con el organizador.`
         );
         
