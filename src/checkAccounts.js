@@ -165,6 +165,31 @@ async function generateAltServerInvite(client) {
 }
 
 /**
+ * Send an automatic message to the user with instructions to verify their account
+ * 
+ * @param {GuildMember} member 
+ * @param {string} inviteUrl 
+ */
+async function sendAutoMessage(member, inviteUrl) {
+	try {
+		const introLines = [
+			'Hola! Tu cuenta de Discord no cumple con la antigüedad mínima requerida para ingresar directamente al servidor **GD Venezuela**.',
+			'',
+			`Para verificar tu acceso, únete al siguiente servidor alternativo: ${inviteUrl}`,
+			'',
+			'Esto permitirá que el bot y tú compartan un servidor en común y puedas ejecutar el comando /verify por mensaje directo.',
+			'Un moderador revisará tu solicitud y, si es aprobada, recibirás el enlace al servidor principal; de lo contrario serás baneado del servidor.',
+			'Este proceso puede tardar unas pocas horas o un día. Por favor, no te salgas del servidor hasta que seas aprobado, de lo contrario el bot no podrá comunicarse contigo.',
+			'',
+			'Gracias por tu comprensión.'
+		];
+		await member.send(introLines.join('\n'));
+	} catch (e) {
+		logger.ERR(`Unable to send message via DM to ${member.user.tag}: ${e}`);
+	}
+}
+
+/**
  * Check if the user account is older than 21 days
  * @param {Guild} guild
  * @param {Db} database
@@ -198,12 +223,7 @@ async function checkUserAccountAge(guild, database, member) {
 
 			if (!await userKickManager.trackExistsUser(database, member.user)) {
 				const inviteUrl = await generateAltServerInvite(guild.client);
-				await member.send(`Hola! Tu cuenta de Discord no cumple con la antigüedad mínima requerida para `  + 
-					`ingresar directamente al servidor **GD Venezuela**.\n\nPara verificar tu acceso, únete al `   +
-					`siguiente servidor alternativo: ${inviteUrl}\n\nEsto permitirá que el bot y tú compartan un ` +
-					`servidor en común y puedas ejecutar el comando /verify por mensaje directo. Un moderador `    + 
-					`revisará tu solicitud, y si es aprobada, recibirás el enlace al servidor principal, de lo `   + 
-					`contrario serás baneado del servidor. ***Este proceso puede tardar unas pocas horas o un día. Por favor, no te salgas del servidor hasta que seas aprobado, de lo contrario el bot no podrá comunicarse contigo.***\n\nGracias por tu comprensión.`);
+				await sendAutoMessage(member, inviteUrl);
 			} else {
 				action = ModerationAction.KICK_NOT_NOTIFY
 			}
