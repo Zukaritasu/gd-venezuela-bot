@@ -60,7 +60,7 @@ async function getTopXPEmbed(database, interaction, page, type = 'text') {
 
         const isMe = user.userId === interaction.user.id ? '»' : ' ';
 
-        table += `${isMe}${padStart(position++, 2)} | ${padEnd(name, 15)} | ${padEnd(pts, 8)}\n`;
+        table += `${isMe}${padStart(position++, 2)} ${padEnd(name, 15)} ${padEnd(pts, 8)}\n`;
     }
 
     table += '```';
