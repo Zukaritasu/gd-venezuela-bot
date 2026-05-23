@@ -85,7 +85,7 @@ async function execute(_database, interaction) {
 					},
 					{
 						name: '¿Cuáles son las ventajas de tener el rol Super Estrella?',
-						value: 'Tener el rol de <@&1487970424225529866> te otorga reconocimiento especial por tu actividad en el servidor y acceso a funciones exclusivas, las cuales son:\n- Puedes enviar contenido multimedia o archivos en <#1120171944378110112>\n- Puedes enviar links en <#1120171944378110112> *(esto incluye gifs)*'
+						value: 'Tener el rol de <@&1487970424225529866> te otorga reconocimiento especial por tu actividad en el servidor y acceso a funciones exclusivas, las cuales son:\n- Puedes enviar contenido multimedia o archivos en <#1120171944378110112>\n- Puedes enviar links en <#1120171944378110112> *(esto incluye gifs)*\n - Puedes cambiar tu apodo en el servidor'
 					},
 					{
 						name: '¿Puedo ser sancionado por abusar del rol Super Estrella?',
