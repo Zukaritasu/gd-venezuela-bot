@@ -15,7 +15,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-const { SlashCommandBuilder, ChatInputCommandInteraction, Message, ActionRowBuilder, ButtonBuilder, ButtonStyle, ComponentType, EmbedBuilder } = require('discord.js');
+const { SlashCommandBuilder, ChatInputCommandInteraction, Message, ActionRowBuilder, ButtonBuilder, ButtonStyle, ComponentType, EmbedBuilder, MessageFlags } = require('discord.js');
 const { Db } = require('mongodb');
 const logger = require('../../logger');
 
@@ -104,7 +104,7 @@ async function execute(_client, _database, interaction) {
                 await i.reply(
                     {
                         content: 'Solo quien ejecutó el comando puede usar los botones.',
-                        ephemeral: true
+                        flags: MessageFlags.Ephemeral
                     });
                 return;
             }

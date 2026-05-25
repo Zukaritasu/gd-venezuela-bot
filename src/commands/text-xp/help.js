@@ -1,4 +1,4 @@
-const { ChatInputCommandInteraction, ActionRowBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder, ComponentType } = require("discord.js");
+const { ChatInputCommandInteraction, ActionRowBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder, ComponentType, MessageFlags } = require("discord.js");
 const { Db } = require("mongodb");
 const logger = require('../../logger')
 const topLimits = require('../../../.botconfig/top-limits.json')
@@ -130,7 +130,7 @@ async function execute(_database, interaction) {
 				await i.reply(
 					{
 						content: 'Solo quien ejecutó el comando puede usar los botones.',
-						ephemeral: true
+						flags: MessageFlags.Ephemeral
 					});
 				return;
 			}

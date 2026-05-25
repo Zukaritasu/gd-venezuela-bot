@@ -15,7 +15,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-const { Client, ChatInputCommandInteraction, Embed, EmbedBuilder } = require("discord.js");
+const { Client, ChatInputCommandInteraction, Embed, EmbedBuilder, MessageFlags } = require("discord.js");
 const { Db } = require("mongodb");
 const logger = require("../../logger");
 const { COLL_GDVZLA_LIST_PROFILES } = require('../../../.botconfig/database-info.json')
@@ -28,7 +28,7 @@ const { COLL_GDVZLA_LIST_PROFILES } = require('../../../.botconfig/database-info
  */
 async function execute(_client, db, interaction) {
     try {
-        await interaction.deferReply({ ephemeral: true });
+        await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
         const user = interaction.options.getUser('user') || interaction.user;
         if (user.bot) {

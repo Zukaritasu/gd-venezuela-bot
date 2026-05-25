@@ -15,7 +15,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-const { SlashCommandBuilder, ChatInputCommandInteraction, ActionRowBuilder, ButtonBuilder, ButtonStyle, MessageComponentInteraction } = require('discord.js');
+const { SlashCommandBuilder, ChatInputCommandInteraction, ActionRowBuilder, ButtonBuilder, ButtonStyle, MessageComponentInteraction, MessageFlags } = require('discord.js');
 
 const axios = require('axios');
 const { Db } = require('mongodb');
@@ -346,7 +346,7 @@ async function processCode(database, interaction) {
  */
 async function execute(_client, database, interaction) {
     try {
-        await interaction.deferReply({ ephemeral: true });
+        await interaction.deferReply({ flags: MessageFlags.Ephemeral });
         await processCode(database, interaction);
     } catch (error) {
         logger.ERR(error)
