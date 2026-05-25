@@ -128,7 +128,7 @@ module.exports = {
 
                 else if (isCommand(message, '--winner')) {
                     if (utils.hasUserPermissions(message.member))
-                        await require('../commands/text-commands/winner').winner(message, getCommandParameters(message.content))
+                        await require('../commands/text-commands/giveaways').winner(message, getCommandParameters(message.content))
                 }
 
                 else if (isCommand(message, '--clone-message')) {
