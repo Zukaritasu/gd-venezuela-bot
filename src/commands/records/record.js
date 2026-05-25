@@ -331,7 +331,7 @@ async function addRecord(message, file, jsonInfo, fileName, isMobile) {
             const totalMillisecondsNew = (((hoursNew * 60 + minutesNew) * 60) + secondsNew) * 1000 + millisecondNew;
 
             if (totalMillisecondsNew <= totalMillisecondsOld) {
-                throw new Error(`El usuario **${jsonInfo.user}** ya tiene un tiempo mayor o igual aceptado (\`${oldRecord.time}\`)`);
+                throw new Error(`El usuario ${jsonInfo.user} ya tiene un tiempo mayor o igual aceptado (${oldRecord.time})`);
             }
         }
 
