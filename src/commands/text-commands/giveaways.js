@@ -22,7 +22,7 @@ const logger = require("../../logger.js");
 /**
  * Selects a random winner from the users who reacted to a giveaway message with a specific emoji.
  * The command should be used in the format: --winner <id_message> <id_channel> <emoji>
- * Example: --winner 123456789012345678 987654321098765432 🎉
+ * Example: --winner 123456789012345678 987654321098765432 :emoji:
  * 
  * @param {Message} message 
  * @param {string[]} params - <id_message> <id_channel> <emoji> <count_winners>
@@ -85,6 +85,62 @@ async function winner(message, params) {
     }
 }
 
+/**
+ * Sends a message listing the users who reacted to a giveaway message with a specific emoji.
+ * 
+ * @param {Message} message 
+ * @param {string[]} params 
+ * @returns 
+ */
+async function sendCandidatesName(message, params) {
+    if (params.length < 3) { 
+        await message.reply("Example: --send-candidates-name <id_message> <id_channel> <emoji>");
+        return;
+    }
+
+    const giveawayMessageId = params[0];
+    const channelId = params[1];
+    let giveawayEmoji = params[2];
+
+    if (giveawayEmoji.includes(':')) {
+        giveawayEmoji = giveawayEmoji.split(':').pop().replace('>', '');
+    }
+
+    try {
+        /** @type {import("discord.js").TextChannel} */
+        const channel = await message.guild.channels.fetch(channelId);
+        if (!channel || channel.type !== 0) {
+            await message.reply("The specified channel ID is invalid or is not a text channel.");
+            return;
+        }
+
+        const giveawayMessage = await channel.messages.fetch(giveawayMessageId);
+        const reaction = giveawayMessage.reactions.cache.find(r => 
+            r.emoji.name === giveawayEmoji || r.emoji.id === giveawayEmoji
+        );
+
+        if (!reaction) {
+            await message.reply("No reaction was found for that emoji in the specified message");
+            return;
+        }
+
+        const users = await reaction.users.fetch();
+        const participantUsers = users.filter(user => !user.bot);
+        
+        if (!participantUsers || participantUsers.length === 0) {
+            await message.reply("No valid participants (humans) were found in the reaction.");
+            return;
+        }
+
+        await message.reply(`Participantes del sorteo: \n${participantUsers.map(u => u.tag).join('\n')}`);
+        
+    } catch (error) {
+        logger.ERR(error);
+        await message.reply('There was an error fetching the participants. Please make sure the IDs and emoji are correct');
+    }
+}
+
 module.exports = {
     winner,
+    sendCandidatesName
 }

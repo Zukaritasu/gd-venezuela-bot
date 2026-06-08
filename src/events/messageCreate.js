@@ -126,10 +126,19 @@ module.exports = {
                         await require(submitPack ? '../commands/packs/pack' : '../commands/records/record').decline(message)
                 }
 
+                // Giveaways
+
                 else if (isCommand(message, '--winner')) {
                     if (utils.hasUserPermissions(message.member))
                         await require('../commands/text-commands/giveaways').winner(message, getCommandParameters(message.content))
                 }
+
+                else if (isCommand(message, '--send-candidates-name')) {
+                    if (utils.hasUserPermissions(message.member))
+                        await require('../commands/text-commands/giveaways').sendCandidatesName(message, getCommandParameters(message.content))
+                }
+
+                // end - Giveaways
 
                 else if (isCommand(message, '--clone-message')) {
                     if (utils.hasUserPermissions(message.member)) {
