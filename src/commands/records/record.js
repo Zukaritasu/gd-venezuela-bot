@@ -17,6 +17,7 @@
 
 const { SlashCommandBuilder, ChatInputCommandInteraction, Message, Guild, GuildMember, TextChannel } = require('discord.js');
 const logger = require('../../logger');
+const { RESTJSONErrorCodes } = require('discord-api-types/v10')
 const aredlapi = require('../../aredlapi');
 const path = require("path");
 const GITHUB_TOKEN = require('../../../.botconfig/token.json').GITHUB_TOKEN;
@@ -45,7 +46,7 @@ function getFileName(levelName) {
  */
 async function getGitHubFile(fileName) {
     try {
-        const response = await axios.get(`https://api.github.com/repos/Abuigsito/gdvzla/contents/public/data/${fileName}.json`, {
+        const response = await axios.get(`${process.env.URL_API_GITHUB}/public/data/${fileName}.json`, {
             headers: {
                 Authorization: `token ${GITHUB_TOKEN}`
             }
@@ -158,7 +159,7 @@ async function createRecordFile(message, fileName, levelName, jsonInfo, userId) 
     // Create new record file
 
     const fileEdited = Buffer.from(JSON.stringify(fileContent, null, 4)).toString("base64");
-    await axios.put(`https://api.github.com/repos/Abuigsito/gdvzla/contents/public/data/${fileName}.json`, {
+    await axios.put(`${process.env.URL_API_GITHUB}/public/data/${fileName}.json`, {
         message: `Created record for ${jsonInfo.user} by ${message.author.username}`,
         content: fileEdited,
         branch: 'main'
@@ -215,7 +216,7 @@ async function createRecordFile(message, fileName, levelName, jsonInfo, userId) 
                 currentLevels.find(lvl => getFileName(lvl.name) === levelLists[75])?.name || null;
 
         const fileEditedList = Buffer.from(JSON.stringify(levelLists, null, 4)).toString("base64");
-        await axios.put(`https://api.github.com/repos/Abuigsito/gdvzla/contents/public/data/${fileNameList}.json`, {
+        await axios.put(`${process.env.URL_API_GITHUB}/public/data/${fileNameList}.json`, {
             message: `Updated ${fileNameList}.json by ${message.author.username}`,
             content: fileEditedList,
             sha: listRespose.sha,
@@ -299,7 +300,7 @@ async function addPlayerToStateList(message, jsonInfo) {
         });
 
         const fileEditedPlayer = Buffer.from(JSON.stringify(playerListResponse.content, null, 4)).toString("base64");
-        await axios.put(`https://api.github.com/repos/Abuigsito/gdvzla/contents/public/data/_playerStates.json`, {
+        await axios.put(`${process.env.URL_API_GITHUB}/public/data/_playerStates.json`, {
             message: `Updated _playerStates.json by ${message.author.username}`,
             content: fileEditedPlayer,
             sha: playerListResponse.sha,
@@ -350,7 +351,7 @@ async function addRecord(message, file, jsonInfo, fileName, isMobile) {
     }
 
     const fileEdited = Buffer.from(JSON.stringify(file.content, null, 4)).toString("base64");
-    await axios.put(`https://api.github.com/repos/Abuigsito/gdvzla/contents/public/data/${fileName}.json`, {
+    await axios.put(`${process.env.URL_API_GITHUB}/public/data/${fileName}.json`, {
         message: `${isNewRecord ? 'Added' : 'Updated'} record for ${jsonInfo.user} by ${message.author.username}`,
         content: fileEdited,
         sha: file.sha,
@@ -378,16 +379,13 @@ async function sendMessageToUser(message, member, content) {
         await member.send(content);
     } catch (error) {
         try {
-            if (error.message === 'Cannot send messages to this user') {
+            if (error?.code === RESTJSONErrorCodes.CannotSendMessagesToThisUser)
                 await message.react('📧');
-                const channel = await message.guild.channels.fetch(channels.BOT); // 🔧・bot
-                if (!channel)
-                    return await message.reply('No se ha podido enviar el mensaje al usuario. El canal de bots no existe.');
-                await channel.send(`<@${member.user.id}> ${content}`);
-            } else {
-                await message.reply(`No se ha podido enviar el mensaje al usuario: ${error.message}`);
-                throw error; // Re-throw the error to be handled by the caller
-            }
+
+            const channel = await message.guild.channels.fetch(channels.BOT);
+            if (!channel)
+                return await message.reply('No se ha podido enviar el mensaje al usuario. El canal de bots no existe.');
+            await channel.send(`<@${member.user.id}> ${content}`);
         } catch (err) {
             logger.ERR(err);
         }
