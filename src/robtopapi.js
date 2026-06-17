@@ -122,14 +122,21 @@ async function getUserInfo(accountID) {
         "targetAccountID": accountID
     });
 
-    const response = await axios.post('http://www.boomlings.com/database/getGJUserInfo20.php', data, {
-        headers: {
-            'User-Agent': '',
-            'Content-Type': 'application/x-www-form-urlencoded'
-        },
-        httpsAgent: agent,
-        httpAgent: agent
-    })
+    let response = null;
+    try {
+        response = await axios.post('http://www.boomlings.com/database/getGJUserInfo20.php', data, {
+            headers: {
+                'User-Agent': '',
+                'Content-Type': 'application/x-www-form-urlencoded'
+            },
+            httpsAgent: agent,
+            httpAgent: agent
+        });
+    } catch (error) {
+        if (error?.response?.status !== 429 && error?.response?.status !== 403) {
+            logger.ERR('Error fetching user info:', error);
+        }
+    }
 
     if (`${response}` === '-1') 
         return null;
