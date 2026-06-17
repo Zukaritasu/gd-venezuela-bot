@@ -53,7 +53,7 @@ async function fetchLeaderboardData(db) {
 			logger.ERR(`Error fetching user info for account ID ${account.accountID}:`, error);
 		}
 
-		await sleep(2000); // Sleep for 2 seconds to avoid hitting rate limits
+		await sleep(5000); // Sleep for 5 seconds to avoid hitting rate limits
 	}
 
 	proccessedData = proccessedData.filter(userInfo => {
@@ -146,7 +146,7 @@ function getIconPrefix(pos) {
  * Only the top 10 score groups are returned.
  *
  * @param {Array<{ creatorPoints: number, username: string }>} entries
- * @returns {string}
+ * @returns {string | null}
  */
 function formatTopCreatorPoints(entries) {
 	if (!Array.isArray(entries) || entries.length === 0) {
@@ -178,6 +178,10 @@ function formatTopCreatorPoints(entries) {
 			creatorPoints: currentPoint,
 			usernames: currentUsers
 		});
+	}
+
+	if (groups.length < MAX_ENTRIES) {
+		return null;
 	}
 
 	return groups.slice(0, MAX_ENTRIES)
