@@ -38,17 +38,22 @@ async function fetchLeaderboardData(db) {
 	let proccessedData = []
 
 	for (const account of accounts) {
-		const userInfo = await robtopapi.getGJUserInfo20(account.accountID);
-		if (userInfo) {
-			proccessedData.push({
-				creatorPoints: parseInt(userInfo.get('creatorpoints') || '0', 10),
-				username: userInfo.get('userName') || ''
-			});
-		} else {
-			logger.DBG(`Failed to fetch user info for account ID ${account.accountID}`); // Debug log for failed API calls
+		try {
+			const userInfo = await robtopapi.getUserInfo(account.accountID);
+			if (userInfo) {
+				logger.DBG(`Fetched user info for account ID ${account.accountID}: ${userInfo.get('userName')}, Creator Points: ${userInfo.get('creatorpoints')}`); // Debug log for successful API calls
+				proccessedData.push({
+					creatorPoints: parseInt(userInfo.get('creatorpoints') || '0', 10),
+					username: userInfo.get('userName') || ''
+				});
+			} else {
+				logger.DBG(`Failed to fetch user info for account ID ${account.accountID}`); // Debug log for failed API calls
+			}
+		} catch (error) {
+			logger.ERR(`Error fetching user info for account ID ${account.accountID}:`, error);
 		}
 
-		await sleep(5000); // Sleep for 5 seconds to avoid hitting rate limits
+		await sleep(2000); // Sleep for 2 seconds to avoid hitting rate limits
 	}
 
 	proccessedData = proccessedData.filter(userInfo => {

@@ -16,6 +16,7 @@
  */
 
 const axios = require('axios');
+const { SocksProxyAgent } = require('socks-proxy-agent');
 const logger = require('./logger')
 
 const robtopUser = require('../resources/robtop_objects/user.json')
@@ -113,6 +114,29 @@ async function getUserData(param, func) {
     return extractKeyValuePairs(response);
 }
 
+async function getUserInfo(accountID) {
+    const agent = new SocksProxyAgent('socks5h://127.0.0.1:9050');
+    
+    const data = new URLSearchParams({
+        "secret": "Wmfd2893gb7",
+        "targetAccountID": accountID
+    });
+
+    const response = await axios.post('http://www.boomlings.com/database/getGJUserInfo20.php', data, {
+        headers: {
+            'User-Agent': '',
+            'Content-Type': 'application/x-www-form-urlencoded'
+        },
+        httpsAgent: agent,
+        httpAgent: agent
+    })
+
+    if (`${response}` === '-1') 
+        return null;
+
+    return extractKeyValuePairs(response.data);
+}
+
 module.exports = {
     setRedisClientObject: (redisObj) => redisObject = redisObj,
 
@@ -128,5 +152,7 @@ module.exports = {
      * @param {string} username - The username of the user to fetch information for.
      * @returns {Promise<Map<string, string> | null>} A map of user information or null if an error occurs.
      */
-    getGJUsers20: async (username) => getUserData(username, getGJUsers20)
+    getGJUsers20: async (username) => getUserData(username, getGJUsers20),
+
+    getUserInfo
 }

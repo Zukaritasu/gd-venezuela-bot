@@ -19,6 +19,7 @@
     "mongodb": "^6.9.0",
     "node-fetch": "^2.7.0",
     "redis": "^4.7.0",
+    "socks-proxy-agent": "^10.1.0",
     "stackblur-canvas": "^2.7.0"
   }
 }
