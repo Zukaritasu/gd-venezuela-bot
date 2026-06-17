@@ -25,7 +25,7 @@ let redisObject = null
 
 /**
  * 
- * @param {*} accountID 
+ * @param {string} accountID 
  * @returns 
  */
 async function getGJUserInfo20(accountID) {
@@ -35,6 +35,25 @@ async function getGJUserInfo20(accountID) {
     });
 
     return axios.post('http://www.boomlings.com/database/getGJUserInfo20.php', data, {
+        headers: {
+            'User-Agent': '',
+            'Content-Type': 'application/x-www-form-urlencoded'
+        }
+    })
+}
+
+/**
+ * 
+ * @param {string} username 
+ * @returns 
+ */
+async function getGJUsers20(username) {
+    const data = new URLSearchParams({
+        "secret": "Wmfd2893gb7",
+        "str": username
+    });
+
+    return axios.post('http://www.boomlings.com/database/getGJUsers20.php', data, {
         headers: {
             'User-Agent': '',
             'Content-Type': 'application/x-www-form-urlencoded'
@@ -56,7 +75,7 @@ function extractKeyValuePairs(str) {
     const addProperty = () => {
         const item = robtopUser.find(item => item.key == parseInt(key));
         if (!item) {
-            logger.DBG(`extractKeyValuePairs: unknown key ${key}`)
+            //logger.DBG(`extractKeyValuePairs: unknown key ${key}`)
         } else {
             if (item.value === 'message')
                 value = Buffer.from(value, 'base64').toString('utf-8')
@@ -87,19 +106,27 @@ function extractKeyValuePairs(str) {
     return map;
 }
 
-/**
- * 
- * @param {*} accountID 
- * @returns {Map<string, string> | null}
- */
-async function dataToUserObject(accountID) {
-    const response = (await getGJUserInfo20(accountID)).data
-    if (`${response}` === '-1')
-        return null
-    return extractKeyValuePairs(response)
+async function getUserData(param, func) {
+    const response = (await func(param)).data;
+    if (`${response}` === '-1') 
+        return null;
+    return extractKeyValuePairs(response);
 }
 
 module.exports = {
     setRedisClientObject: (redisObj) => redisObject = redisObj,
-    getGJUserInfo20: async (accountID) => dataToUserObject(accountID)
+
+    /**
+     * Fetch user information for a single user.
+     * @param {string} accountID - The account ID of the user to fetch information for.
+     * @returns {Promise<Map<string, string> | null>} A map of user information or null if an error occurs.
+     */
+    getGJUserInfo20: async (accountID) => getUserData(accountID, getGJUserInfo20),
+
+    /**
+     * Fetch user information for a single user.
+     * @param {string} username - The username of the user to fetch information for.
+     * @returns {Promise<Map<string, string> | null>} A map of user information or null if an error occurs.
+     */
+    getGJUsers20: async (username) => getUserData(username, getGJUsers20)
 }

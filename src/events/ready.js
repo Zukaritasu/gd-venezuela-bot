@@ -24,6 +24,7 @@ const services = [
 	'../commands/gdvzla-list/service-levels.js',
 	'../commands/gdvzla-list/service-levels-p.js',
 	'../commands/leveling/service-auto-update.js',
+	'../services/leaderboard-creator-point.js',
 ]
 
 /**
