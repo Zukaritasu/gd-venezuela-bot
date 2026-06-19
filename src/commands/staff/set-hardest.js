@@ -15,7 +15,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-const { SlashCommandBuilder, ChatInputCommandInteraction, PermissionsBitField, GuildMember } = require('discord.js');
+const { SlashCommandBuilder, ChatInputCommandInteraction, PermissionsBitField, GuildMember, MessageFlags } = require('discord.js');
 const { states } = require('../../../.botconfig/country-states.json')
 const { COLL_CONFIG } = require('../../../.botconfig/database-info.json');
 const https = require('https');
@@ -172,7 +172,8 @@ async function validateUserInfo(interaction) {
  */
 async function execute(_client, database, interaction) {
     try {
-        await interaction.deferReply({ ephemeral: true });
+        await interaction.deferReply({ flags: MessageFlags.Ephemeral })
+
         if (!utils.isAdministrator(interaction.member)) {
             await interaction.editReply('No tienes privilegios suficientes para realizar esta acción');
         } else {

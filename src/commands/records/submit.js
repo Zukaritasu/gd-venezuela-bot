@@ -16,7 +16,7 @@
  */
 
 const { ChatInputCommandInteraction, Message, Client, TextChannel } = require('discord.js');
-const { RESTJSONErrorCodes } = require('discord-api-types/v10')
+const { RESTJSONErrorCodes, MessageFlags } = require('discord-api-types/v10')
 const { Db } = require('mongodb');
 const utils = require('../../utils')
 const logger = require('../../logger');
@@ -193,7 +193,7 @@ async function getVideoLink(interaction, videoLink) {
  */
 async function execute(_client, database, interaction) {
     try {
-        await interaction.deferReply({ ephemeral: true });
+        await interaction.deferReply({ flags: MessageFlags.Ephemeral })
 
         const player = await getPlayerName(interaction, interaction.options.getString('player'));
         if (!player) return;

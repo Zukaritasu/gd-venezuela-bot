@@ -15,7 +15,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-const { SlashCommandBuilder, ChatInputCommandInteraction } = require('discord.js');
+const { SlashCommandBuilder, ChatInputCommandInteraction, MessageFlags } = require('discord.js');
 const { states } = require('../../../.botconfig/country-states.json');
 const { Db } = require('mongodb');
 const utils = require('../../utils')
@@ -82,7 +82,8 @@ async function updateStateHardest(interaction, database, stateId, player, level,
  * @param {ChatInputCommandInteraction} interaction 
  */
 async function execute(_client, database, interaction) {
-    await interaction.deferReply({ ephemeral: true });
+    await interaction.deferReply({ flags: MessageFlags.Ephemeral })
+
     try {
         const role = interaction.options.getRole('state', false)
         if (states.find(state => state.roleId === role.id) === undefined)

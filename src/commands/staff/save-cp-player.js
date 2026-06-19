@@ -17,7 +17,8 @@
 
 const { ChatInputCommandInteraction, ActionRowBuilder,
     ButtonBuilder, ButtonStyle,
-    Client } = require('discord.js');
+    Client, 
+    MessageFlags} = require('discord.js');
 const utils = require('../../utils');
 const { Db } = require('mongodb');
 const axios = require('axios');
@@ -214,7 +215,7 @@ async function processAccountCreatorPoint(interaction, database) {
  */
 async function execute(_client, database, interaction) {
     try {
-        await interaction.deferReply({ ephemeral: true });
+        await interaction.deferReply({ flags: MessageFlags.Ephemeral })
         if (!utils.isAdministrator(interaction.member))
             await interaction.editReply('No tienes privilegios suficientes para realizar esta acción');
         else
