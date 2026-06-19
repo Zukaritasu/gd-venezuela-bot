@@ -240,7 +240,7 @@ async function service(db, client) {
 
 	await functionRun();
 
-	const timeout = setInterval(functionRun, /* 10 hours */ 10 * 60 * 60 * 1000);
+	const timeout = setInterval(functionRun, /* 1 hour */ 1 * 60 * 60 * 1000);
 
 	return {
 		stop: () => clearInterval(timeout),
