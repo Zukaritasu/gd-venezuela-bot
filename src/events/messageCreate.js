@@ -105,6 +105,9 @@ module.exports = {
                 if (isCommand(message, '--update')) {
                     if (utils.hasUserPermissions(message.member))
                         await require('../commands/text-commands/update-leaderboard').update(database, message.guild)
+                } else if (isCommand(message, '--update-lth')) {
+                    if (utils.hasUserPermissions(message.member))
+                        await require('../commands/text-commands/update-leaderboard-top-hardest').update(database, message)
                 } else if (isCommand(message, '--blacklist')) {
                     if (utils.hasUserPermissions(message.member))
                         await require('../commands/text-commands/topxp-blacklist').process(getCommandParameters(message.content), database, message)
