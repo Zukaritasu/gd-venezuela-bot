@@ -245,7 +245,10 @@ async function update(db, message) {
         embeds.push(embed)
     }
 
-    await channel.send({ embeds })
+    await channel.send({ 
+      content: '<:zTrophy:1215845799313932400> Top Niveles **más difíciles** de la @Demonlist Venezuela <:flag_Ven:1120424330879320124>\n\nPara ver la lista completa del Top 150, visita nuestro sitio web [GD Venezuela List](https://gdvzla.pages.dev/#/). Si estás interesado en enviar un récord, dirígete al canal <#1368411272965525684>.',
+      embeds
+    })
 
 	await message.react('✅')
 }
