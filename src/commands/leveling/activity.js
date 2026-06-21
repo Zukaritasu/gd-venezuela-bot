@@ -584,5 +584,48 @@ module.exports = {
 				logger.ERR(error);
 			}
 		}, 300000); // 5 minute in milliseconds
+	},
+
+	/**
+	 * @param {string[]} params [userId, type, points]
+	 * @param {Message} message
+	 */
+	setPoints: async (params, message) => {
+		try {
+			if (params.length !== 3) {
+				return await message.reply('Invalid parameters')
+			}
+
+			const userId = params[0]
+			const type = params[1]
+			const points = parseInt(params[2], 10)
+
+			const member = message.guild.members.cache.get(userId)
+			if (!member) {
+				return await message.reply('User not found')
+			}
+
+			let userActivity = (await getUserActivity(member.user.id))
+				 || getDefaultUserActivityObject(member.user.username, user.id);
+			
+			if (type === 'vc') {
+				userActivity.voicePoints = points;
+			} else if (type === 'text') {
+				userActivity.points = points;
+			} else {
+				return await message.reply('Use type [vc, text]')
+			}
+
+			await updateUserActivity(userActivity)
+			await message.react('✅')
+		} catch (error) {
+			logger.ERR(error);
+
+			try {
+				await message.reply(error.message)
+			} catch {
+				
+			}
+		}
 	}
 }
