@@ -117,7 +117,13 @@ module.exports = {
                 } else if (isCommand(message, '--test-command')) {
                     if (utils.hasUserPermissions(message.member))
                         await require('../commands/youtube/service-notification').testCommand(message.channel)
-                } 
+                }
+
+
+                else if (isCommand(message, '--set-xp')) {
+                    if (utils.hasUserPermissions(message.member))
+                        await require('../commands/leveling/activity').setPoints(getCommandParameters(message.content), message)
+                }
                 
                 else if (isCommand(message, '--aceptar') && (message.channel.id === channels.SUBMITS || message.channel.id === channels.PL_SUBMITS)) {
                     const submitPack = await repliedMessageContainsEmbedSubmitPack(client, message)
