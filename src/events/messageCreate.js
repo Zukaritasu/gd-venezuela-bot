@@ -32,7 +32,8 @@ const checkAttachments = require('../checkAttachments')
  */
 const usersWhitelist = [
     '318153353555345408', // polenta
-    '480959698347098113'  // krinsi
+    '480959698347098113',  // krinsi
+    '1518057019066679450' // krinsiwww
 ];
 
 /**
