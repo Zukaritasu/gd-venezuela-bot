@@ -317,7 +317,7 @@ async function sendDM(client, message, content) {
             return null;
 
         const repliedMessage = await message.channel.messages.fetch(message.reference.messageId);
-        if (!repliedMessage || repliedMessage.author.id !== '1294111960882872341')
+        if (!repliedMessage || repliedMessage.author.id !== process.env.BOT_ID)
             return null;
 
         let userId = null
