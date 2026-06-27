@@ -157,7 +157,7 @@ async function getTop10(db) {
             throw new Error(`Invalid level data for ${level}`);
         }
 
-        const index = allRatedLevels.findIndex(l => getLevelNormalizedName(l.name) === level)
+        const index = allRatedLevels.findIndex(l => `${l.level_id}` === level)
         if (index === -1) {
             continue
         }
