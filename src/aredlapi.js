@@ -56,6 +56,7 @@ const https = require('https');
 /**
  * @typedef {Object} LevelReference
  * @property {string} id - Unique identifier of the level.
+ * @property {string | undefined} levelId - level id.
  * @property {string} name - Display name of the level.
  */
 

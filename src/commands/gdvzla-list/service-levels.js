@@ -202,7 +202,7 @@ async function isSortedList(client, listLevels, sortedList) {
     }
 
     for (let i = 0; i < listLevels.content.length; i++) {
-        if (listLevels.content[i] !== sortedList[i].name) {
+        if (listLevels.content[i] !== sortedList[i].levelId) {
             return false;
         }
     }
@@ -217,10 +217,10 @@ async function isSortedList(client, listLevels, sortedList) {
  * @returns {ListChangeEvents|null} An object containing event details or null if no relevant event is found.
  */
 function getEventsFromLevelChange(change, normalizedLevels, oldNormalizedLevels) {
-    let levelIndex = normalizedLevels.findIndex(level => level.originName === change.affected_level.name);
+    let levelIndex = normalizedLevels.findIndex(level => level.levelId === change.affected_level.levelId);
     const events = {
         levelName: change.affected_level.name,
-        from: oldNormalizedLevels.content.findIndex(name => name === getLevelName(change.affected_level.name)) + 1,
+        from: oldNormalizedLevels.content.findIndex(levelId => levelId === change.affected_level.levelId) + 1,
         to: levelIndex + 1,
         above: normalizedLevels[levelIndex - 1] ? normalizedLevels[levelIndex - 1].originName : null,
         below: normalizedLevels[levelIndex + 1] ? normalizedLevels[levelIndex + 1].originName : null,
@@ -235,26 +235,26 @@ function getEventsFromLevelChange(change, normalizedLevels, oldNormalizedLevels)
     // The level that has changed range in the list due to the movement of
     // the affected level before the list normalization is extracted
     if (events.from > 75 && events.to <= 75 && events.from <= 150) {
-        events.pushed = normalizedLevels.find(level => oldNormalizedLevels.content[74] == level.name).originName;
+        events.pushed = normalizedLevels.find(level => oldNormalizedLevels.content[74] == level.levelId).originName;
         events.pushedTarget = 'extended';
     } else if (events.from <= 75 && events.to > 75 && events.to <= 150) {
-        events.pushed = normalizedLevels.find(level => oldNormalizedLevels.content[75] == level.name).originName;
+        events.pushed = normalizedLevels.find(level => oldNormalizedLevels.content[75] == level.levelId).originName;
         events.pushedTarget = 'main';
     } else if (events.from > 150 && events.to <= 150 && events.to > 75) {
-        events.pushed = normalizedLevels.find(level => oldNormalizedLevels.content[149] == level.name).originName;
+        events.pushed = normalizedLevels.find(level => oldNormalizedLevels.content[149] == level.levelId).originName;
         events.pushedTarget = 'legacy';
     } else if (events.from <= 150 && events.from > 75 && events.to > 150) {
-        events.pushed = normalizedLevels.find(level => oldNormalizedLevels.content[150] == level.name).originName;
+        events.pushed = normalizedLevels.find(level => oldNormalizedLevels.content[150] == level.levelId).originName;
         events.pushedTarget = 'extended';
     } else if (events.from > 150 && events.to <= 75) {
-        events.pushed = normalizedLevels.find(level => oldNormalizedLevels.content[74] == level.name).originName;
+        events.pushed = normalizedLevels.find(level => oldNormalizedLevels.content[74] == level.levelId).originName;
         events.pushedTarget = 'extended';
-        events.pushed2 = normalizedLevels.find(level => oldNormalizedLevels.content[149] == level.name).originName;
+        events.pushed2 = normalizedLevels.find(level => oldNormalizedLevels.content[149] == level.levelId).originName;
         events.pushed2Target = 'legacy';
     } else if (events.from <= 75 && events.to > 150) {
-        events.pushed = normalizedLevels.find(level => oldNormalizedLevels.content[75] == level.name).originName;
+        events.pushed = normalizedLevels.find(level => oldNormalizedLevels.content[75] == level.levelId).originName;
         events.pushedTarget = 'main';
-        events.pushed2 = normalizedLevels.find(level => oldNormalizedLevels.content[150] == level.name).originName;
+        events.pushed2 = normalizedLevels.find(level => oldNormalizedLevels.content[150] == level.levelId).originName;
         events.pushed2Target = 'extended';
     } else if (events.from > 150 && events.to > 150) {
         return null;
@@ -276,7 +276,8 @@ function filterChangelogLevels(changelog, doc, normalizedLevels, listData) {
     const filteredLevels = [];
     changelog.slice(0, index).reverse().forEach(entry => {
         const levelIndex = normalizedLevels.findIndex(level => level.originName === entry.affected_level.name);
-        if (levelIndex !== -1 && listData.content[levelIndex] !== normalizedLevels[levelIndex].name) {
+        if (levelIndex !== -1 && listData.content[levelIndex] !== normalizedLevels[levelIndex].levelId) {
+            entry.affected_level['levelId'] = normalizedLevels[levelIndex].levelId
             filteredLevels.push(entry);
         }
     });
