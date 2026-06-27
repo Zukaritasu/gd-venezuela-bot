@@ -190,9 +190,9 @@ async function createRecordFile(message, fileName, levelName, levelId, jsonInfo,
         const levelIndex = currentLevels.findIndex(lvl => `${lvl.level_id}` === levelId);
 
         for (let i = 0; i < levelLists.length; i++) {
-            const currentLevelName = currentLevels.find(lvl => `${lvl.level_id}` === levelLists[i])?.name;
-            if (currentLevelName) {
-                const currentIndex = currentLevels.findIndex(lvl => lvl.name === currentLevelName);
+            const currentLevelId = currentLevels.find(lvl => `${lvl.level_id}` === levelLists[i])?.level_id.toString();
+            if (currentLevelId) {
+                const currentIndex = currentLevels.findIndex(lvl => `${lvl.level_id}` === currentLevelId);
                 if (levelIndex < currentIndex) {
                     insertIndex = i;
                     break;
@@ -207,16 +207,16 @@ async function createRecordFile(message, fileName, levelName, levelId, jsonInfo,
 
         if (insertIndex - 1 >= 0)
             changes.levelNameUp =
-                currentLevels.find(lvl => getFileName(lvl.name) === levelLists[insertIndex - 1])?.name || null;
+                currentLevels.find(lvl => `${lvl.level_id}` === levelLists[insertIndex - 1])?.name || null;
         if (insertIndex + 1 < levelLists.length)
             changes.levelNameDown =
-                currentLevels.find(lvl => getFileName(lvl.name) === levelLists[insertIndex + 1])?.name || null;
+                currentLevels.find(lvl => `${lvl.level_id}` === levelLists[insertIndex + 1])?.name || null;
         if (levelLists.length > 150)
             changes.levelLegacy =
-                currentLevels.find(lvl => getFileName(lvl.name) === levelLists[150])?.name || null;
+                currentLevels.find(lvl => `${lvl.level_id}` === levelLists[150])?.name || null;
         if (insertIndex < 75)
             changes.levelExtended =
-                currentLevels.find(lvl => getFileName(lvl.name) === levelLists[75])?.name || null;
+                currentLevels.find(lvl => `${lvl.level_id}` === levelLists[75])?.name || null;
 
         const fileEditedList = Buffer.from(JSON.stringify(levelLists, null, 4)).toString("base64");
         await axios.put(`${process.env.URL_API_GITHUB}/public/data/${fileNameList}.json`, {
