@@ -18,6 +18,7 @@
 const { SlashCommandBuilder, ChatInputCommandInteraction, Client } = require('discord.js');
 const { Db } = require('mongodb');
 const gdvzlalistapi = require('../gdvzlalistapi')
+const logger = require('../logger')
 
 //////////////////////////////////////////////////
 
