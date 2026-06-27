@@ -19,7 +19,7 @@ const logger = require('../logger');
 const robtopapi = require('../robtopapi');
 const { TOP_CREATOR_POINTS } = require('../../.botconfig/channels.json');
 const { COLL_CREATOR_POINT_PLAYERS, COLL_CONFIG } = require('../../.botconfig/database-info.json');
-const { Client, Message } = require('discord.js');
+const { Client, Message, TextChannel } = require('discord.js');
 const { Db } = require('mongodb');
 
 const TIME_INTERVAL = 12 * 60 * 60 * 1000; // 12 hours
@@ -29,7 +29,7 @@ const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 /**
  * Fetch the leaderboard data from the database.
  * @param {Db} db - The database instance
- * @returns {Promise<Array<{ creatorPoints: number, username: string }>>}
+ * @returns {Promise<Array<{ creatorPoints: number, username: string }> | null>}
  * An array of leaderboard entries
  */
 async function fetchLeaderboardData(db) {
@@ -48,9 +48,11 @@ async function fetchLeaderboardData(db) {
 				});
 			} else {
 				logger.DBG(`Failed to fetch user info for account ID ${account.accountID}`); // Debug log for failed API calls
+				return null
 			}
 		} catch (error) {
 			logger.ERR(`Error fetching user info for account ID ${account.accountID}:`, error);
+			return null
 		}
 
 		await sleep(5000); // Sleep for 5 seconds to avoid hitting rate limits
@@ -97,13 +99,7 @@ async function isListUpdatable(db) {
 async function getMessageLeaderboard(db, channel) {
 	const messageId = await db.collection(COLL_CONFIG).findOne({ type: 'leaderboardCreatorPointsMessageId' });
 	if (messageId && messageId.value) {
-		try {
-			const message = await channel.messages.fetch(messageId.value);
-			return message;
-		} catch (error) {
-			logger.ERR('Failed to fetch existing leaderboard message:', error);
-			return null;
-		}
+		return await channel.messages.fetch(messageId.value);
 	}
 
 	return null;
@@ -190,18 +186,6 @@ function formatTopCreatorPoints(entries) {
 }
 
 /**
- * Get the top 10 creator points from the database and format it as a string.
- * 
- * @param {*} db 
- * @returns {Promise<string | null>} The top 10 creator points as a formatted string,
- * or null if an error occurs
- */
-async function getTopCreatorPoints(db) {
-	const data = await fetchLeaderboardData(db);
-	return formatTopCreatorPoints(data);
-}
-
-/**
  * @param {Db} db 
  * @param {Client} client 
  */
@@ -217,8 +201,11 @@ async function service(db, client) {
 				if (!channel) return;
 
 				const message = await getMessageLeaderboard(db, channel);
+				const data = await fetchLeaderboardData(db)
 
-				const topCreatorPoints = await getTopCreatorPoints(db);
+				if (!data) return
+
+				const topCreatorPoints = formatTopCreatorPoints(data);
 				const description = '\nEste es el TOP 10 usuarios con mas Creator Points en el país. Un reconocimiento a los usuarios con más Creator Points que, con su dedicación, decoración y gameplay, representan a nuestro país en la comunidad global de Geometry Dash.\n\n';
 
 				if (topCreatorPoints) {
