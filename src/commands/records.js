@@ -15,7 +15,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-const { SlashCommandBuilder, ChatInputCommandInteraction } = require('discord.js');
+const { SlashCommandBuilder, ChatInputCommandInteraction, MessageFlags } = require('discord.js');
 const aredlapi = require('../aredlapi');
 const logger = require('../logger');
 
@@ -119,7 +119,7 @@ module.exports = {
 
             const filteredLevels = levels
                 .filter(level => level.name.toLowerCase().includes(focusedValue.toLowerCase()))
-                .map(level => ({ name: level.name, value: level.name }))
+                .map(level => ({ name: `${level.name} - ${level.level_id}`, value: `${level.name}~${level.level_id}` }))
                 .slice(0, 25);
 
             await interaction.respond(filteredLevels);

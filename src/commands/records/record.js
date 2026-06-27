@@ -67,7 +67,8 @@ async function getGitHubFile(fileName) {
 }
 
 /**
- * @param {Message} message 
+ * @param {Message} message
+ * @returns {Promise<{userId: string, levelName: string, levelId: string, botRecord: Message<boolean>, jsonInfo: object}>}
  */
 async function getBotMessage(message) {
     if (!message.reference || !message.reference.messageId)
@@ -77,7 +78,7 @@ async function getBotMessage(message) {
     if (!repliedMessage || repliedMessage.author.id !== process.env.BOT_ID)
         return null;
 
-    let userId = null, levelName = null;
+    let userId = null, levelName = null, levelId = null;
 
     const content = repliedMessage.content;
     content.split('\n').forEach(line => {
@@ -86,6 +87,8 @@ async function getBotMessage(message) {
             userId = line.split(':')[1].trim();
         } else if (line.startsWith('Level:')) {
             levelName = line.split(':')[1].trim();
+        } else if (line.startsWith('Level ID:')) {
+            levelId = line.split(':')[1].trim();
         }
     });
 
@@ -93,6 +96,7 @@ async function getBotMessage(message) {
         return {
             userId,
             levelName,
+            levelId,
             botRecord: repliedMessage,
             jsonInfo: JSON.parse(content.substring(content.indexOf('```json') + 7,
                 content.indexOf('```', content.indexOf('```json') + 7)).trim())
@@ -105,24 +109,23 @@ async function getBotMessage(message) {
 /**
  * @param {Message} message 
  * @param {string} fileName 
- * @param {string} levelName 
+ * @param {string} levelName
+ * @param {string} levelId 
  * @param {Object} jsonInfo 
- * @param {string} userId 
- * @returns {Promise<{levelNameUp: string|null, levelNameDown: string|null, levelInserted: string|null, 
- * indexInserted: number, levelLegacy: string|null, levelExtended: string|null}>}
+ * @param {string} userId
  */
-async function createRecordFile(message, fileName, levelName, jsonInfo, userId) {
+async function createRecordFile(message, fileName, levelName, levelId, jsonInfo, userId) {
     const [levels, levelsPlat] = await Promise.all([
         aredlapi.getLevels(),
         aredlapi.getLevelsPlatformer()
     ]);
 
     let isPlatformer = false;
-    let matchingLevel = levels.find(lvl => lvl.name === levelName);
+    let matchingLevel = levels.find(lvl => lvl.level_id.toString() === levelId);
     if (!matchingLevel) {
-        matchingLevel = levelsPlat.find(lvl => lvl.name === levelName);
+        matchingLevel = levelsPlat.find(lvl => lvl.level_id.toString() === levelId);
         if (!matchingLevel)
-            throw new Error(`The level **${levelName}** does not exist in AREDL`);
+            throw new Error(`The level **${levelName} - ${levelId}** does not exist in AREDL`);
         isPlatformer = true;
     }
 
@@ -184,10 +187,10 @@ async function createRecordFile(message, fileName, levelName, jsonInfo, userId) 
     const currentLevels = isPlatformer ? levelsPlat : levels;
     if (!levelLists.includes(fileName)) {
         let insertIndex = levelLists.length;
-        const levelIndex = currentLevels.findIndex(lvl => lvl.name === levelName);
+        const levelIndex = currentLevels.findIndex(lvl => `${lvl.level_id}` === levelId);
 
         for (let i = 0; i < levelLists.length; i++) {
-            const currentLevelName = currentLevels.find(lvl => getFileName(lvl.name) === levelLists[i])?.name;
+            const currentLevelName = currentLevels.find(lvl => `${lvl.level_id}` === levelLists[i])?.name;
             if (currentLevelName) {
                 const currentIndex = currentLevels.findIndex(lvl => lvl.name === currentLevelName);
                 if (levelIndex < currentIndex) {
@@ -232,7 +235,7 @@ async function createRecordFile(message, fileName, levelName, jsonInfo, userId) 
 
     await addPlayerToStateList(message, jsonInfo);
 
-    return {changes: changes, isPlatformer: isPlatformer};
+    return {changes, isPlatformer};
 }
 
 /**
@@ -402,7 +405,7 @@ async function handleProgress(message, isAccept) {
         const botMessage = await getBotMessage(message);
         if (!botMessage) return;
 
-        const { userId, levelName, botRecord, jsonInfo } = botMessage;
+        const { userId, levelName, levelId, botRecord, jsonInfo } = botMessage;
         const user = await message.guild.members.fetch(userId);
         if (!user) return await message.react('❌');
 
@@ -411,13 +414,13 @@ async function handleProgress(message, isAccept) {
         }
 
         if (isAccept) {
-            const fileName = getFileName(levelName);
+            const fileName = levelId;
             let isUpdate = false;
 
             let file = await getGitHubFile(fileName);
             if (!file) { // File doesn't exist, create it
-                const report = await createRecordFile(message, fileName, levelName, jsonInfo, userId);
-                await message.reply(`El archivo **${fileName}.json** no existe, por lo que se ha creado uno nuevo.`);
+                const report = await createRecordFile(message, fileName, levelName, levelId, jsonInfo, userId);
+                await message.reply(`El archivo **${fileName}.json** correspondiente al nivel ${levelName} no existe, por lo que se ha creado uno nuevo.`);
                 await printChanges(report.changes, message.guild, report.isPlatformer);
             } else if (file.content.verifier === jsonInfo.user ||
                 file.content.records.some(oldRecord => oldRecord.user === jsonInfo.user && !('time' in jsonInfo) && oldRecord.percent >= jsonInfo.percent)) {

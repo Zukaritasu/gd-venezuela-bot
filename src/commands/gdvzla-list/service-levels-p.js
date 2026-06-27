@@ -19,6 +19,7 @@ const channels = require('../../../.botconfig/channels.json');
  * @typedef {Object} NormalizedLevel
  * @property {string} originName - The original name of the level.
  * @property {string} name - The normalized name of the level.
+ * @property {string} levelId - level id
  * @property {number} position - The position of the level in the list.
  */
 
@@ -350,11 +351,12 @@ async function service(db, client) {
                 const listData = await getListLevels();
                 const currentLevels = await aredlapi.getLevelsPlatformer();
                 /** @type {NormalizedLevel[]} */
-                let normalizedLevels = currentLevels.filter(level => listData.content.includes(getLevelName(level.name)))
+                let normalizedLevels = currentLevels.filter(level => listData.content.includes(level.level_id.toString()))
                     .map(level => {
                         return {
                             originName: level.name,
                             name: getLevelName(level.name),
+                            levelId: level.level_id.toString(),
                             position: level.position
                         }
                     }).sort((a, b) => a.position - b.position);
@@ -365,7 +367,7 @@ async function service(db, client) {
                 // corresponding channel
 
                 if (!await isSortedList(client, listData, normalizedLevels)) {
-                    await saveSortedList(listData.sha, normalizedLevels.map(level => level.name));
+                    await saveSortedList(listData.sha, normalizedLevels.map(level => level.levelId));
                     await printChangelog(db, client, normalizedLevels, listData);
                 }
             }
@@ -395,25 +397,26 @@ module.exports = {
             const listData = await getListLevels();
             const currentLevels = await aredlapi.getLevelsPlatformer();
             /** @type {NormalizedLevel[]} */
-            let normalizedLevels = currentLevels.filter(level => listData.content.includes(getLevelName(level.name)))
+            let normalizedLevels = currentLevels.filter(level => listData.content.includes(level.level_id.toString()))
                 .map(level => {
                     return {
                         originName: level.name,
                         name: getLevelName(level.name),
+                        levelId: level.level_id.toString(),
                         position: level.position
                     }
                 }).sort((a, b) => a.position - b.position);
 
             let listA = listData.content;
-            let listB = normalizedLevels.map(level => level.name);
+            let listB = normalizedLevels.map(level => level.levelId);
 
             const setA = new Set(listA);
             const setB = new Set(listB);
 
-            listB.forEach(name => {
-                if (setA.has(name)) {
-                    setA.delete(name);
-                    setB.delete(name);
+            listB.forEach(levelId => {
+                if (setA.has(levelId)) {
+                    setA.delete(levelId);
+                    setB.delete(levelId);
                 }
             });
 

@@ -117,7 +117,7 @@ async function getPlayerName(interaction, player) {
 /**
  * @param {Message} message 
  * @param {string} level 
- * @returns {Promise<{name: string, isPlatformer: boolean} | null>} Returns the level
+ * @returns {Promise<{name: string, levelId: number, isPlatformer: boolean} | null>} Returns the level
  * object if found, otherwise null.
  */
 async function getLevelName(message, level) {
@@ -128,30 +128,34 @@ async function getLevelName(message, level) {
     ]);
     
     levels.push(...levelsPlat);
-    const matchingLevels = levels.filter(lvl => lvl.name.toLowerCase() === levelName);
 
-    if (matchingLevels.length !== 1) {
-        await sendErrorDM(message, 'El nivel proporcionado no existe o hay múltiples coincidencias. Por favor, verifica el nombre del nivel.');
-        return null;
+    let matchLevel = null
+
+    if (/^\d+$/.test(levelName)) { // is level id?
+        matchLevel = levels.find(lvl => `${lvl.level_id}` === levelName);
+        if (!matchLevel) {
+            await sendErrorDM(message, 'El ID del nivel no es válido.');
+            return null;
+        }
+    } else {
+        const matchingLevels = levels.filter(lvl => lvl.name.toLowerCase() === levelName);
+        if (matchingLevels.length !== 1) {
+            await sendErrorDM(message, 'El nivel proporcionado no existe o hay varias coincidencias. Por favor, comprueba el nombre del nivel o, en su lugar, introduce el ID del nivel.');
+            return null;
+        }
+
+        matchLevel = matchingLevels[0]
+    }
+
+    if (!('isPlatformer' in matchLevel)) {
+        matchLevel['isPlatformer'] = false
     }
 
     return {
-        name: matchingLevels[0].name,
-        isPlatformer: matchingLevels[0]?.isPlatformer || false
+        name: matchLevel.name,
+        levelId: matchLevel.level_id,
+        isPlatformer: matchLevel.isPlatformer
     };
-}
-
-/**
- * Checks if the given level name corresponds to a platformer level by fetching
- * the list of platformer levels from the API and comparing the names.
- * 
- * @param {string} levelName - The name of the level to check.
- * @returns {Promise<boolean>} Returns true if the level is a platformer 
- * level, otherwise false.
- */
-async function isPlatformLevel(levelName) {
-    const levelsPlat = await aredlapi.getLevelsPlatformer();
-    return levelsPlat.some(lvl => lvl.name.toLowerCase() === levelName.trim().toLowerCase());
 }
 
 /**
@@ -167,12 +171,8 @@ async function getVideoLink(interaction, videoLink) {
             return utils.normalizeYoutubeLink(link);
         } else if (link.toLowerCase().startsWith('video:') || link.toLowerCase().startsWith('vídeo:')) {
             link = link.substring(6).trim();
-            try {
-                new URL(link);
-                return utils.normalizeYoutubeLink(link);
-            } catch {
-
-            }
+            new URL(link);
+            return utils.normalizeYoutubeLink(link);
         }
     } catch {
 
@@ -201,6 +201,7 @@ async function execute(_client, database, interaction) {
         if (!profile) return;
 
         const level = interaction.options.getString('level');
+        const [levelName, levelId] = level.split('~')
 
         const recordTime = interaction.options.getString('time');
         let time = null;
@@ -211,9 +212,12 @@ async function execute(_client, database, interaction) {
             }
         }
 
-        if (time && !await isPlatformLevel(level)) {
-            await sendErrorDM(interaction, 'El nivel proporcionado no es un nivel de platformer.');
-            return;
+        if (time) {
+            const levelsPlat = await aredlapi.getLevelsPlatformer();
+            if (!levelsPlat.some(lvl => lvl.name.toLowerCase() === levelName.trim().toLowerCase())) {
+                await sendErrorDM(interaction, 'El nivel proporcionado no es un nivel de platformer.');
+                return;
+            }
         }
 
         const ytvideo = await getVideoLink(interaction, interaction.options.getString('ytvideo'));
@@ -249,7 +253,8 @@ async function execute(_client, database, interaction) {
         const stringJson =
             `
 User ID: ${profile.userId}
-Level: ${level}
+Level: ${levelName}
+Level ID: ${levelId}
 Video: ${ytvideo}
 Comentario: ${comment ?? ""}
         \`\`\`json
@@ -356,6 +361,7 @@ async function processSubmitRecord(database, message, parts) {
             `
 User ID: ${profile.userId}
 Level: ${level.name}
+Level ID: ${level.levelId}
 Video: ${ytvideo}
 Comentario: ${parts.length > indexPart ? parts.slice(++indexPart).join(' ') : parts[indexPart].trim()}
         \`\`\`json
@@ -403,7 +409,7 @@ async function checkNewSubmitRecords(client, database) {
                 break;
             const parts = message.content.split('\n').map(part => part.trim()).filter(part => part.length > 0);
             if (parts.length < 3) {
-                await sendErrorDM(message, 'El formato del mensaje es inválido. Debe contener al menos:\nNombre del nivel\nname: tu nombre\nvideo: tu enlace\n[Comentario opcional]');
+                await sendErrorDM(message, 'El formato del mensaje es inválido. Debe contener al menos:\nNombre o ID del nivel\nname: tu nombre\nvideo: tu enlace\n[Comentario opcional]');
                 continue;
             }
 
