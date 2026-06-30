@@ -21,10 +21,6 @@ const channels = require('../../../.botconfig/channels.json');
 const gdvzlalistapi = require('../../gdvzlalistapi');
 const { RESTJSONErrorCodes } = require('discord-api-types/v10')
 
-///////////////////////////////////////////////////
-
-const GD_VENEZUELA_GUILD_ID = '1119795689984102455';
-
 /**
  * @typedef {Object} EmbedData
  * @property {string | null} username - username in the GD Venezuela List
@@ -43,7 +39,7 @@ const GD_VENEZUELA_GUILD_ID = '1119795689984102455';
  * @returns {Promise<boolean>} - True if the message was successfully delivered (DM or public channel), false otherwise.
  */
 async function sendMessage(client, userId, messageStr) {
-	const guild = client.guilds.cache.get(GD_VENEZUELA_GUILD_ID)
+	const guild = client.guilds.cache.get(process.env.SERVER_GD_VENEZUELA_ID)
 
 	try {
 		if (guild) {
