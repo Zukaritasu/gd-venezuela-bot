@@ -138,7 +138,7 @@ async function getUserInfo(accountID) {
         }
     }
 
-    if (`${response}` === '-1') 
+    if (response === null || `${response}` === '-1') 
         return null;
 
     return extractKeyValuePairs(response.data);
