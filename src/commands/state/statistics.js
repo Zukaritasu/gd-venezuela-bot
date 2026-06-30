@@ -23,8 +23,6 @@ const { states } = require('../../../.botconfig/country-states.json');
 const { COLL_GD_PROFILES } = require('../../../.botconfig/database-info.json');
 const logger = require("../../logger");
 
-///////////////////////////////////
-
 const ERROR_TIMEOUT_MESSAGE = 'Collector received no interactions before ending with reason: time'
 
 /**
@@ -35,11 +33,11 @@ const ERROR_TIMEOUT_MESSAGE = 'Collector received no interactions before ending 
 async function getUserStadistic(database, userId, stadistic) {
     try {
         const profile = await database.collection(COLL_GD_PROFILES).findOne({ userId: userId })
-        if (profile !== null) {
+        if (profile) {
             const response = await robtopapi.getGJUserInfo20(profile.accountID)
-            if (response !== null) {
+            if (Response) {
                 let value = response.get(stadistic.key)
-                if (value !== undefined) {
+                if (value) {
                     if (stadistic.key === 'demons') {
                         let number = 0
                         value.split(',').forEach(part => number += parseInt(part))
@@ -51,7 +49,7 @@ async function getUserStadistic(database, userId, stadistic) {
             }
         }
     } catch (error) {
-        console.log(error)
+        logger.ERR(error)
     }
 
     return -1
