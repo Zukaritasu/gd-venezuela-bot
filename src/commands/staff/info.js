@@ -46,7 +46,6 @@ async function execute(_client, _database, interaction) {
     let categories = []
     staffRolesID.forEach(staffRole => {
         let category = { name: '\u200B', value: '', inline: true }
-        //console.log(interaction.guild.roles.cache.find(role => role.id === staffRole.id).iconURL({ extension: 'png' }))
         category.value = `${staffRole.emoji} **${interaction.guild.roles.cache.find(role => role.id === staffRole.id)}**\n`
 
         const collection = interaction.guild.members.cache.filter(member => 
