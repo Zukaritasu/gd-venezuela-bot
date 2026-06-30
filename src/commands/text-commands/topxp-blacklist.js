@@ -31,7 +31,7 @@ async function removeRole(userId, message) {
         const member = await message.guild.members.fetch(userId)
         if (!member)
                 return await message.reply('User not found. Failed to remove user role')
-            await member.roles.remove(topLimits.starsRoleID, `User added to Top ${topLimits.positions} blacklist`)
+            await member.roles.remove(process.env.ID_ROL_ESTRELLAS, `User added to Top ${topLimits.positions} blacklist`)
         await message.reply('Role removed successfully!')
     } catch (e) {
         try {
