@@ -41,7 +41,6 @@ async function fetchLeaderboardData(db) {
 		try {
 			const userInfo = await robtopapi.getUserInfo(account.accountID);
 			if (userInfo) {
-				logger.DBG(`Fetched user info for account ID ${account.accountID}: ${userInfo.get('userName')}, Creator Points: ${userInfo.get('creatorpoints')}`); // Debug log for successful API calls
 				proccessedData.push({
 					creatorPoints: parseInt(userInfo.get('creatorpoints') || '0', 10),
 					username: userInfo.get('userName') || ''
