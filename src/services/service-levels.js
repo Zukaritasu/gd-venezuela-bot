@@ -1,13 +1,11 @@
 const { Db } = require('mongodb');
-const logger = require('../../logger');
+const logger = require('../logger');
 const { Client, TextChannel } = require('discord.js');
-const GITHUB_TOKEN = require('../../../.botconfig/token.json').GITHUB_TOKEN;
-const aredlapi = require('../../aredlapi');
+const GITHUB_TOKEN = require('../../.botconfig/token.json').GITHUB_TOKEN;
+const aredlapi = require('../aredlapi');
 const axios = require('axios');
-const { COLL_GDVZLA_LIST_CONFIG } = require('../../../.botconfig/database-info.json')
-const channels = require('../../../.botconfig/channels.json');
-
-//////////////////////////////////////
+const { COLL_GDVZLA_LIST_CONFIG } = require('../../.botconfig/database-info.json')
+const channels = require('../../.botconfig/channels.json');
 
 /**
  * @typedef {Object} ListData
