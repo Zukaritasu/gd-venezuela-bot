@@ -25,10 +25,6 @@ const redis = require('redis')
 const logger = require('./logger')
 const { DATABASE_NAME } = require('../.botconfig/database-info.json');
 
-//
-// +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-//
-
 process.chdir(__dirname);
 
 

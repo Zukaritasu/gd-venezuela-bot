@@ -19,10 +19,6 @@ const { Collection } = require('discord.js')
 const path = require('path');
 const fs = require('fs');
 
-//
-// +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-//
-
 const commandFileList = [
     'all-hardests.js',
     'github.js',

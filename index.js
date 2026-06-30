@@ -23,8 +23,6 @@ const logger = require('./src/logger')
 const botenv = require('./src/botenv');
 const { TIMEZONEDB_API_KEY } = require('./.botconfig/token.json')
 
-/* const fetch = require('node-fetch'); */
-
 /////////////////////////////////////////////////
 // Main bot launcher
 /////////////////////////////////////////////////
@@ -69,12 +67,7 @@ async function executeSubprocess(command) {
         const child = fork(command);
 
         child.on('exit', (code) => {
-            const success = code === 0;
-            if (!success) {
-                logger.ERR(`Subprocess terminated with error code ${code}`);
-            } else {
-                logger.INF(`Subprocess terminated with code 0`);
-            }
+            logger.INF(`Subprocess terminated with code ${code}`);
             resolve(success);
         });
 
