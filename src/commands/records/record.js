@@ -24,10 +24,6 @@ const GITHUB_TOKEN = require('../../../.botconfig/token.json').GITHUB_TOKEN;
 const axios = require('axios');
 const channels = require('../../../.botconfig/channels.json');
 
-//
-// +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-//
-
 /**
  * @param {string} levelName 
  * @returns {string} The formatted file name.
@@ -56,7 +52,6 @@ async function getGitHubFile(fileName) {
             content: JSON.parse(Buffer.from(response.data.content, "base64").toString())
         };
     } catch (error) {
-        logger.ERR(`getGitHubFile: ${error.message}`);
         if (!(error.response && error.response.status === 404)) {
             throw new Error(`Error al obtener el archivo de GitHub: ${error.message}`);
         } else {
@@ -406,9 +401,23 @@ async function handleProgress(message, isAccept) {
         if (!botMessage) return;
 
         const { userId, levelName, levelId, botRecord, jsonInfo } = botMessage;
-        const user = await message.guild.members.fetch(userId);
-        if (!user) return await message.react('❌');
+        let user = null;
 
+        try {
+            user = await message.guild.members.fetch(userId);
+        } catch (e) {
+            try {
+                if (e.message.includes('Unknown Member')) {
+                    await message.reply('El usuario al que corresponde el record no está dentro del servidor.')
+                } else
+                    await message.reply(`Ha ocurrido un error al procesar el record: ${e.message}`)
+                await message.react('❌');
+            } catch {
+                
+            }
+            return
+        }
+        
         if (userId === message.member.user.id) {
             return await message.reply('No puedes aceptar tus propios récords. Otro miembro debe hacerlo.')
         }
