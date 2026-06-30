@@ -22,8 +22,8 @@ const utils = require('../utils');
 const services = [
 	'../services/service-levels.js',
 	'../services/service-levels-p.js',
-	'../commands/leveling/service-auto-update.js',
-	'../services/leaderboard-creator-point.js',
+	'../services/service-xp-auto-update.js',
+	'../services/service-leaderboard-creator-point.js',
 ]
 
 /**

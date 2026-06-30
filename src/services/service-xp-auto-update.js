@@ -14,10 +14,10 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-const { COLL_USERS_ACTIVITY_CONFIG, doc_types } = require('../../../.botconfig/database-info.json');
-const activity = require('./activity')
-const topLimits = require('../../../.botconfig/top-limits.json');
-const logger = require('../../logger');
+const { COLL_USERS_ACTIVITY_CONFIG, doc_types } = require('../../.botconfig/database-info.json');
+const activity = require('../commands/leveling/activity')
+const topLimits = require('../../.botconfig/top-limits.json');
+const logger = require('../logger');
 const { Db } = require('mongodb');
 const { Client, Guild } = require('discord.js');
 
@@ -86,7 +86,7 @@ async function removeStarRoleFromInvalidMembers(guild, blMembers, currentTopUser
 /**
  * 
  * @param {Guild} guild - The Discord guild where the role is assigned.
- * @param {import('./activity').UserActivity[]} currentTopUsers - The list of current
+ * @param {import('../commands/leveling/activity').UserActivity[]} currentTopUsers - The list of current
  * top users with their activity data, including the "isSuperStar" property.
  */
 async function removeSuperStarRoleFromInvalidMembers(guild, currentTopUsers) {
@@ -179,7 +179,7 @@ async function service(_db, client) {
 		try {
 			if (await isListUpdatable(global.database)) {
 				await processUsersStarsRole(global.database, guild);
-				await require('../text-commands/update-leaderboard').update(global.database, guild);
+				await require('../commands/text-commands/update-leaderboard').update(global.database, guild);
 			}
 		} catch (error) {
 			logger.ERR(error);
