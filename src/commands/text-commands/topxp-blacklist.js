@@ -136,7 +136,7 @@ async function removeUser(userId, database, message) {
  * @param {Db} database
  * @param {Message} message
  */
-async function process(params, database, message) {
+async function processCommand(params, database, message) {
     try {
         if (params.length < 2)
             return await message.reply('Insufficient parameters')
@@ -168,5 +168,5 @@ async function process(params, database, message) {
 module.exports = {
     addUser,
     removeUser,
-    process
+    process: processCommand
 }
