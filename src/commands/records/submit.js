@@ -22,6 +22,7 @@ const utils = require('../../utils')
 const logger = require('../../logger');
 const aredlapi = require('../../aredlapi');
 const channels = require('../../../.botconfig/channels.json');
+const gdvzlalistapi = require('../../gdvzlalistapi');
 const { COLL_GDVZLA_LIST_PROFILES } = require('../../../.botconfig/database-info.json');
 
 /**
@@ -55,6 +56,39 @@ async function getLevelPlatformTime(message, param) {
 
     const totalMilliseconds = (seconds * 1000) + milliseconds;
     return { time: timeStr, timestamp: totalMilliseconds, isValid: true };
+}
+
+/**
+ * Determines if a level is considered "legacy" based on its position in the level list.
+ * @param {string} levelId - The ID of the level to check.
+ * @param {number | null} position - The position of the level in the list.
+ * @param {boolean} isPlatformer - Whether the level is a platformer level.
+ * @returns {Promise<boolean>} - Returns true if the level is legacy, false otherwise.
+ */
+async function isLegacyLevel(levelId, position, isPlatformer) {
+    const levelList = await gdvzlalistapi.getLevelListIDs(isPlatformer ? gdvzlalistapi.TypeList.PLATFORMER :
+        gdvzlalistapi.TypeList.CLASSIC);
+
+    if (levelList.length < 150 || levelList[149] === levelId) {
+        return false
+    }
+
+    const listLevels = isPlatformer ? await aredlapi.getLevelsPlatformer() : await aredlapi.getLevels();
+    const lastLevelId = levelList[149]
+    const lastLevelPosition = listLevels.find(lvl => `${lvl.level_id}` === lastLevelId)?.position;
+    
+    if (lastLevelPosition === undefined) {
+        throw new Error(`Could not find position for level ID ${lastLevelId}`);
+    }
+
+    if (!position) {
+        position = listLevels.find(lvl => `${lvl.level_id}` === levelId)?.position;
+        if (position === undefined) {
+            throw new Error(`Could not find position for level ID ${levelId}`);
+        }
+    }
+
+    return position > lastLevelPosition;
 }
 
 /**
@@ -117,7 +151,7 @@ async function getPlayerName(interaction, player) {
 /**
  * @param {Message} message 
  * @param {string} level 
- * @returns {Promise<{name: string, levelId: number, isPlatformer: boolean} | null>} Returns the level
+ * @returns {Promise<{name: string, levelId: number, isPlatformer: boolean, position: number} | null>} Returns the level
  * object if found, otherwise null.
  */
 async function getLevelName(message, level) {
@@ -154,7 +188,8 @@ async function getLevelName(message, level) {
     return {
         name: matchLevel.name,
         levelId: matchLevel.level_id,
-        isPlatformer: matchLevel.isPlatformer
+        isPlatformer: matchLevel.isPlatformer,
+        position: matchLevel.position
     };
 }
 
@@ -218,6 +253,11 @@ async function execute(_client, database, interaction) {
                 await sendErrorDM(interaction, 'El nivel proporcionado no es un nivel de platformer.');
                 return;
             }
+        }
+
+        if (await isLegacyLevel(levelId, null, !!time)) {
+            await sendErrorDM(interaction, 'El nivel proporcionado es un nivel legacy y no se aceptan records de niveles legacy.');
+            return;
         }
 
         const ytvideo = await getVideoLink(interaction, interaction.options.getString('ytvideo'));
@@ -325,6 +365,11 @@ async function processSubmitRecord(database, message, parts) {
             if (!time.isValid) {
                 return;
             }
+        }
+
+        if (await isLegacyLevel(level.levelId, level.position, level.isPlatformer)) {
+            await sendErrorDM(message, 'El nivel proporcionado es un nivel legacy y no se aceptan records de niveles legacy.');
+            return;
         }
 
         const player = await getPlayerName(message, parts[indexPart++]);
