@@ -20,6 +20,11 @@ const logger = require('./logger');
 const GITHUB_TOKEN = require('../.botconfig/token.json').GITHUB_TOKEN;
 const axios = require('axios');
 
+const TypeList = {
+	CLASSIC: '_list',
+	PLATFORMER: '_list-plat',
+}
+
 /** @type {import('redis').RedisClientType} */
 let redisObject = null
 
@@ -38,6 +43,8 @@ let redisObject = null
  */
 
 /**
+ * File extension is always .json
+ * 
  * @param {string} fileName - The name of the file (without extension) to retrieve.
  * @returns {Promise<{sha: string, content: object}>} The file's SHA and parsed content.
  */
@@ -51,6 +58,23 @@ async function getGitHubFile(fileName) {
 		sha: response.data.sha,
 		content: JSON.parse(Buffer.from(response.data.content, "base64").toString())
 	};
+}
+
+/**
+ * Retrieves the IDs of levels based on the specified type.
+ * 
+ * @param {string} type - The type of level list to retrieve (e.g., 'CLASSIC', 'PLATFORMER').
+ * @returns {Promise<string[]>} - Returns an array of level IDs based on the specified type.
+ */
+async function getLevelListIDs(type) {
+	const fileName = TypeList[type];
+
+	if (!fileName) {
+		throw new Error(`Invalid type provided: ${type}`);
+	}
+
+	const file = await getGitHubFile(fileName);
+	return file.content
 }
 
 module.exports = {
@@ -106,5 +130,10 @@ module.exports = {
 			}
 		});
 	},
-	setRedisClientObject: (redisObj) => redisObject = redisObj
+
+	setRedisClientObject: (redisObj) => redisObject = redisObj,
+
+	TypeList,
+
+	getLevelListIDs
 }
