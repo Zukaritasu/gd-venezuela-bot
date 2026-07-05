@@ -170,6 +170,8 @@ module.exports = {
                 levels[i].name = levels[i].name.trim();
         return levels;
     },
+
+    /** @returns {Promise<LevelInfo[]>} */
     getLevelsPlatformer: async () => {
         const levels = await getResponseJSON('v2/api/arepl/levels');
         if (!(levels instanceof Error)) {
