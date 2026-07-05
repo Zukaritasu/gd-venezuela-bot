@@ -66,8 +66,7 @@ async function getLevelPlatformTime(message, param) {
  * @returns {Promise<boolean>} - Returns true if the level is legacy, false otherwise.
  */
 async function isLegacyLevel(levelId, position, isPlatformer) {
-    const levelList = await gdvzlalistapi.getLevelListIDs(isPlatformer ? gdvzlalistapi.TypeList.PLATFORMER :
-        gdvzlalistapi.TypeList.CLASSIC);
+    const levelList = await gdvzlalistapi.getLevelListIDs(isPlatformer ? 'PLATFORMER' : 'CLASSIC');
 
     if (levelList.length < 150 || levelList[149] === levelId) {
         return false
