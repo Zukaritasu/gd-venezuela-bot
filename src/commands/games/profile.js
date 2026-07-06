@@ -101,14 +101,29 @@ async function savePoints(userId, points, keys, type, timeOutMs) {
 
 module.exports = {
 	savePoints,
-	isCooldownActive: async function(userId, type) {
+
+	/**
+	 * Checks if a cooldown is active for a user's profile based on the specified type.
+	 * 
+	 * 
+	 * @param {string} userId - The user ID of the profile to check for cooldown.
+	 * @param {string} type - The type of cooldown to check (e.g., "daily", "weekly").
+	 * @param {{time: number}} [timeDifference] - An object to store the time difference until the cooldown expires.
+	 * @returns 
+	 */
+	isCooldownActive: async function(userId, type, timeDifference) {
 		const collection = global.database.collection(COLL_BOT_GAME_PROFILES);
 		const profile = await collection.findOne({ userId: userId });
 
 		if (!profile) return false;
 
 		const timeout = profile.timeouts.find(t => t.type === type);
+		const nowDate = Date.now();
 
-		return timeout && timeout.timestamp > Date.now();
+		if (timeDifference) {
+			timeDifference.time = timeout ? timeout.timestamp - nowDate : 0;
+		}
+
+		return timeout && timeout.timestamp > nowDate;
 	}
 };

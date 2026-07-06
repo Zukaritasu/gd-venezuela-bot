@@ -102,8 +102,9 @@ function toStringRewards(rewards) {
  * @param {string} subcommand 
  */
 async function openChestCommand(interaction, subcommand) {
-	if (profile.isCooldownActive(interaction.user.id, `chest_${subcommand}`)) {
-		await interaction.reply({ content: "¡Ya has abierto un cofre recientemente! Por favor, espera un poco antes de intentarlo de nuevo.",
+	const timeDifference = { time: 0 };
+	if (await profile.isCooldownActive(interaction.user.id, `chest_${subcommand}`, timeDifference)) {
+		await interaction.reply({ content: `Por favor, espera ${utils.formatTimeMilliseconds(timeDifference.time)} antes de intentarlo de nuevo.`,
 			flags: MessageFlags.Ephemeral
 		});
 		return;

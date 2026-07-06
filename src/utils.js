@@ -239,6 +239,23 @@ async function sleep(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
 }
 
+function formatTimeMilliseconds(ms) {
+    const totalSeconds = Math.floor(ms / 1000);
+    const days = Math.floor(totalSeconds / 86400);
+    const hours = Math.floor((totalSeconds % 86400) / 3600);
+    const minutes = Math.floor((totalSeconds % 3600) / 60);
+    const seconds = totalSeconds % 60;
+
+    const parts = [];
+    if (days) parts.push(`${days} ${days === 1 ? 'día' : 'días'}`);
+    if (hours) parts.push(`${hours} ${hours === 1 ? 'hora' : 'horas'}`);
+    if (minutes) parts.push(`${minutes} ${minutes === 1 ? 'minuto' : 'minutos'}`);
+    if (seconds || parts.length === 0) parts.push(`${seconds} ${seconds === 1 ? 'segundo' : 'segundos'}`);
+
+    if (parts.length === 1) return parts[0];
+    if (parts.length === 2) return `${parts[0]} y ${parts[1]}`;
+    return `${parts.slice(0, -1).join(', ')} y ${parts[parts.length - 1]}`;
+}
 
 module.exports = {
     isValidYouTubeUrl,
@@ -252,6 +269,7 @@ module.exports = {
     GD_VENEZUELA_SERVER_ID: '1119795689984102455',
     formatDate,
     formatDateTime,
+    formatTimeMilliseconds,
     getSHA256,
     getAllMembers,
     sleep
