@@ -17,6 +17,9 @@
 
 const utils = require("../../../utils.js");
 const logger = require("../../../logger.js");
+const profile = require('../profile.js')
+
+const TYPE_SLOT_MACHINE = "slot_machine";
 
 const encouragingMessages = [
 	"¡Sigue intentándolo! La próxima vez podrías tener más suerte.",
@@ -55,6 +58,11 @@ async function slotMachineCommand(interaction) {
 	try {
 		await interaction.deferReply();
 
+		if (profile.isCooldownActive(interaction.user.id, TYPE_SLOT_MACHINE)) {
+			await interaction.editReply({ content: "¡Ya has jugado la máquina tragamonedas recientemente! Por favor, espera un poco antes de intentarlo de nuevo." });
+			return;
+		}
+
 		const slots = [
 			demonEmojis[Math.floor(Math.random() * demonEmojis.length)], 
 			demonEmojis[Math.floor(Math.random() * demonEmojis.length)], 
@@ -66,17 +74,21 @@ async function slotMachineCommand(interaction) {
 
 		// Check if all slots are the same
 		const isWin = slots.every(slot => slot === slots[0]);
+
+		let points = 0;
 		if (isWin) {
-			const points = demonPoints[slots[0]] * 3; // Triple the points for three matching symbols
+			points = demonPoints[slots[0]] * 3; // Triple the points for three matching symbols
 			await interaction.channel.send(`${interaction.user} ¡Felicidades! Has ganado **${points} puntos**`);
 		} else if (slots[0] !== slots[1] && slots[1] !== slots[2] && slots[0] !== slots[2]) {
 			await interaction.channel.send(`${interaction.user} ¡No has ganado esta vez! No hay demons repetidos. ¡Sigue intentándolo!`);
 		} else {
 			const repeatedSlot = slots.sort()[1]; // Get the middle slot after sorting
-			const points = demonPoints[repeatedSlot] * 2; // Double the points for two matching symbols
+			points = demonPoints[repeatedSlot] * 2; // Double the points for two matching symbols
 			const randomMessage = encouragingMessages[Math.floor(Math.random() * encouragingMessages.length)];
 			await interaction.channel.send(`${interaction.user} ¡No has ganado esta vez! Has obtenido **${points} puntos**. ${randomMessage}`);
 		}
+
+		await profile.savePoints(interaction.user.id, points, null, TYPE_SLOT_MACHINE, 60000); // 1 minute cooldown
 	} catch (e) {
 		logger.ERR(`Error executing slot machine command: ${e.message}`, e);
 		try {

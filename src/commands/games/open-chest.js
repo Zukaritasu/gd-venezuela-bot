@@ -16,6 +16,7 @@
  */
 
 const { ChatInputCommandInteraction, EmbedBuilder } = require("discord.js");
+const profile = require('./profile.js')
 
 const chest = {
 	small: {
@@ -53,32 +54,46 @@ function padEnding(str, length) {
 /**
  * Returns the rewards for opening a chest based on the subcommand.
  * @param {string} subcommand - The subcommand indicating the type of chest opened.
- * @returns {Array<string>} An array of rewards received from the chest.
+ * @returns {{manaOrbes: number, chestKeys: number | undefined}} An object containing the rewards received from the chest.
  */
 function getRewards(subcommand) {
 	switch (subcommand) {
 		case "small":
-			return [
-				`\`${padEnding(chest.small.randomOrbe[Math.floor(Math.random() * chest.small.randomOrbe.length)].toString(), 8)}\` <:mana_orbe:1523732878347997344> orbes`
-			];
+			return {
+				manaOrbes: chest.small.randomOrbe[Math.floor(Math.random() * chest.small.randomOrbe.length)]
+			}
 		case "daily":
 			if (Math.random() < 0.5) {
-				return [
-					`\`${padEnding(chest.daily.randomOrbe[Math.floor(Math.random() * chest.daily.randomOrbe.length)].toString(), 8)}\` <:mana_orbe:1523732878347997344> orbes`,
-					`\`${padEnding(chest.daily.randomKey[Math.floor(Math.random() * chest.daily.randomKey.length)].toString(), 8)}\` <:chest_key:1523739081341800509> llave(s)`
-				];
+				return {
+					manaOrbes: chest.daily.randomOrbe[Math.floor(Math.random() * chest.daily.randomOrbe.length)],
+					chestKeys: chest.daily.randomKey[Math.floor(Math.random() * chest.daily.randomKey.length)]
+				}
 			}
-			return [
-				`\`${padEnding(chest.daily.randomOrbe[Math.floor(Math.random() * chest.daily.randomOrbe.length)].toString(), 8)}\` <:mana_orbe:1523732878347997344> orbes`
-			];
+			return {
+				manaOrbes: chest.daily.randomOrbe[Math.floor(Math.random() * chest.daily.randomOrbe.length)]
+			};
 		case "weekly":
-			return [
-				`\`${padEnding(chest.weekly.randomOrbe[Math.floor(Math.random() * chest.weekly.randomOrbe.length)].toString(), 8)}\` <:mana_orbe:1523732878347997344> orbes`,
-				`\`${padEnding(chest.weekly.randomKey[Math.floor(Math.random() * chest.weekly.randomKey.length)].toString(), 8)}\` <:chest_key:1523739081341800509> llave(s)`
-			];
+			return {
+				manaOrbes: chest.weekly.randomOrbe[Math.floor(Math.random() * chest.weekly.randomOrbe.length)],
+				chestKeys: chest.weekly.randomKey[Math.floor(Math.random() * chest.weekly.randomKey.length)]
+			};
 		default:
-			return [];
+			return {
+				manaOrbes: 0,
+				chestKeys: 0
+			};
 	}
+}
+
+function toStringRewards(rewards) {
+	const rewardStrings = [];
+	if (rewards.manaOrbes) {
+		rewardStrings.push(`\`${padEnding(rewards.manaOrbes.toString(), 8)}\` <:mana_orbe:1523732878347997344> orbes`);
+	}
+	if (rewards.chestKeys) {
+		rewardStrings.push(`\`${padEnding(rewards.chestKeys.toString(), 8)}\` <:chest_key:1523739081341800509> llave(s)`);
+	}
+	return rewardStrings;
 }
 
 /**
@@ -87,11 +102,21 @@ function getRewards(subcommand) {
  * @param {string} subcommand 
  */
 async function openChestCommand(interaction, subcommand) {
+	if (profile.isCooldownActive(interaction.user.id, `chest_${subcommand}`)) {
+		await interaction.reply({ content: "¡Ya has abierto un cofre recientemente! Por favor, espera un poco antes de intentarlo de nuevo.",
+			flags: MessageFlags.Ephemeral
+		});
+		return;
+	}
+
+	const rewards = getRewards(subcommand);
+	await profile.savePoints(interaction.user.id, rewards.manaOrbes, rewards.chestKeys || 0, `chest_${subcommand}`, chest[subcommand].waitMs);
+
 	const embed = new EmbedBuilder()
 		.setTitle(`Abriendo el cofre ${subcommand}`)
 		.setColor(chest[subcommand].color)
 		.setThumbnail(chest[subcommand].image)
-		.setDescription(`¡Felicidades! Has abierto un cofre ${subcommand} y has recibido tus recompensas.\n\n- ${getRewards(subcommand).join("\n- ")}\n\n-# Recuerda que puedes abrir un cofre ${subcommand} cada ${chest[subcommand].wait}. ¡Vuelve más tarde para obtener más recompensas!`);
+		.setDescription(`¡Felicidades! Has abierto un cofre ${subcommand} y has recibido tus recompensas.\n\n- ${toStringRewards(rewards).join("\n- ")}\n\n-# Próximo cofre en ${chest[subcommand].wait}.`);
 	await interaction.reply({ embeds: [embed] });
 }
 
