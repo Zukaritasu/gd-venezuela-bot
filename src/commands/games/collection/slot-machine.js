@@ -57,11 +57,9 @@ const demonPoints = {
  */
 async function slotMachineCommand(interaction) {
 	try {
-		await interaction.deferReply();
-
 		const timeDifference = { time: 0 };
 		if (await profile.isCooldownActive(interaction.user.id, TYPE_SLOT_MACHINE, timeDifference)) {
-			await interaction.editReply({
+			await interaction.reply({
 				content: `Por favor, espera ${utils.formatTimeMilliseconds(timeDifference.time)} antes de intentarlo de nuevo.`,
 				flags: MessageFlags.Ephemeral
 			});
@@ -75,7 +73,7 @@ async function slotMachineCommand(interaction) {
 		];
 
 		const message = `${slots.join(" ")}`;
-		await interaction.editReply({ content: message });
+		await interaction.reply({ content: message });
 
 		// Check if all slots are the same
 		const isWin = slots.every(slot => slot === slots[0]);
@@ -97,7 +95,7 @@ async function slotMachineCommand(interaction) {
 	} catch (e) {
 		logger.ERR(`Error executing slot machine command: ${e.message}`, e);
 		try {
-			await interaction.editReply({ content: "Ha ocurrido un error desconocido. Por favor, inténtalo de nuevo más tarde." });
+			await interaction.reply({ content: "Ha ocurrido un error desconocido. Por favor, inténtalo de nuevo más tarde." });
 		} catch {
 			
 		}
