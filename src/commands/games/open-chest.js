@@ -52,22 +52,22 @@ function getRewards(subcommand) {
 	switch (subcommand) {
 		case "small":
 			return [
-				chest.small.randomOrbe[Math.floor(Math.random() * chest.small.randomOrbe.length)] + " orbes"
+				chest.small.randomOrbe[Math.floor(Math.random() * chest.small.randomOrbe.length)] + "<:mana_orbe:1523732878347997344> orbes"
 			];
 		case "daily":
 			if (Math.random() < 0.5) {
 				return [
-					chest.daily.randomOrbe[Math.floor(Math.random() * chest.daily.randomOrbe.length)] + " orbes",
-					chest.daily.randomKey[Math.floor(Math.random() * chest.daily.randomKey.length)] + " llaves"
+					chest.daily.randomOrbe[Math.floor(Math.random() * chest.daily.randomOrbe.length)] + "<:mana_orbe:1523732878347997344> orbes",
+					chest.daily.randomKey[Math.floor(Math.random() * chest.daily.randomKey.length)] + "<:chest_key:1523739081341800509> llaves"
 				];
 			}
 			return [
-				chest.daily.randomOrbe[Math.floor(Math.random() * chest.daily.randomOrbe.length)] + " orbes"
+				chest.daily.randomOrbe[Math.floor(Math.random() * chest.daily.randomOrbe.length)] + "<:mana_orbe:1523732878347997344> orbes"
 			];
 		case "weekly":
 			return [
-				chest.weekly.randomOrbe[Math.floor(Math.random() * chest.weekly.randomOrbe.length)] + " orbes",
-				chest.weekly.randomKey[Math.floor(Math.random() * chest.weekly.randomKey.length)] + " llaves"
+				chest.weekly.randomOrbe[Math.floor(Math.random() * chest.weekly.randomOrbe.length)] + "<:mana_orbe:1523732878347997344> orbes",
+				chest.weekly.randomKey[Math.floor(Math.random() * chest.weekly.randomKey.length)] + "<:chest_key:1523739081341800509> llaves"
 			];
 		default:
 			return [];
