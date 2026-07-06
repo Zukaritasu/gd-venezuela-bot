@@ -231,6 +231,14 @@ async function getAllMembers(guild) {
     }
 }
 
+/**
+ * @param {number} ms - The number of milliseconds to sleep.
+ * @returns {Promise<void>} A promise that resolves after the specified time.
+ */
+async function sleep(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+}
+
 
 module.exports = {
     isValidYouTubeUrl,
@@ -245,5 +253,6 @@ module.exports = {
     formatDate,
     formatDateTime,
     getSHA256,
-    getAllMembers
+    getAllMembers,
+    sleep
 }
