@@ -58,7 +58,7 @@ async function slotMachineCommand(interaction) {
 	try {
 		await interaction.deferReply();
 
-		if (profile.isCooldownActive(interaction.user.id, TYPE_SLOT_MACHINE)) {
+		if (await profile.isCooldownActive(interaction.user.id, TYPE_SLOT_MACHINE)) {
 			await interaction.editReply({ content: "¡Ya has jugado la máquina tragamonedas recientemente! Por favor, espera un poco antes de intentarlo de nuevo." });
 			return;
 		}

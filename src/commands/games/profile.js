@@ -105,14 +105,9 @@ module.exports = {
 		const collection = global.database.collection(COLL_BOT_GAME_PROFILES);
 		const profile = await collection.findOne({ userId: userId });
 
-		if (!profile) {
-			logger.DBG("A")
-			return false;
-		}
+		if (!profile) return false;
 
 		const timeout = profile.timeouts.find(t => t.type === type);
-
-		logger.DBG("B")
 
 		return timeout && timeout.timestamp > Date.now();
 	}
