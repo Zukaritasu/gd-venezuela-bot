@@ -17,6 +17,7 @@
 
 const { ChatInputCommandInteraction, EmbedBuilder, MessageFlags } = require("discord.js");
 const profile = require('./profile.js')
+const utils = require('../../utils.js')
 
 const chest = {
 	small: {
