@@ -15,6 +15,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+const { ChatInputCommandInteraction } = require('discord.js');
 const { COLL_BOT_GAME_PROFILES } = require('../../../.botconfig/database-info.json')
 const logger = require('../../logger')
 
@@ -99,8 +100,30 @@ async function savePoints(userId, points, keys, type, timeOutMs) {
     }
 }
 
+async function getProfileInfo(userId) {
+	const collection = global.database.collection(COLL_BOT_GAME_PROFILES);
+	const profile = await collection.findOne({ userId: userId });
+
+	return profile
+}
+
 module.exports = {
 	savePoints,
+
+	getProfileInfo,
+
+	/**
+	 * 
+	 * @param {ChatInputCommandInteraction} interaction 
+	 */
+	profileCommand: async function(interaction) {
+		const profile = await getProfileInfo(interaction.user.id) 
+		if (profile) {
+			return await interaction.reply(`Tienes ${profile.points} <:mana_orbe:1523732878347997344> puntos y ${profile.keys} <:chest_key:1523739081341800509> llave(s).`)
+		}
+
+		await interaction.reply(`No tienes un perfil de jugador. ¡Juega a los juegos para crear uno y ganar puntos!`)
+	},
 
 	/**
 	 * Checks if a cooldown is active for a user's profile based on the specified type.
