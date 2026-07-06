@@ -17,11 +17,31 @@
 
 const { SlashCommandBuilder } = require("discord.js");
 
+/**
+ * Executes the appropriate game command based on the subcommand and subcommand group.
+ * @param {import("discord.js").Client} _client - The Discord client instance
+ * @param {import("mongodb").Db} _db - The MongoDB database instance
+ * @param {import("discord.js").ChatInputCommandInteraction} interaction - The command interaction object
+ */
 async function execute(_client, _db, interaction) {
+	const subcommandGroup = interaction.options.getSubcommandGroup();
 	const subcommand = interaction.options.getSubcommand();
+
+	if (subcommandGroup) {
+		if (subcommandGroup === 'open-chest') {
+			await require('./games/open-chest').openChestCommand(interaction, subcommand);
+		} else if (subcommandGroup === 'demon-boss') {
+			await require('./games/demon-boss').demonBossCommand(interaction, subcommand);
+		}
+		return
+	}
 
 	if (subcommand === 'slot-machine') {
 		await require('./games/collection/slot-machine').slotMachineCommand(interaction);
+	} else if (subcommand === 'profile') {
+		await require('./games/profile').profileCommand(interaction);
+	} else if (subcommand === 'tienda') {
+		await require('./games/tienda').tiendaCommand(interaction);
 	}
 }
 
