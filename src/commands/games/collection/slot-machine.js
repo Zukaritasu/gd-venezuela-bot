@@ -61,7 +61,7 @@ async function slotMachineCommand(interaction) {
 
 		const timeDifference = { time: 0 };
 		if (await profile.isCooldownActive(interaction.user.id, TYPE_SLOT_MACHINE, timeDifference)) {
-			await interaction.reply({
+			await interaction.editReply({
 				content: `Por favor, espera ${utils.formatTimeMilliseconds(timeDifference.time)} antes de intentarlo de nuevo.`,
 				flags: MessageFlags.Ephemeral
 			});
