@@ -43,6 +43,13 @@ const chest = {
 	}
 }
 
+function padEnding(str, length) {
+	while (str.length < length) {
+		str += " ";
+	}
+	return str;
+}
+
 /**
  * Returns the rewards for opening a chest based on the subcommand.
  * @param {string} subcommand - The subcommand indicating the type of chest opened.
@@ -52,22 +59,22 @@ function getRewards(subcommand) {
 	switch (subcommand) {
 		case "small":
 			return [
-				chest.small.randomOrbe[Math.floor(Math.random() * chest.small.randomOrbe.length)] + "<:mana_orbe:1523732878347997344> orbes"
+				`\`${padEnding(chest.small.randomOrbe[Math.floor(Math.random() * chest.small.randomOrbe.length)].toString(), 8)}\` <:mana_orbe:1523732878347997344> orbes`
 			];
 		case "daily":
 			if (Math.random() < 0.5) {
 				return [
-					chest.daily.randomOrbe[Math.floor(Math.random() * chest.daily.randomOrbe.length)] + "<:mana_orbe:1523732878347997344> orbes",
-					chest.daily.randomKey[Math.floor(Math.random() * chest.daily.randomKey.length)] + "<:chest_key:1523739081341800509> llaves"
+					`\`${padEnding(chest.daily.randomOrbe[Math.floor(Math.random() * chest.daily.randomOrbe.length)].toString(), 8)}\` <:mana_orbe:1523732878347997344> orbes`,
+					`\`${padEnding(chest.daily.randomKey[Math.floor(Math.random() * chest.daily.randomKey.length)].toString(), 8)}\` <:chest_key:1523739081341800509> llave(s)`
 				];
 			}
 			return [
-				chest.daily.randomOrbe[Math.floor(Math.random() * chest.daily.randomOrbe.length)] + "<:mana_orbe:1523732878347997344> orbes"
+				`\`${padEnding(chest.daily.randomOrbe[Math.floor(Math.random() * chest.daily.randomOrbe.length)].toString(), 8)}\` <:mana_orbe:1523732878347997344> orbes`
 			];
 		case "weekly":
 			return [
-				chest.weekly.randomOrbe[Math.floor(Math.random() * chest.weekly.randomOrbe.length)] + "<:mana_orbe:1523732878347997344> orbes",
-				chest.weekly.randomKey[Math.floor(Math.random() * chest.weekly.randomKey.length)] + "<:chest_key:1523739081341800509> llaves"
+				`\`${padEnding(chest.weekly.randomOrbe[Math.floor(Math.random() * chest.weekly.randomOrbe.length)].toString(), 8)}\` <:mana_orbe:1523732878347997344> orbes`,
+				`\`${padEnding(chest.weekly.randomKey[Math.floor(Math.random() * chest.weekly.randomKey.length)].toString(), 8)}\` <:chest_key:1523739081341800509> llave(s)`
 			];
 		default:
 			return [];
