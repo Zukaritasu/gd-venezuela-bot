@@ -68,14 +68,14 @@ async function slotMachineCommand(interaction) {
 		const isWin = slots.every(slot => slot === slots[0]);
 		if (isWin) {
 			const points = demonPoints[slots[0]] * 3; // Triple the points for three matching symbols
-			await interaction.channel.send(`${interaction.user} ¡Felicidades! Has ganado ${points} puntos`);
+			await interaction.channel.send(`${interaction.user} ¡Felicidades! Has ganado **${points} puntos**`);
 		} else if (slots[0] !== slots[1] && slots[1] !== slots[2] && slots[0] !== slots[2]) {
-			await interaction.channel.send(`${interaction.user} ¡No has ganado esta vez! No hay símbolos repetidos. ¡Sigue intentándolo!`);
+			await interaction.channel.send(`${interaction.user} ¡No has ganado esta vez! No hay demons repetidos. ¡Sigue intentándolo!`);
 		} else {
 			const repeatedSlot = slots.sort()[1]; // Get the middle slot after sorting
 			const points = demonPoints[repeatedSlot] * 2; // Double the points for two matching symbols
 			const randomMessage = encouragingMessages[Math.floor(Math.random() * encouragingMessages.length)];
-			await interaction.channel.send(`${interaction.user} ¡No has ganado esta vez! Has obtenido ${points} puntos. ${randomMessage}`);
+			await interaction.channel.send(`${interaction.user} ¡No has ganado esta vez! Has obtenido **${points} puntos**. ${randomMessage}`);
 		}
 	} catch (e) {
 		logger.ERR(`Error executing slot machine command: ${e.message}`, e);
