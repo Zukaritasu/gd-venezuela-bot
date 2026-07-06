@@ -61,7 +61,7 @@ async function slotMachineCommand(interaction) {
 			demonEmojis[Math.floor(Math.random() * demonEmojis.length)]
 		];
 
-		const message = `Resultado de la máquina tragamonedas...\n\n ${slots.join(" ")}`;
+		const message = `${slots.join(" ")}`;
 		await interaction.editReply({ content: message });
 
 		// Check if all slots are the same
