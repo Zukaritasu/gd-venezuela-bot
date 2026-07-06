@@ -78,7 +78,7 @@ async function slotMachineCommand(interaction) {
 		// Check if all slots are the same
 		const isWin = slots.every(slot => slot === slots[0]);
 
-		let points = 0;
+		let points = -10;
 		if (isWin) {
 			points = demonPoints[slots[0]] * 3; // Triple the points for three matching symbols
 			await interaction.channel.send(`${interaction.user} ¡Felicidades! Has ganado **${points} puntos**`);
