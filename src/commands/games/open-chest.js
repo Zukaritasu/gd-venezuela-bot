@@ -15,7 +15,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-const { ChatInputCommandInteraction, EmbedBuilder } = require("discord.js");
+const { ChatInputCommandInteraction, EmbedBuilder, MessageFlags } = require("discord.js");
 const profile = require('./profile.js')
 
 const chest = {

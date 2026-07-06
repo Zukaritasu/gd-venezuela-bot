@@ -17,7 +17,8 @@
 
 const utils = require("../../../utils.js");
 const logger = require("../../../logger.js");
-const profile = require('../profile.js')
+const profile = require('../profile.js');
+const { MessageFlags } = require("discord.js");
 
 const TYPE_SLOT_MACHINE = "slot_machine";
 
