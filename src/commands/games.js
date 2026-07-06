@@ -28,11 +28,56 @@ async function execute(_client, _db, interaction) {
 module.exports = {
     data: new SlashCommandBuilder()
         .setName('game')
-        .setDescription('Juegos disponibles en el bot')
+        .setDescription('Juegos disponibles')
 		.addSubcommand(subcommand =>
 			subcommand
 				.setName('slot-machine')
 				.setDescription('Juega a la máquina tragamonedas')
+		)
+		.addSubcommand(subcommand =>
+			subcommand
+				.setName('profile')
+				.setDescription('Mira tu perfil de jugador')
+		)
+		.addSubcommand(subcommand =>
+			subcommand
+				.setName('tienda')
+				.setDescription('Mira la tienda de recompensas')
+		)
+		.addSubcommandGroup(subcommandGroup =>
+			subcommandGroup
+				.setName('open-chest')
+				.setDescription('Abre un cofre para obtener recompensas')
+				.addSubcommand(subcommand =>
+					subcommand
+						.setName('small')
+						.setDescription('Abre un cofre cada 3 horas')
+				)
+				.addSubcommand(subcommand =>
+					subcommand
+						.setName('daily')
+						.setDescription('Abre un cofre cada 24 horas')
+				)
+				.addSubcommand(subcommand =>
+					subcommand
+						.setName('weekly')
+						.setDescription('Abre un cofre cada 7 días')
+				)
+		)
+		.addSubcommandGroup(subcommandGroup =>
+			subcommandGroup
+				.setName('demon-boss')
+				.setDescription('Lucha contra el Demon para obtener recompensas')
+				.addSubcommand(subcommand =>
+					subcommand
+						.setName('actual')
+						.setDescription('Demon semanal actual')
+				)
+				.addSubcommand(subcommand =>
+					subcommand
+						.setName('saltar')
+						.setDescription('Salta para derrotar al Demon actual')
+				)
 		),
-    execute,
+    execute
 };
