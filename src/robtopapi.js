@@ -130,7 +130,8 @@ async function getUserInfo(accountID) {
                 'Content-Type': 'application/x-www-form-urlencoded'
             },
             httpsAgent: agent,
-            httpAgent: agent
+            httpAgent: agent,
+            timeout: 20000
         });
     } catch (error) {
         if (error?.response?.status !== 429 && error?.response?.status !== 403) {
