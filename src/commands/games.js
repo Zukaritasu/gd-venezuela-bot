@@ -52,7 +52,7 @@ module.exports = {
 		.addSubcommand(subcommand =>
 			subcommand
 				.setName('slot-machine')
-				.setDescription('Juega a la máquina tragamonedas')
+				.setDescription('Juega a la máquina tragaperra')
 		)
 		.addSubcommand(subcommand =>
 			subcommand
