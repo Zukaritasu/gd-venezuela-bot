@@ -71,25 +71,33 @@ function getLevelName(levelName) {
 
 /**
  * Fetches the GD Venezuela List from GitHub.
- * @returns {Promise<{sha: string, content: string[]}>} The list levels with SHA and content.
+ * @returns {Promise<{sha: string, content: string[]} | null>} An object containing the SHA and content
+ * of the list, or null if the request fails with a 502 status.
  * @throws {Error} If the request fails or the response is not successful.
  */
 async function getListLevels() {
-    const response = await axios.get(`${process.env.URL_API_GITHUB}/public/data/_list-plat.json`, {
-        headers: {
-            Authorization: `token ${GITHUB_TOKEN}`
+    try {
+        const response = await axios.get(`${process.env.URL_API_GITHUB}/public/data/_list-plat.json`, {
+            headers: {
+                Authorization: `token ${GITHUB_TOKEN}`
+            }
+        });
+
+        if (response.status !== 200) {
+            throw new Error(`Failed to fetch GD Venezuela List: ${response.statusText}`);
         }
-    });
 
-    if (response.status !== 200) {
-        throw new Error(`Failed to fetch GD Venezuela List: ${response.statusText}`);
+        const raw = JSON.parse(Buffer.from(response.data.content, "base64").toString());
+        return {
+            sha: response.data.sha,
+            content: Array.isArray(raw) ? raw : Object.values(raw)
+        };
+    } catch (error) {
+        if (error.response && error.response.status === 502) {
+            return null
+        }
+        throw error;
     }
-
-    const raw = JSON.parse(Buffer.from(response.data.content, "base64").toString());
-    return {
-        sha: response.data.sha,
-        content: Array.isArray(raw) ? raw : Object.values(raw)
-    };
 }
 
 /**
@@ -347,7 +355,18 @@ async function service(db, client) {
         try {
             if (await isListUpdatable(db)) {
                 /** @type {ListData} */
-                const listData = await getListLevels();
+                let listData = null;
+                let retries = 3
+
+                while (retries > 0) {
+                    listData = await getListLevels()
+                    if (listData !== null) {
+                        break
+                    }
+
+                    retries--
+                }
+                
                 const currentLevels = await aredlapi.getLevelsPlatformer();
                 /** @type {NormalizedLevel[]} */
                 let normalizedLevels = currentLevels.filter(level => listData.content.includes(level.level_id.toString()))
