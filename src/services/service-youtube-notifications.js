@@ -100,7 +100,6 @@ async function autoUpdateSuscription() {
 async function GET_verifyWebhook(req, res) {
 	const challenge = req.query['hub.challenge'];
 	if (challenge) {
-		logger.DBG(JSON.stringify(challenge))
 		return res.status(200).send(challenge);
 	}
 	res.status(400).send('No challenge found');
@@ -118,10 +117,10 @@ async function GET_verifyWebhook(req, res) {
  * @returns {Promise<void>} Responds to the webhook notification.
  */
 async function POST_youtubeWebhook(req, res) {
-    res.status(200).end();
-
     try {
         const jsonObj = parser.parse(req.body);
+
+        logger.DBG(JSON.stringify(req.body));
         
         const entries = Array.isArray(jsonObj.feed?.entry) 
             ? jsonObj.feed.entry 
@@ -156,8 +155,11 @@ async function POST_youtubeWebhook(req, res) {
                 }
             }
         }
+
+        res.status(200).end();
     } catch (error) {
         logger.ERR(error);
+        res.status(200).end();
     }
 }
 
