@@ -68,7 +68,7 @@ async function executeSubprocess(command) {
 
         child.on('exit', (code) => {
             logger.INF(`Subprocess terminated with code ${code}`);
-            resolve(success);
+            resolve(code == 0);
         });
 
         child.on('error', (error) => {
