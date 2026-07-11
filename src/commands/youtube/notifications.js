@@ -17,6 +17,7 @@
 
 const { ChatInputCommandInteraction, GuildMember, MessageFlags } = require("discord.js");
 const { COLL_YOUTUBE_CHANNELS } = require('../../../.botconfig/database-info.json')
+const { YOUTUBE_WEBHOOK_SECRET, YOUTUBE_NOTIFICATIONS_PORT } = require('../../../.botconfig/token.json')
 const { Db } = require("mongodb");
 const axios = require('axios')
 const logger = require('../../logger')
@@ -56,7 +57,7 @@ async function subscribeUnsubscribe(webhookUrl, channelId, isSubscribe) {
 
 	if (isSubscribe) {
 		params.append('hub.lease_seconds', '345600'); // 4 days
-		params.append('hub.secret', process.env.YOUTUBE_WEBHOOK_SECRET);
+		params.append('hub.secret', YOUTUBE_WEBHOOK_SECRET);
 	}
 
 	try {
@@ -102,7 +103,7 @@ async function setEnabled(interaction, isEnabled) {
 
 		if (channel.isEnabled !== isEnabled) {
 			const isSubscribeSuccessful = await subscribeUnsubscribe(
-				`http://${PUBLIC_IP}:${process.env.YOUTUBE_NOTIFICATIONS_PORT}/youtube-webhook`,
+				`http://${PUBLIC_IP}:${YOUTUBE_NOTIFICATIONS_PORT}/youtube-webhook`,
 				channel.channelId,
 				isEnabled
 			)
@@ -258,7 +259,7 @@ async function configure(interaction) {
         if (channel.isEnabled && channelUrl && oldChannelId !== channel.channelId) {
             if (oldChannelId) {
                 const ok = await subscribeUnsubscribe(
-                    `http://${PUBLIC_IP}:${process.env.YOUTUBE_NOTIFICATIONS_PORT}/youtube-webhook`,
+                    `http://${PUBLIC_IP}:${YOUTUBE_NOTIFICATIONS_PORT}/youtube-webhook`,
                     oldChannelId,
                     false
                 )
@@ -271,7 +272,7 @@ async function configure(interaction) {
             }
 
             isSubscribeSuccessful = await subscribeUnsubscribe(
-                `http://${PUBLIC_IP}:${process.env.YOUTUBE_NOTIFICATIONS_PORT}/youtube-webhook`,
+                `http://${PUBLIC_IP}:${YOUTUBE_NOTIFICATIONS_PORT}/youtube-webhook`,
                 channel.channelId, 
                 channel.isEnabled
             )

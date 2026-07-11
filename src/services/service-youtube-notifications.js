@@ -23,7 +23,7 @@ const logger = require('../logger.js');
 const utils = require('../utils.js');
 const { YOUTUBE_NOTIFICATIONS, BOT_TESTING } = require('../../.botconfig/channels.json')
 const { COLL_YOUTUBE_CHANNELS, COLL_CONFIG } = require('../../.botconfig/database-info.json')
-const { PUBLIC_IP } = require('../../.botconfig/token.json')
+const { PUBLIC_IP, YOUTUBE_NOTIFICATIONS_PORT } = require('../../.botconfig/token.json')
 const { XMLParser } = require('fast-xml-parser');
 const notifications = require('../commands/youtube/notifications.js')
 
@@ -59,7 +59,7 @@ const globalRef = global;
  * @returns {Promise<void>} Resolves when all subscription requests are sent.
  */
 async function autoUpdateSuscription() {
-    const webhookUrl = `http://${PUBLIC_IP}:${process.env.YOUTUBE_NOTIFICATIONS_PORT}/youtube-webhook`
+    const webhookUrl = `http://${PUBLIC_IP}:${YOUTUBE_NOTIFICATIONS_PORT}/youtube-webhook`
     
     /** @type {YouTubeChannel[]} */
     const youtubeChannels = await globalRef.database.collection(COLL_YOUTUBE_CHANNELS).find().toArray()
@@ -192,8 +192,8 @@ async function service(_db, client) {
 	app.get('/youtube-webhook', GET_verifyWebhook);
 	app.post('/youtube-webhook', POST_youtubeWebhook);
 
-	const serverInstance = app.listen(parseInt(process.env.YOUTUBE_NOTIFICATIONS_PORT, 10), '0.0.0.0', () => {
-		logger.INF(`YouTube notifications service listening on port ${process.env.YOUTUBE_NOTIFICATIONS_PORT}`);
+	const serverInstance = app.listen(YOUTUBE_NOTIFICATIONS_PORT, '0.0.0.0', () => {
+		logger.INF(`YouTube notifications service listening on port ${YOUTUBE_NOTIFICATIONS_PORT}`);
 	});
 
 	const timeout = setInterval(autoUpdateSuscription, 1000 * 60 * 60); // 1 hour
