@@ -70,9 +70,9 @@ async function subscribeUnsubscribe(webhookUrl, channelId, isSubscribe) {
 			}
 		});
 
-        logger.DBG(JSON.stringify(response))
+        logger.DBG(response.status)
 
-		return response.status === 204
+		return response.status === 202
 	} catch (e) {
 		logger.ERR(e)
 	}
