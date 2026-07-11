@@ -50,9 +50,6 @@ const globalRef = global;
  * otherwise false.
  */
 async function subscribeUnsubscribe(webhookUrl, channelId, isSubscribe) {
-
-    logger.DBG(webhookUrl, channelId, isSubscribe)
-
 	const params = new URLSearchParams();
 	params.append('hub.callback', webhookUrl);
 	params.append('hub.topic', `https://www.youtube.com/xml/feeds/videos.xml?channel_id=${channelId}`);
@@ -69,8 +66,6 @@ async function subscribeUnsubscribe(webhookUrl, channelId, isSubscribe) {
 				'Content-Type': 'application/x-www-form-urlencoded'
 			}
 		});
-
-        logger.DBG(response.status)
 
 		return response.status === 202
 	} catch (e) {
