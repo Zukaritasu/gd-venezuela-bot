@@ -118,10 +118,9 @@ async function GET_verifyWebhook(req, res) {
  */
 async function POST_youtubeWebhook(req, res) {
     try {
+        logger.DBG(JSON.stringify(req));
         const jsonObj = parser.parse(req.body);
 
-        logger.DBG(JSON.stringify(req.body));
-        
         const entries = Array.isArray(jsonObj.feed?.entry) 
             ? jsonObj.feed.entry 
             : jsonObj.feed?.entry ? [jsonObj.feed.entry] : [];
