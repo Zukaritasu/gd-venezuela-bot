@@ -60,10 +60,10 @@ const globalRef = global;
  */
 async function autoUpdateSuscription() {
     const webhookUrl = `http://${PUBLIC_IP}:${YOUTUBE_NOTIFICATIONS_PORT}/youtube-webhook`
-    
+
     /** @type {YouTubeChannel[]} */
     const youtubeChannels = await globalRef.database.collection(COLL_YOUTUBE_CHANNELS).find().toArray()
-    
+
     for (const channel of youtubeChannels) {
         if (!channel.isEnabled) continue;
 
@@ -78,7 +78,7 @@ async function autoUpdateSuscription() {
                     { $set: { datetimeSub: Date.now() } }
                 )
             }
-            
+
             await utils.sleep(500)
         }
     }
@@ -98,11 +98,11 @@ async function autoUpdateSuscription() {
  * challenge token or an error status.
  */
 async function GET_verifyWebhook(req, res) {
-	const challenge = req.query['hub.challenge'];
-	if (challenge) {
-		return res.status(200).send(challenge);
-	}
-	res.status(400).send('No challenge found');
+    const challenge = req.query['hub.challenge'];
+    if (challenge) {
+        return res.status(200).send(challenge);
+    }
+    res.status(400).send('No challenge found');
 }
 
 /**
@@ -118,11 +118,18 @@ async function GET_verifyWebhook(req, res) {
  */
 async function POST_youtubeWebhook(req, res) {
     try {
-        logger.DBG(JSON.stringify(req));
+        logger.DBG(JSON.stringify({
+            url: req.url,
+            method: req.method,
+            headers: req.headers,
+            query: req.query,
+            body: req.body
+        }, null, 2));
+
         const jsonObj = parser.parse(req.body);
 
-        const entries = Array.isArray(jsonObj.feed?.entry) 
-            ? jsonObj.feed.entry 
+        const entries = Array.isArray(jsonObj.feed?.entry)
+            ? jsonObj.feed.entry
             : jsonObj.feed?.entry ? [jsonObj.feed.entry] : [];
 
         for (const entry of entries) {
@@ -130,12 +137,12 @@ async function POST_youtubeWebhook(req, res) {
 
             const videoId = entry['yt:videoId'];
             const channelId = entry['yt:channelId'];
-            
+
             if (!videoId || !channelId) continue;
 
             const published = new Date(entry.published).getTime();
             const updated = new Date(entry.updated).getTime();
-            
+
             const oneHourMs = 1000 * 60 * 60;
             if (Date.now() - published > oneHourMs) {
                 logger.DBG(`Ignorando video ${videoId} porque es una edición o contenido antiguo.`);
@@ -175,45 +182,45 @@ async function POST_youtubeWebhook(req, res) {
  * An object representing the service control interface.
  */
 async function service(_db, client) {
-	const guild = await client.guilds.fetch(process.env.SERVER_GD_VENEZUELA_ID);
-	if (!guild) {
-		throw new Error(`Guild not found ${process.env.SERVER_GD_VENEZUELA_ID}`);
-	}
+    const guild = await client.guilds.fetch(process.env.SERVER_GD_VENEZUELA_ID);
+    if (!guild) {
+        throw new Error(`Guild not found ${process.env.SERVER_GD_VENEZUELA_ID}`);
+    }
 
-	globalRef.guild = guild
+    globalRef.guild = guild
 
-	app.use(express.text({
-		type: [
-			'text/xml',
-			'application/xml',
-			'text/plain'
-		]
-	}));
+    app.use(express.text({
+        type: [
+            'text/xml',
+            'application/xml',
+            'text/plain'
+        ]
+    }));
 
-	app.get('/youtube-webhook', GET_verifyWebhook);
-	app.post('/youtube-webhook', POST_youtubeWebhook);
+    app.get('/youtube-webhook', GET_verifyWebhook);
+    app.post('/youtube-webhook', POST_youtubeWebhook);
 
-	const serverInstance = app.listen(YOUTUBE_NOTIFICATIONS_PORT, '0.0.0.0', () => {
-		logger.INF(`YouTube notifications service listening on port ${YOUTUBE_NOTIFICATIONS_PORT}`);
-	});
+    const serverInstance = app.listen(YOUTUBE_NOTIFICATIONS_PORT, '0.0.0.0', () => {
+        logger.INF(`YouTube notifications service listening on port ${YOUTUBE_NOTIFICATIONS_PORT}`);
+    });
 
-	const timeout = setInterval(autoUpdateSuscription, 1000 * 60 * 60); // 1 hour
+    const timeout = setInterval(autoUpdateSuscription, 1000 * 60 * 60); // 1 hour
 
-	return {
-		stop: () => {
-			if (serverInstance) {
-				serverInstance.close((err) => {
+    return {
+        stop: () => {
+            if (serverInstance) {
+                serverInstance.close((err) => {
                     if (err) logger.ERR(err);
                 });
-			}
+            }
 
-			clearInterval(timeout)
-		},
+            clearInterval(timeout)
+        },
 
-		description: 'Service YouTube notifications for new videos from subscribed channels',
-		name: 'service-youtube-notifications',
-		fullname: 'YouTube Notifications Service'
-	}
+        description: 'Service YouTube notifications for new videos from subscribed channels',
+        name: 'service-youtube-notifications',
+        fullname: 'YouTube Notifications Service'
+    }
 }
 
 module.exports = { start: service }
