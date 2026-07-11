@@ -24,11 +24,10 @@ const utils = require('../utils.js');
 const { YOUTUBE_NOTIFICATIONS, BOT_TESTING } = require('../../.botconfig/channels.json')
 const { COLL_YOUTUBE_CHANNELS, COLL_CONFIG } = require('../../.botconfig/database-info.json')
 const { PUBLIC_IP, YOUTUBE_NOTIFICATIONS_PORT } = require('../../.botconfig/token.json')
-const { XMLParser } = require('fast-xml-parser');
 const notifications = require('../commands/youtube/notifications.js')
+const { XMLParser } = require('fast-xml-parser');
 
 const parser = new XMLParser();
-
 const app = express();
 
 /**
@@ -193,6 +192,7 @@ async function service(_db, client) {
         type: [
             'text/xml',
             'application/xml',
+            'application/atom+xml',
             'text/plain'
         ]
     }));
