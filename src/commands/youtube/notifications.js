@@ -15,7 +15,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-const { ChatInputCommandInteraction, GuildMember, MessageFlags, ModalSubmitInteraction, ActionRowBuilder, TextInputBuilder, ModalBuilder } = require("discord.js");
+const { ChatInputCommandInteraction, GuildMember, MessageFlags, ModalSubmitInteraction, ActionRowBuilder, TextInputBuilder, ModalBuilder, TextInputStyle } = require("discord.js");
 const { COLL_YOUTUBE_CHANNELS } = require('../../../.botconfig/database-info.json')
 const { YOUTUBE_WEBHOOK_SECRET, YOUTUBE_NOTIFICATIONS_PORT } = require('../../../.botconfig/token.json')
 const { Db } = require("mongodb");
