@@ -238,6 +238,10 @@ function getEventsFromLevelChange(change, normalizedLevels, oldNormalizedLevels)
         pushed2Target: null
     }
 
+    if (events.from > 50 && events.to > 50) {
+        return false // Skip levels that aren't in the top 50 to avoid change log spam
+    }
+
     // The level that has changed range in the list due to the movement of
     // the affected level before the list normalization is extracted
     if (events.from > 75 && events.to <= 75 && events.from <= 150) {
