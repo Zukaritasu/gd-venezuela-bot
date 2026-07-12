@@ -342,11 +342,11 @@ async function testNotification(interaction) {
 
 		if (typeNotif === 'video') {
 			await interaction.editReply({
-				content: `<@&1120424697918652609>\n${channel.commentNewVideo} https://www.youtube.com/watch?v=E_xqy5GjjzI`
+				content: `<@&${process.env.ID_ROL_YOUTUBE_NOTIFICACIONES}>\n${channel.commentNewVideo} https://www.youtube.com/watch?v=E_xqy5GjjzI`
 			})
 		} else if (typeNotif === 'stream') {
 			await interaction.editReply({
-				content: `<@&1120424697918652609>\n${channel.commentNewStream} https://www.youtube.com/watch?v=E_xqy5GjjzI`
+				content: `<@&${process.env.ID_ROL_YOUTUBE_NOTIFICACIONES}>\n${channel.commentNewStream} https://www.youtube.com/watch?v=E_xqy5GjjzI`
 			})
 		} else {
             await interaction.editReply({
