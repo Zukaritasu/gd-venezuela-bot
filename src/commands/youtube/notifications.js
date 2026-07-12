@@ -23,6 +23,8 @@ const axios = require('axios')
 const logger = require('../../logger')
 const { PUBLIC_IP } = require('../../../.botconfig/token.json')
 
+const WEBHOOK_URL = `http://${PUBLIC_IP}:${YOUTUBE_NOTIFICATIONS_PORT}/youtube-webhook`;
+
 /**
  * @typedef {Object} YouTubeChannel
  * 
@@ -103,7 +105,7 @@ async function setEnabled(interaction, isEnabled) {
 
 		if (channel.isEnabled !== isEnabled) {
 			const isSubscribeSuccessful = await subscribeUnsubscribe(
-				`http://${PUBLIC_IP}:${YOUTUBE_NOTIFICATIONS_PORT}/youtube-webhook`,
+				WEBHOOK_URL,
 				channel.channelId,
 				isEnabled
 			)
@@ -156,7 +158,7 @@ async function setEnabled(interaction, isEnabled) {
  */
 function containsIllegalTags(comment) {
 	const hasEveryoneOrHere = /@(everyone|here)\b/i.test(comment);
-	const hasDiscordTags = /<(?!a?:\w+:\d+)[@#\/&][^>]+>/.test(comment);
+	const hasDiscordTags = /<(@|@&|#|\/)[^>]+>/.test(comment);
 	const hasMaskedLinks = /\[[^\]]+\]\(\s*https?:\/\/[^\s)]+\)/i.test(comment);
 
 	return hasEveryoneOrHere || hasDiscordTags || hasMaskedLinks;
@@ -244,14 +246,18 @@ async function configure(interaction) {
             }
         } else {
             oldChannelId = channel.channelId
+            
+            if (channelId && oldChannelId !== channelId) {
+                channel.channelId = channelId;
+                if (channel.isEnabled) {
+                    channel.datetimeSub = Date.now();
+                }
+            }
+
             channel.channelName = channelName || channel.channelName
-            channel.channelId = channelId || channel.channelId
             channel.commentNewVideo = commentNewVideo || channel.commentNewVideo
             channel.commentNewStream = commentNewStream || channel.commentNewStream
 
-            if (channel.isEnabled && channelUrl && oldChannelId !== channel.channelId) {
-                channel.datetimeSub = Date.now()
-            }
         }
 
         let isSubscribeSuccessful = true
@@ -259,7 +265,7 @@ async function configure(interaction) {
         if (channel.isEnabled && channelUrl && oldChannelId !== channel.channelId) {
             if (oldChannelId) {
                 const ok = await subscribeUnsubscribe(
-                    `http://${PUBLIC_IP}:${YOUTUBE_NOTIFICATIONS_PORT}/youtube-webhook`,
+                    WEBHOOK_URL,
                     oldChannelId,
                     false
                 )
@@ -272,27 +278,27 @@ async function configure(interaction) {
             }
 
             isSubscribeSuccessful = await subscribeUnsubscribe(
-                `http://${PUBLIC_IP}:${YOUTUBE_NOTIFICATIONS_PORT}/youtube-webhook`,
+                WEBHOOK_URL,
                 channel.channelId, 
-                channel.isEnabled
+                true
             )
         }
 
-        if (isSubscribeSuccessful) {
-            await globalRef.database.collection(COLL_YOUTUBE_CHANNELS).updateOne(
-                { userId: interaction.user.id },
-                { $set: channel },
-                { upsert: true }
-            )
-
-            await interaction.editReply({
-                content: 'Configuración del canal actualizada correctamente!'
-            })
-        } else {
-            await interaction.editReply({
+        if (channel.isEnabled && !isSubscribeSuccessful) {
+            return await interaction.editReply({
                 content: 'No se ha podido suscribir tu canal de YouTube. Revisa que el link de tu canal sea válido'
             })
         }
+
+        await globalRef.database.collection(COLL_YOUTUBE_CHANNELS).updateOne(
+            { userId: interaction.user.id },
+            { $set: channel },
+            { upsert: true }
+        )
+
+        await interaction.editReply({
+            content: 'Configuración del canal actualizada correctamente!'
+        })
     } catch (error) {
         try {
             logger.ERR(error)
