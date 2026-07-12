@@ -127,7 +127,7 @@ async function sendNewVideo(videoInfo, isStream) {
 
     if (youtubeChannel && youtubeChannel.isEnabled) {
         /** @type {TextChannel} */
-        const channel = globalRef.guild.channels.cache.get(BOT_TESTING);
+        const channel = globalRef.guild.channels.cache.get(YOUTUBE_NOTIFICATIONS);
         if (channel) {
             await channel.send(`<@&${process.env.ID_ROL_YOUTUBE_NOTIFICACIONES}>\n${
                 isStream ? youtubeChannel.commentNewStream : youtubeChannel.commentNewVideo
