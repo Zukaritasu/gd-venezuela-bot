@@ -27,7 +27,7 @@ async function execute(_client, _db, interaction) {
 	const subcommand = interaction.options.getSubcommand();
 
 	if (subcommand === 'configurar') {
-		await require('./youtube/notifications').configure(interaction);
+		await require('./youtube/notifications').configureYoutubeNotifications(interaction);
 	} else if (subcommand === 'desactivar') {
 		await require('./youtube/notifications').setEnabled(interaction, false);
 	} else if (subcommand === 'activar') {
@@ -41,7 +41,7 @@ module.exports = {
 	data: new SlashCommandBuilder()
 		.setName('youtube')
 		.setDescription('Canales de YouTube')
-		.addSubcommand(subcommand =>
+		/* .addSubcommand(subcommand =>
 			subcommand
 				.setName('configurar')
 				.setDescription('Configura tu notificacion')
@@ -65,6 +65,11 @@ module.exports = {
 						.setName('message_stream')
 						.setDescription('Mensaje de tu notificacion cuando inicias directo')
 				)
+		) */
+		.addSubcommand(subcommand =>
+			subcommand
+				.setName('configurar')
+				.setDescription('Configurar las notificaciones de YouTube')
 		)
 		.addSubcommand(subcommand =>
 			subcommand

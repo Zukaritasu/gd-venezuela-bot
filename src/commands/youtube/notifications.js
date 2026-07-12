@@ -15,7 +15,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-const { ChatInputCommandInteraction, GuildMember, MessageFlags } = require("discord.js");
+const { ChatInputCommandInteraction, GuildMember, MessageFlags, ModalSubmitInteraction, ActionRowBuilder, TextInputBuilder, ModalBuilder } = require("discord.js");
 const { COLL_YOUTUBE_CHANNELS } = require('../../../.botconfig/database-info.json')
 const { YOUTUBE_WEBHOOK_SECRET, YOUTUBE_NOTIFICATIONS_PORT } = require('../../../.botconfig/token.json')
 const { Db } = require("mongodb");
@@ -185,10 +185,23 @@ async function configure(interaction) {
             })
         }
 
-        const channelName = interaction.options.getString('channel_name')
-        const channelId = interaction.options.getString('channel_id')
-        const commentNewVideo = interaction.options.getString('message_video')
-        const commentNewStream = interaction.options.getString('message_stream')
+        const isModalSubmit = interaction.isModalSubmit()
+
+        if (isModalSubmit && !('youtubeNotificationData' in interaction)) {
+            throw new Error('Configuration data not found')
+        }
+
+        const channelName = isModalSubmit ? interaction.youtubeNotificationData.channelName : 
+            interaction.options.getString('channel_name')
+        
+        const channelId = isModalSubmit ? interaction.youtubeNotificationData.channelId : 
+            interaction.options.getString('channel_id')
+
+        const commentNewVideo = isModalSubmit ? interaction.youtubeNotificationData.commentNewVideo : 
+            interaction.options.getString('message_video')
+
+        const commentNewStream = isModalSubmit ? interaction.youtubeNotificationData.commentNewStream :
+            interaction.options.getString('message_stream')
 
         if (!channelName && !channelId && !commentNewVideo && !commentNewStream) {
             return await interaction.reply({
@@ -307,6 +320,80 @@ async function configure(interaction) {
     } catch (error) {
         try {
             logger.ERR(error)
+            if (interaction.deferred) {
+                await interaction.editReply('Ha ocurrido un error desconocido. Inténtalo más tarde')
+            } else {
+                await interaction.reply('Ha ocurrido un error desconocido. Inténtalo más tarde')
+            }
+        } catch {
+
+        }
+    }
+}
+
+/**
+ * 
+ * @param {ChatInputCommandInteraction} interaction
+ * @returns {Promise<Message | void>}
+ */
+async function configureYoutubeNotifications(interaction) {
+    try {
+        if (!interaction.member.roles.cache.find(role => role.id === process.env.ID_ROL_NOTABLE)) {
+            return await interaction.reply({
+                content: 'Usuario no autorizado',
+                flags: MessageFlags.Ephemeral
+            })
+        }
+
+        /** @type {YouTubeChannel} */
+        let channel = await globalRef.database.collection(COLL_YOUTUBE_CHANNELS).findOne({
+            userId: interaction.user.id
+        })
+
+        const modal = new ModalBuilder()
+            .setCustomId('configureYoutubeNotifications')
+            .setTitle('Configurar Notificaciones de YouTube');
+
+        // Crear inputs
+        const channelNameInput = new TextInputBuilder()
+            .setCustomId('channel_name')
+            .setLabel('Define el nombre de tu canal de YouTube')
+            .setStyle(TextInputStyle.Short)
+            .setValue(channel?.channelName || '')
+            .setRequired(true)
+
+        const channelIdInput = new TextInputBuilder()
+            .setCustomId('channel_id')
+            .setLabel('ID del Canal')
+            .setStyle(TextInputStyle.Short)
+            .setValue(channel?.channelId || '')
+            .setRequired(true)
+
+        const videoMessageInput = new TextInputBuilder()
+            .setCustomId('message_video')
+            .setLabel('Mensaje para nuevos videos')
+            .setStyle(TextInputStyle.Paragraph)
+            .setValue(channel?.commentNewVideo || '')
+            .setRequired(false)
+
+        const streamMessageInput = new TextInputBuilder()
+            .setCustomId('message_stream')
+            .setLabel('Mensaje para nuevos directos')
+            .setStyle(TextInputStyle.Paragraph)
+            .setValue(channel?.commentNewStream || '')
+            .setRequired(false)
+
+        const firstRow = new ActionRowBuilder().addComponents(channelNameInput);
+        const secondRow = new ActionRowBuilder().addComponents(channelIdInput);
+        const thirdRow = new ActionRowBuilder().addComponents(videoMessageInput);
+        const fourthRow = new ActionRowBuilder().addComponents(streamMessageInput);
+
+        modal.addComponents(firstRow, secondRow, thirdRow, fourthRow);
+
+        await interaction.showModal(modal);
+    } catch (error) {
+        try {
+            logger.ERR(error)
             await interaction.editReply('Ha ocurrido un error desconocido. Inténtalo más tarde')
         } catch {
 
@@ -363,9 +450,25 @@ async function testNotification(interaction) {
 	}
 }
 
+/**
+ * @param {ModalSubmitInteraction} interaction - The Discord modal interaction object.
+ */
+async function handleModalSubmit(interaction) {
+    interaction.youtubeNotificationData = {
+        channelName: interaction.fields.getTextInputValue('channel_name'),
+        channelId: interaction.fields.getTextInputValue('channel_id'),
+        messageVideo: interaction.fields.getTextInputValue('message_video'),
+        messageStream: interaction.fields.getTextInputValue('message_stream')
+    }
+
+    await configure(interaction)
+}
+
 module.exports = {
 	setEnabled,
 	configure,
 	testNotification,
-	subscribeUnsubscribe
+	subscribeUnsubscribe,
+    configureYoutubeNotifications,
+    handleModalSubmit
 }

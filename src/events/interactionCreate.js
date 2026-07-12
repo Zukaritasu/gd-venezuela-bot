@@ -54,6 +54,10 @@ module.exports = {
                 if (!command || !command.autocomplete) 
                     return;
                 await command.autocomplete(interaction);
+            } else if (interaction.isModalSubmit()) {
+                if (interaction.customId === 'configureYoutubeNotifications') {
+                    await require('../commands/youtube/notifications').handleModalSubmit(interaction)
+                }
             }
 
         } catch (error) {
