@@ -47,23 +47,23 @@ module.exports = {
 				.setDescription('Configura tu notificacion')
 				.addStringOption(option =>
 					option
-						.setName('channelname')
+						.setName('channel_name')
 						.setDescription('Define el nombre de tu canal de YouTube')
 				)
 				.addStringOption(option =>
 					option
-						.setName('channelurl')
+						.setName('channel_id')
 						.setDescription('Link de tu canal de YouTube')
 				)
 				.addStringOption(option =>
 					option
-						.setName('str-newvideo')
-						.setDescription('Comentario de tu notificacion cuando subes un video')
+						.setName('message_video')
+						.setDescription('Mensaje de tu notificacion cuando subes un video')
 				)
 				.addStringOption(option =>
 					option
-						.setName('str-newstream')
-						.setDescription('Comentario de tu notificacion cuando inicias directo')
+						.setName('message_stream')
+						.setDescription('Mensaje de tu notificacion cuando inicias directo')
 				)
 		)
 		.addSubcommand(subcommand =>
