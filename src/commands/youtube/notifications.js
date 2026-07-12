@@ -354,7 +354,6 @@ async function configureYoutubeNotifications(interaction) {
             .setCustomId('configureYoutubeNotifications')
             .setTitle('Configurar Notificaciones de YouTube');
 
-        // Crear inputs
         const channelNameInput = new TextInputBuilder()
             .setCustomId('channel_name')
             .setLabel('Define el nombre de tu canal de YouTube')
