@@ -187,8 +187,8 @@ async function configure(interaction) {
 
         const channelName = interaction.options.getString('channel_name')
         const channelId = interaction.options.getString('channel_id')
-        const commentNewVideo = interaction.options.getString('str-newvideo')
-        const commentNewStream = interaction.options.getString('str-newstream')
+        const commentNewVideo = interaction.options.getString('message_video')
+        const commentNewStream = interaction.options.getString('message_stream')
 
         if (!channelName && !channelId && !commentNewVideo && !commentNewStream) {
             return await interaction.reply({
