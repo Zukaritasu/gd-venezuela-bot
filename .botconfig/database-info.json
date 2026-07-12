@@ -10,6 +10,7 @@
 	"COLL_TEXT_XP": "text_xp",
 	"COLL_GD_PROFILES": "gd_profiles",
 	"COLL_YOUTUBE_CHANNELS": "youtube_channels",
+	"COLL_YOUTUBE_VIDEOS": "youtube_videos",
 	"COLL_SERVER_NEW_ACCOUNTS": "server_new_accounts",
 	"COLL_SERVER_CONFIG": "server_config",
 	"COLL_GDVZLA_LIST_CONFIG": "gdvzla_list_config",
