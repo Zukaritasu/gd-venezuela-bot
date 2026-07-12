@@ -457,8 +457,8 @@ async function handleModalSubmit(interaction) {
     interaction.youtubeNotificationData = {
         channelName: interaction.fields.getTextInputValue('channel_name'),
         channelId: interaction.fields.getTextInputValue('channel_id'),
-        messageVideo: interaction.fields.getTextInputValue('message_video'),
-        messageStream: interaction.fields.getTextInputValue('message_stream')
+        commentNewVideo: interaction.fields.getTextInputValue('message_video'),
+        commentNewStream: interaction.fields.getTextInputValue('message_stream')
     }
 
     await configure(interaction)
