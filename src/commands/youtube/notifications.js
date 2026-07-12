@@ -185,12 +185,12 @@ async function configure(interaction) {
             })
         }
 
-        const channelName = interaction.options.getString('channelname')
-        const channelUrl = interaction.options.getString('channelurl')
+        const channelName = interaction.options.getString('channel_name')
+        const channelId = interaction.options.getString('channel_id')
         const commentNewVideo = interaction.options.getString('str-newvideo')
         const commentNewStream = interaction.options.getString('str-newstream')
 
-        if (!channelName && !channelUrl && !commentNewVideo && !commentNewStream) {
+        if (!channelName && !channelId && !commentNewVideo && !commentNewStream) {
             return await interaction.reply({
                 content: 'Se requiere al menos un parámetro para continuar',
                 flags: MessageFlags.Ephemeral
@@ -199,18 +199,11 @@ async function configure(interaction) {
 
         await interaction.deferReply({ flags: MessageFlags.Ephemeral })
 
-        const isParametersCompleted = channelName && channelUrl && commentNewVideo && commentNewStream
-        let channelId = null
-        if (channelUrl) {
-            const match = channelUrl.match(/channel\/(UC[a-zA-Z0-9_-]{22})/)
-            if (match) {
-                channelId = match[1]
-            } else {
-                return await interaction.editReply({
-                    content: 'La URL no es válida. Se requiere el enlace con el ID del canal sin alias. Por ejemplo: ' +
-                        'https://www.youtube.com/channel/UCeI6lBecLZ57HDs8lYarksw'
-                })
-            }
+        const isParametersCompleted = channelName && channelId && commentNewVideo && commentNewStream
+        if (channelId && !/^UC[a-zA-Z0-9_-]{22}$/.test(channelId)) {
+            return await interaction.editReply({
+                content: 'El ID del canal no es válido. Debe comenzar con "UC" y tener exactamente 24 caracteres' 
+            })
         }
 
         const isIllegalComment = [commentNewVideo || '', commentNewStream || ''].some(comment => containsIllegalTags(comment))
@@ -220,12 +213,24 @@ async function configure(interaction) {
             })
         }
 
-        const existingChannel = await globalRef.database.collection(COLL_YOUTUBE_CHANNELS).findOne({
+        /** @type {YouTubeChannel} */
+        let channel = await globalRef.database.collection(COLL_YOUTUBE_CHANNELS).findOne({
             userId: interaction.user.id
         })
 
-        /** @type {YouTubeChannel} */
-        let channel = existingChannel
+        if (channelId) {
+            const existingChannel = await globalRef.database.collection(COLL_YOUTUBE_CHANNELS).findOne({
+                channelId: channelId,
+                userId: { $ne: interaction.user.id }
+            });
+
+            if (existingChannel) {
+                return await interaction.editReply({
+                    content: 'EL ID del canal ya está registrado por otro usuario'
+                });
+            }
+        }
+
         let oldChannelId = null
 
         if (!channel) {
@@ -262,7 +267,7 @@ async function configure(interaction) {
 
         let isSubscribeSuccessful = true
         
-        if (channel.isEnabled && channelUrl && oldChannelId !== channel.channelId) {
+        if (channel.isEnabled && channelId && oldChannelId !== channelId) {
             if (oldChannelId) {
                 const ok = await subscribeUnsubscribe(
                     WEBHOOK_URL,
@@ -279,7 +284,7 @@ async function configure(interaction) {
 
             isSubscribeSuccessful = await subscribeUnsubscribe(
                 WEBHOOK_URL,
-                channel.channelId, 
+                channelId, 
                 true
             )
         }
