@@ -466,7 +466,6 @@ async function handleModalSubmit(interaction) {
 
 module.exports = {
 	setEnabled,
-	configure,
 	testNotification,
 	subscribeUnsubscribe,
     configureYoutubeNotifications,
