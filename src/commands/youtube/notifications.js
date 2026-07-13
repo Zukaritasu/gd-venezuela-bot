@@ -338,9 +338,16 @@ async function configure(interaction) {
 }
 
 /**
- * 
- * @param {ChatInputCommandInteraction} interaction
- * @returns {Promise<Message | void>}
+ * Presents a modal to the user to configure YouTube notification settings.
+ * Validates that the user has the required role, loads any existing channel
+ * configuration from the database, and pre-fills the modal inputs with that
+ * data. The modal allows editing the channel name, channel ID, and custom
+ * messages for new videos and streams.
+ *
+ * @param {ChatInputCommandInteraction} interaction - The Discord interaction
+ * that invoked the command.
+ * @returns {Promise<Message | void>} Resolves when the modal is shown or an
+ * ephemeral error message is returned.
  */
 async function configureYoutubeNotifications(interaction) {
     try {
@@ -456,7 +463,14 @@ async function testNotification(interaction) {
 }
 
 /**
- * @param {ModalSubmitInteraction} interaction - The Discord modal interaction object.
+ * Handles submission of the YouTube configuration modal.
+ * Extracts form values from the modal interaction and attaches them
+ * to the interaction as `youtubeNotificationData`, then calls
+ * `configure` to apply the new settings.
+ *
+ * @param {ModalSubmitInteraction} interaction - The Discord modal interaction object containing
+ * the submitted text input fields: `channel_name`, `channel_id`, `message_video`, and `message_stream`.
+ * @returns {Promise<void>} Resolves after calling configure(interaction).
  */
 async function handleModalSubmit(interaction) {
     interaction.youtubeNotificationData = {
