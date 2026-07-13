@@ -19,11 +19,12 @@ const { Client, TextChannel, Guild } = require("discord.js");
 const { Db } = require("mongodb");
 const express = require('express');
 const axios = require('axios')
+const crypto = require('crypto')
 const logger = require('../logger.js');
 const utils = require('../utils.js');
 const { YOUTUBE_NOTIFICATIONS, BOT_TESTING } = require('../../.botconfig/channels.json')
 const { COLL_YOUTUBE_CHANNELS, COLL_YOUTUBE_VIDEOS } = require('../../.botconfig/database-info.json')
-const { PUBLIC_IP, YOUTUBE_NOTIFICATIONS_PORT, YOUTUBE_API_KEY } = require('../../.botconfig/token.json')
+const { PUBLIC_IP, YOUTUBE_NOTIFICATIONS_PORT, YOUTUBE_API_KEY, YOUTUBE_WEBHOOK_SECRET } = require('../../.botconfig/token.json')
 const notifications = require('../commands/youtube/notifications.js')
 const { XMLParser } = require('fast-xml-parser');
 
@@ -317,6 +318,46 @@ async function getVideoType(videoInfo) {
 }
 
 /**
+ * Verify the incoming PubSubHubbub (YouTube webhook) request signature.
+ *
+ * Computes the HMAC-SHA1 of the raw request body using the provided secret
+ * and compares it to the value in the `X-Hub-Signature` header in a
+ * timing-safe manner.
+ *
+ * @param {string|Buffer} body - Raw request body as received (string or Buffer).
+ * @param {string} signatureHeader - Value of the `X-Hub-Signature` header (format: "sha1=<hex>").
+ * @param {string} secret - Shared secret used to compute the HMAC.
+ * @returns {boolean} True if the signature is valid, false otherwise.
+ */
+function verifyHubSignature(body, signatureHeader, secret) {
+    if (!signatureHeader || !secret) return false;
+
+    try {
+        const parts = signatureHeader.split('=');
+        if (parts.length !== 2 || parts[0] !== 'sha1')
+            return false;
+
+        const expectedHash = parts[1];
+
+        const hmac = crypto.createHmac('sha1', secret);
+        hmac.update(body, 'utf8');
+        const computedHash = hmac.digest('hex');
+
+        const expectedBuffer = Buffer.from(expectedHash, 'hex');
+        const computedBuffer = Buffer.from(computedHash, 'hex');
+
+        if (expectedBuffer.length !== computedBuffer.length)
+            return false; 
+
+        return crypto.timingSafeEqual(expectedBuffer, computedBuffer);
+    } catch (error) {
+        logger.ERR(error)
+    }
+
+    return false
+}
+
+/**
  * Handle incoming YouTube PubSubHubbub notifications.
  *
  * This endpoint receives POST requests from YouTube when a subscribed
@@ -329,6 +370,13 @@ async function getVideoType(videoInfo) {
  */
 async function POST_youtubeWebhook(req, res) {
     try {
+        if (!verifyHubSignature(req.body, req.headers['x-hub-signature'], YOUTUBE_WEBHOOK_SECRET)) {
+            logger.ERR('Verify Hub Signature failed', { 
+                headers: req.headers 
+            })
+            return res.status(403).end();
+        }
+
         const jsonObj = parser.parse(req.body);
         const entries = Array.isArray(jsonObj.feed?.entry)
             ? jsonObj.feed.entry
@@ -346,12 +394,12 @@ async function POST_youtubeWebhook(req, res) {
                 await sendNewVideo(videoInfo, videoType === 'stream')
             }
         }
-
-        res.status(200).end();
     } catch (error) {
         logger.ERR(error);
-        res.status(200).end();
+        
     }
+
+    res.status(200).end();
 }
 
 /**
