@@ -219,6 +219,12 @@ async function configure(interaction) {
             })
         }
 
+        if (channelName && containsIllegalTags(channelName)) {
+            return await interaction.editReply({
+                content: 'El nombre del canal contiene menciones ilegales'
+            })
+        }
+
         const isIllegalComment = [commentNewVideo || '', commentNewStream || ''].some(comment => containsIllegalTags(comment))
         if (isIllegalComment) {
             return await interaction.editReply({
