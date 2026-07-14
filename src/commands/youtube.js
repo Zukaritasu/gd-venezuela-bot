@@ -34,6 +34,8 @@ async function execute(_client, _db, interaction) {
 		await require('./youtube/notifications').setEnabled(interaction, true);
 	} else if (subcommand === 'testear') {
 		await require('./youtube/notifications').testNotification(interaction);
+	} else if (subcommand === 'lista') {
+		await require('./youtube/notifications').listYouTubeChannels(interaction);
 	}
 }
 
@@ -41,31 +43,6 @@ module.exports = {
 	data: new SlashCommandBuilder()
 		.setName('youtube')
 		.setDescription('Canales de YouTube')
-		/* .addSubcommand(subcommand =>
-			subcommand
-				.setName('configurar')
-				.setDescription('Configura tu notificacion')
-				.addStringOption(option =>
-					option
-						.setName('channel_name')
-						.setDescription('Define el nombre de tu canal de YouTube')
-				)
-				.addStringOption(option =>
-					option
-						.setName('channel_id')
-						.setDescription('Link de tu canal de YouTube')
-				)
-				.addStringOption(option =>
-					option
-						.setName('message_video')
-						.setDescription('Mensaje de tu notificacion cuando subes un video')
-				)
-				.addStringOption(option =>
-					option
-						.setName('message_stream')
-						.setDescription('Mensaje de tu notificacion cuando inicias directo')
-				)
-		) */
 		.addSubcommand(subcommand =>
 			subcommand
 				.setName('configurar')
@@ -80,6 +57,11 @@ module.exports = {
 			subcommand
 				.setName('activar')
 				.setDescription('Activa las notificaciones cuando subes un video')
+		)
+		.addSubcommand(subcommand =>
+			subcommand
+				.setName('lista')
+				.setDescription('Lista de canales registrados (solo personal autorizado)')
 		)
 		.addSubcommand(subcommand =>
 			subcommand

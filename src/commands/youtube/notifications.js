@@ -21,7 +21,9 @@ const { YOUTUBE_WEBHOOK_SECRET, YOUTUBE_NOTIFICATIONS_PORT } = require('../../..
 const { Db } = require("mongodb");
 const axios = require('axios')
 const logger = require('../../logger')
-const { PUBLIC_IP } = require('../../../.botconfig/token.json')
+const { PUBLIC_IP } = require('../../../.botconfig/token.json');
+const utils = require("../../utils");
+const { EmbedBuilder } = require("discord.js");
 
 const WEBHOOK_URL = `http://${PUBLIC_IP}:${YOUTUBE_NOTIFICATIONS_PORT}/youtube-webhook`;
 
@@ -483,10 +485,126 @@ async function handleModalSubmit(interaction) {
     await configure(interaction)
 }
 
+
+/**
+ * Build an embed containing a list of YouTube channels.
+ * 
+ * @param {object[]} channels - Array of channel objects to display.
+ * @param {number} skip - Number of items skipped for pagination.
+ * @param {number} limit - Maximum number of items shown per page.
+ * @returns {EmbedBuilder}
+ */
+function getEmbedChannels(channels, skip, limit) {
+    const embed = new EmbedBuilder()
+    embed.setTitle('Lista de canales de YouTube')
+    embed.setDescription(channels.map(channel => `\`\`\`\nuserId: ${channel.userId}\nchannelName: ${channel.channelName}\nchannelId: ${channel.channelId}\n\`\`\``).join('\n'))
+    return embed
+}
+
+function createButtonRow(page, totalPages) {
+    const row = new ActionRowBuilder()
+
+    const prev = new ButtonBuilder()
+    prev.setCustomId('prev')
+    prev.setEmoji('<:retroceder:1436857028092887091>')
+    prev.setStyle(ButtonStyle.Secondary)
+    prev.setDisabled(totalPages <= 1 || page === 1)
+
+    const next = new ButtonBuilder()
+    next.setCustomId('next')
+    next.setEmoji('<:siguiente:1436857026876538900>')
+    next.setStyle(ButtonStyle.Secondary)
+    next.setDisabled(totalPages <= 1 || page === totalPages)
+
+    const close = new ButtonBuilder()
+    close.setCustomId('close')
+    close.setEmoji('<:close:1320737181358227551>')
+    close.setStyle(ButtonStyle.Danger)
+    close.setDisabled(totalPages == -1)
+
+    row.addComponents(prev, next, close)
+
+    return row
+}
+
+/**
+ * List stored YouTube channels in a paginated embed for staff members.
+ * @param {ChatInputCommandInteraction} interaction - The command interaction used to send the response.
+ */
+async function listYouTubeChannels(interaction) {
+    try {
+        if (!utils.isStaff(interaction.member)) {
+            return interaction.reply('Comando de uso exclusivo para el Staff del servidor')
+        }
+
+        const getChannels = async (skip, limit) => {
+            return await globalRef.database.collection(COLL_YOUTUBE_CHANNELS).find(
+                {}, {
+                projection: {
+                    _id: 0,
+                    userId: 1,
+                    channelName: 1,
+                    channelId: 1
+                }
+            }).skip(skip).limit(limit).toArray()
+        }
+
+        await interaction.deferReply({ flags: MessageFlags.Ephemeral })
+        const limit = 8
+        const totalCount = await globalRef.database.collection(COLL_YOUTUBE_CHANNELS).countDocuments()
+        const totalPages = totalCount === 0 ? 1 : Math.ceil(totalCount / limit)
+        let page = 1
+
+        const buildResponse = async (page) => {
+            const skip = (page - 1) * limit
+            const channels = await getChannels(skip, limit)
+            const embed = getEmbedChannels(channels, skip, limit)
+            const row = createButtonRow(page, totalPages)
+            return { embeds: [embed], components: [row] }
+        }
+
+        const initial = await buildResponse(page)
+        await interaction.editReply(initial)
+        const msg = await interaction.fetchReply()
+
+        const collector = msg.createMessageComponentCollector({ time: 120000 })
+        collector.on('collect', async i => {
+            try {
+                if (i.customId === 'prev') {
+                    if (page > 1) page--
+                } else if (i.customId === 'next') {
+                    if (page < totalPages) page++
+                } else if (i.customId === 'close') {
+                    const disabledRow = createButtonRow(page, -1)
+                    await i.update({ components: [disabledRow] })
+                    collector.stop()
+                    return
+                }
+
+                await i.update(await buildResponse(page))
+            } catch (err) {
+                logger.ERR(err)
+            }
+        })
+
+        collector.on('end', async () => {
+            try {
+                const disabledRow = createButtonRow(page, -1)
+                await msg.edit({ components: [disabledRow] })
+            } catch (err) {
+                logger.ERR(err)
+            }
+        })
+    } catch (error) {
+        logger.ERR(error)
+    }
+}
+
 module.exports = {
 	setEnabled,
 	testNotification,
 	subscribeUnsubscribe,
     configureYoutubeNotifications,
-    handleModalSubmit
+    handleModalSubmit,
+    listYouTubeChannels
 }
