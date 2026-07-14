@@ -183,6 +183,15 @@ function isAdministrator(member) {
 }
 
 /**
+ * 
+ * @param {GuildMember} member 
+ * @returns {boolean}
+ */
+function isStaff(member) {
+    return member.permissions.has(PermissionsBitField.Flags.BanMembers)
+}
+
+/**
  * Formats a date to a human-readable string in Spanish.
  * 
  * @param {Date} date The date to format.
@@ -261,6 +270,7 @@ module.exports = {
     isValidYouTubeUrl,
     getYouTubeThumbnail,
     isAdministrator,
+    isStaff,
     isValidPointercrateUrl,
     escapeDiscordSpecialChars,
     hasUserPermissions,
