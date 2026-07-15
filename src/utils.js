@@ -276,7 +276,6 @@ module.exports = {
     hasUserPermissions,
     getUserFlagState,
     normalizeYoutubeLink,
-    GD_VENEZUELA_SERVER_ID: '1119795689984102455',
     formatDate,
     formatDateTime,
     formatTimeMilliseconds,

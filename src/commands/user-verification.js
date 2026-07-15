@@ -30,7 +30,7 @@ const { RESTJSONErrorCodes, MessageFlags } = require('discord-api-types/v10')
  * @returns {Promise<boolean>} True if the user is inside the server, false otherwise
  */
 async function isUserInsideServer(client, interaction) {
-    const guild = await client.guilds.fetch(utils.GD_VENEZUELA_SERVER_ID);
+    const guild = await client.guilds.fetch(process.env.SERVER_GD_VENEZUELA_ID);
     let member;
     try {
         member = await guild.members.fetch(typeof interaction === 'string' ? interaction : interaction.user.id);
@@ -116,7 +116,7 @@ async function execute(client, db, interaction) {
             { $addToSet: { accounts: interaction.user.id } },
             { upsert: true });
 
-        const channel = (await client.guilds.fetch(utils.GD_VENEZUELA_SERVER_ID))
+        const channel = (await client.guilds.fetch(process.env.SERVER_GD_VENEZUELA_ID))
             .channels.cache.get(channels.MODERATION);
         if (!channel) {
             throw new Error('Channel not found');
@@ -216,7 +216,7 @@ async function denyUser(client, database, message, messageParts) {
             }
         }
         // Ban the user from the guild
-        await (await client.guilds.fetch(utils.GD_VENEZUELA_SERVER_ID)).bans.create(userId, {
+        await (await client.guilds.fetch(process.env.SERVER_GD_VENEZUELA_ID)).bans.create(userId, {
             reason: 'Solicitud de verificación denegada'
         });
         await message.react('✅');
