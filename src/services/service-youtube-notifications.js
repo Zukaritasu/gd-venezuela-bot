@@ -44,6 +44,7 @@ const globalRef = global;
  * @property {string} channelId
  * @property {string} commentNewVideo
  * @property {string} commentNewStream
+ * @property {string[]} videoFilter
  * @property {boolean} isEnabled
  * @property {number} datetimeSub
  */
@@ -130,6 +131,11 @@ async function sendNewVideo(videoInfo, isStream) {
         /** @type {TextChannel} */
         const channel = globalRef.guild.channels.cache.get(YOUTUBE_NOTIFICATIONS);
         if (channel) {
+            if (youtubeChannel?.videoFilter.some(item =>
+                videoInfo.title.toLowerCase().includes(item.toLowerCase())
+            )) {
+                return;
+            }
             await channel.send(`<@&${process.env.ID_ROL_YOUTUBE_NOTIFICACIONES}>\n${
                 isStream ? youtubeChannel.commentNewStream : youtubeChannel.commentNewVideo
             } https://youtu.be/${videoInfo.videoId}`);

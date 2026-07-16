@@ -35,6 +35,7 @@ const WEBHOOK_URL = `http://${PUBLIC_IP}:${YOUTUBE_NOTIFICATIONS_PORT}/youtube-w
  * @property {string} channelId
  * @property {string} commentNewVideo
  * @property {string} commentNewStream
+ * @property {string[]} videoFilter
  * @property {boolean} isEnabled
  * @property {number} datetimeSub
  */
@@ -187,23 +188,15 @@ async function configure(interaction) {
             })
         }
 
-        const isModalSubmit = interaction.isModalSubmit()
-
-        if (isModalSubmit && !('youtubeNotificationData' in interaction)) {
+        if (!('youtubeNotificationData' in interaction)) {
             throw new Error('Configuration data not found')
         }
 
-        const channelName = isModalSubmit ? interaction.youtubeNotificationData.channelName : 
-            interaction.options.getString('channel_name')
-        
-        const channelId = isModalSubmit ? interaction.youtubeNotificationData.channelId : 
-            interaction.options.getString('channel_id')
-
-        const commentNewVideo = isModalSubmit ? interaction.youtubeNotificationData.commentNewVideo : 
-            interaction.options.getString('message_video')
-
-        const commentNewStream = isModalSubmit ? interaction.youtubeNotificationData.commentNewStream :
-            interaction.options.getString('message_stream')
+        const channelName = interaction.youtubeNotificationData.channelName
+        const channelId = interaction.youtubeNotificationData.channelId
+        const commentNewVideo = interaction.youtubeNotificationData.commentNewVideo
+        const commentNewStream = interaction.youtubeNotificationData.commentNewStream
+        const videoFilter = interaction.youtubeNotificationData.videoFilter
 
         if (!channelName && !channelId && !commentNewVideo && !commentNewStream) {
             return await interaction.reply({
@@ -254,6 +247,9 @@ async function configure(interaction) {
 
         let oldChannelId = null
 
+        /** @type {string[]} */
+        const videoFilterNormalized = videoFilter?.split(',').map(item => item.trim()).filter(Boolean) || [];
+
         if (!channel) {
             if (!isParametersCompleted) {
                 return await interaction.editReply({
@@ -268,7 +264,8 @@ async function configure(interaction) {
                 commentNewVideo,
                 commentNewStream,
                 isEnabled: true,
-                datetimeSub: Date.now()
+                datetimeSub: Date.now(),
+                videoFilter: videoFilterNormalized
             }
         } else {
             oldChannelId = channel.channelId
@@ -283,7 +280,7 @@ async function configure(interaction) {
             channel.channelName = channelName || channel.channelName
             channel.commentNewVideo = commentNewVideo || channel.commentNewVideo
             channel.commentNewStream = commentNewStream || channel.commentNewStream
-
+            channel.videoFilter = videoFilterNormalized
         }
 
         let isSubscribeSuccessful = true
@@ -397,12 +394,21 @@ async function configureYoutubeNotifications(interaction) {
             .setValue(channel?.commentNewStream || '')
             .setRequired(false)
 
+        const videoFilterInput = new TextInputBuilder()
+            .setCustomId('video_filter')
+            .setLabel('Filtro de vídeos')
+            .setStyle(TextInputStyle.Paragraph)
+            .setValue(channel?.videoFilter.join(', ') || '')
+            .setPlaceholder('No notificar si el título contiene palabras clave. Separar con comas (,)')
+            .setRequired(false)
+
         const firstRow = new ActionRowBuilder().addComponents(channelNameInput);
         const secondRow = new ActionRowBuilder().addComponents(channelIdInput);
         const thirdRow = new ActionRowBuilder().addComponents(videoMessageInput);
         const fourthRow = new ActionRowBuilder().addComponents(streamMessageInput);
+        const fifthRow = new ActionRowBuilder().addComponents(videoFilterInput);
 
-        modal.addComponents(firstRow, secondRow, thirdRow, fourthRow);
+        modal.addComponents(firstRow, secondRow, thirdRow, fourthRow, fifthRow);
 
         await interaction.showModal(modal);
     } catch (error) {
@@ -479,7 +485,8 @@ async function handleModalSubmit(interaction) {
         channelName: interaction.fields.getTextInputValue('channel_name'),
         channelId: interaction.fields.getTextInputValue('channel_id'),
         commentNewVideo: interaction.fields.getTextInputValue('message_video'),
-        commentNewStream: interaction.fields.getTextInputValue('message_stream')
+        commentNewStream: interaction.fields.getTextInputValue('message_stream'),
+        videoFilter: interaction.fields.getTextInputValue('video_filter')
     }
 
     await configure(interaction)
