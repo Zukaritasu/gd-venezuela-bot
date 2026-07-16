@@ -398,7 +398,7 @@ async function configureYoutubeNotifications(interaction) {
             .setCustomId('video_filter')
             .setLabel('Filtro de vídeos')
             .setStyle(TextInputStyle.Paragraph)
-            .setValue(channel?.videoFilter.join(', ') || '')
+            .setValue(channel?.videoFilter?.join(', ') || '')
             .setPlaceholder('No notificar si el título contiene palabras clave. Separar con comas (,)')
             .setRequired(false)
 
