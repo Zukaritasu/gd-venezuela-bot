@@ -83,7 +83,12 @@ async function fetchVideoDetails(videoId) {
             }
         });
 
-        return response.data?.items?.[0] ?? null;
+        const videoItem = response.data?.items?.[0] ?? null;
+        if (videoItem) {
+            logger.DBG(JSON.stringify(videoItem))
+        }
+
+        return videoItem;
     } catch (error) {
         logger.ERR(`Error fetching video details for ${videoId}:`, error);
         return null;
