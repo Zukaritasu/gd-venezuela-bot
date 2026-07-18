@@ -294,9 +294,9 @@ async function POST_youtubeWebhook(req, res) {
             : jsonObj.feed?.entry ? [jsonObj.feed.entry] : [];
 
         for (const entry of entries) {
-            logger.DBG(`New video/stream: ${videoInfo.videoId}`)
-
             const videoInfo = parseEntryToYouTubeVideo(entry)
+
+            logger.DBG(`New video/stream: ${videoInfo.videoId}`)
 
             if (!videoInfo.published || !videoInfo.updated || !videoInfo.videoId || !videoInfo.channelId)
                 continue;
