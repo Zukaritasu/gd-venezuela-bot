@@ -22,6 +22,7 @@ const axios = require('axios')
 const crypto = require('crypto')
 const logger = require('../logger.js');
 const utils = require('../utils.js');
+const youtubeApi = require('../youtubeapi.js');
 const { YOUTUBE_NOTIFICATIONS, BOT_TESTING } = require('../../.botconfig/channels.json')
 const { COLL_YOUTUBE_CHANNELS, COLL_YOUTUBE_VIDEOS } = require('../../.botconfig/database-info.json')
 const { PUBLIC_IP, YOUTUBE_NOTIFICATIONS_PORT, YOUTUBE_API_KEY, YOUTUBE_WEBHOOK_SECRET } = require('../../.botconfig/token.json')
@@ -127,48 +128,39 @@ async function sendNewVideo(videoInfo, isStream) {
         channelId: videoInfo.channelId
     });
 
-    if (youtubeChannel && youtubeChannel.isEnabled) {
+    if (await saveVideo(videoInfo) && youtubeChannel && youtubeChannel.isEnabled) {
         /** @type {TextChannel} */
         const channel = globalRef.guild.channels.cache.get(YOUTUBE_NOTIFICATIONS);
-        if (channel) {
-            if (youtubeChannel?.videoFilter.some(item =>
-                videoInfo.title.toLowerCase().includes(item.toLowerCase())
-            )) {
-                return;
-            }
-            await channel.send(`<@&${process.env.ID_ROL_YOUTUBE_NOTIFICACIONES}>\n${
-                isStream ? youtubeChannel.commentNewStream : youtubeChannel.commentNewVideo
-            } https://youtu.be/${videoInfo.videoId}`);
+        if (!channel || youtubeChannel?.videoFilter.some(item => videoInfo.title.toLowerCase().includes(item.toLowerCase())))
+            return
+
+        logger.DBG(`Video sended: ${videoInfo.videoId}`)
+        if (videoInfo.channelId !== 'UCdwIt6BJez93HG-rxNnttNw') {
+            await channel.send(`<@&${process.env.ID_ROL_YOUTUBE_NOTIFICACIONES}>\n${isStream ? youtubeChannel.commentNewStream : youtubeChannel.commentNewVideo
+                } https://youtu.be/${videoInfo.videoId}`);
         }
     }
 }
 
 /**
- * Checks if a YouTube video is valid for notification.
- * A video is considered valid if:
- * - It was published within the last hour
- * - It hasn't been notified before (not in database)
+ * Saves a YouTube video to the database if it hasn't been registered before.
  * 
- * @param {YouTubeVideo} videoInfo - The video information to validate
- * @returns {Promise<boolean>} True if the video is valid and should be notified
+ * A video is considered valid for notification if:
+ * - It doesn't exist in the database yet (prevents duplicate notifications).
+ * 
+ * @param {YouTubeVideo} videoInfo - The video information to check and save.
+ * @param {string} videoInfo.videoId - The unique identifier of the video.
+ * @param {string} videoInfo.channelId - The identifier of the channel that published the video.
+ * @returns {Promise<boolean>} True if the video was successfully saved (new video), false
+ * if it already existed or an error occurred.
  */
-async function isVideoValid(videoInfo) {
-    const ONE_HOUR_MS = 1000 * 60 * 60;
-    const now = Date.now();
-
-    if (now - videoInfo.published > ONE_HOUR_MS) {
-        logger.DBG(`Ignoring video ${videoInfo.videoId} because it is an older version or outdated content`);
-        return false;
-    }
-
+async function saveVideo(videoInfo) {
     try {
-        // Check if video already exists in database (already notified)
         const video = await globalRef.database.collection(COLL_YOUTUBE_VIDEOS).findOne(
             { videoId: videoInfo.videoId })
 
         if (video) return false
 
-        // Mark video as notified by inserting into database
         await globalRef.database.collection(COLL_YOUTUBE_VIDEOS).insertOne(
             {
                 channelId: videoInfo.channelId,
@@ -183,7 +175,6 @@ async function isVideoValid(videoInfo) {
         return false
     }
 }
-
 /**
  * Parses an XML entry object from a YouTube video feed and converts it to a YouTubeVideo object.
  * 
@@ -235,92 +226,6 @@ function parseEntryToYouTubeVideo(entry) {
         published: getDate('published'),
         updated: getDate('updated')
     };
-}
-
-/**
- * Converts ISO 8601 duration to seconds.
- * 
- * @param {string} duration - ISO 8601 duration string (e.g., 'PT1M30S')
- * @returns {number} Duration in seconds
- * 
- * @example
- * parseDurationToSeconds('PT1M30S') // 90
- * parseDurationToSeconds('PT45S') // 45
- */
-function parseDurationToSeconds(duration) {
-  const match = duration.match(/PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?/);
-  if (!match) return 0;
-  
-  const hours = parseInt(match[1] || '0');
-  const minutes = parseInt(match[2] || '0');
-  const seconds = parseInt(match[3] || '0');
-  
-  return hours * 3600 + minutes * 60 + seconds;
-}
-
-/**
- * Determines the type of a YouTube video (short, video, or stream).
- * 
- * This function uses a multi-step approach:
- * 1. Fetches video details from YouTube API to check for live streams and duration
- * 2. If duration ≤ 60 seconds, verifies if it's a Short by checking the /shorts/ URL
- * 3. Returns null if the video type cannot be determined (API errors, network issues, etc.)
- * 
- * @param {YouTubeVideo} videoInfo - The video information object containing the videoId
- * @param {string} videoInfo.videoId - The YouTube video ID
- * @returns {Promise<'short' | 'video' | 'stream' | null>} 
- *          - 'short': The video is a YouTube Short
- *          - 'video': The video is a regular video (not a Short or stream)
- *          - 'stream': The video is a live stream or upcoming stream
- *          - null: The video type could not be determined (API error, network issue, etc.)
- * 
- * @example
- * const type = await getVideoType({ videoId: 'iUBO9exdK5s' });
- * if (type === 'short') {
- *   logger.INF('This is a YouTube Short');
- * } else if (type === null) {
- *   logger.INF('Could not determine video type');
- * }
- */
-async function getVideoType(videoInfo) {
-    try {
-        const response = await axios.get('https://www.googleapis.com/youtube/v3/videos', {
-            params: {
-                id: videoInfo.videoId,
-                part: 'snippet,contentDetails,liveStreamingDetails',
-                key: YOUTUBE_API_KEY
-            }
-        });
-
-        const video = response.data?.items?.[0];
-
-        if (!video) return null;
-
-        if (video.snippet?.liveBroadcastContent === 'live' ||
-            video.snippet?.liveBroadcastContent === 'upcoming' ||
-            video.liveStreamingDetails) {
-            return 'stream';
-        }
-
-        const duration = video.contentDetails?.duration;
-        const durationSeconds = duration ? parseDurationToSeconds(duration) : 0;
-
-        if (durationSeconds > 60) return 'video';
-
-        const headResponse = await axios.head(`https://www.youtube.com/shorts/${videoInfo.videoId}`, {
-            maxRedirects: 0,
-            validateStatus: (status) => status >= 200 && status < 400
-        });
-
-        if (headResponse.status >= 200 && headResponse.status < 300)
-            return 'short';
-        else if (headResponse.status >= 300 && headResponse.status < 400)
-            return 'video';
-    } catch (error) {
-        logger.ERR(error)
-    }
-
-    return null
 }
 
 /**
@@ -389,15 +294,21 @@ async function POST_youtubeWebhook(req, res) {
             : jsonObj.feed?.entry ? [jsonObj.feed.entry] : [];
 
         for (const entry of entries) {
+            logger.DBG(`New video/stream: ${videoInfo.videoId}`)
+
             const videoInfo = parseEntryToYouTubeVideo(entry)
 
-            if (!videoInfo.published || !videoInfo.updated || !videoInfo.videoId ||
-                !videoInfo.channelId || !await isVideoValid(videoInfo))
+            if (!videoInfo.published || !videoInfo.updated || !videoInfo.videoId || !videoInfo.channelId)
                 continue;
 
-            const videoType = await getVideoType(videoInfo)
-            if (videoType && videoType !== 'short') {
-                await sendNewVideo(videoInfo, videoType === 'stream')
+            const videoItem = await youtubeApi.fetchVideoDetails(videoInfo.videoId)
+            if (videoItem) {
+                const videoType = await youtubeApi.getVideoType(videoItem)
+                if (videoType) {
+                    if (videoType === 'stream' && videoItem.snippet?.liveBroadcastContent !== 'live')
+                        continue
+                    await sendNewVideo(videoInfo, videoType === 'stream')
+                }
             }
         }
     } catch (error) {
