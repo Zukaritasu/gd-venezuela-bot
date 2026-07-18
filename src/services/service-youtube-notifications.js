@@ -258,7 +258,7 @@ function verifyHubSignature(body, signatureHeader, secret) {
         const computedBuffer = Buffer.from(computedHash, 'hex');
 
         if (expectedBuffer.length !== computedBuffer.length)
-            return false; 
+            return false;
 
         return crypto.timingSafeEqual(expectedBuffer, computedBuffer);
     } catch (error) {
@@ -282,8 +282,8 @@ function verifyHubSignature(body, signatureHeader, secret) {
 async function POST_youtubeWebhook(req, res) {
     try {
         if (!verifyHubSignature(req.body, req.headers['x-hub-signature'], YOUTUBE_WEBHOOK_SECRET)) {
-            logger.ERR('Verify Hub Signature failed', { 
-                headers: req.headers 
+            logger.ERR('Verify Hub Signature failed', {
+                headers: req.headers
             })
             return res.status(403).end();
         }
@@ -303,6 +303,10 @@ async function POST_youtubeWebhook(req, res) {
 
             const videoItem = await youtubeApi.fetchVideoDetails(videoInfo.videoId)
             if (videoItem) {
+                // Skip videos older than 2 weeks
+                if (Date.now() - videoInfo.published >= 1209600000)
+                    continue
+
                 const videoType = await youtubeApi.getVideoType(videoItem)
                 if (videoType) {
                     if (videoType === 'stream' && videoItem.snippet?.liveBroadcastContent !== 'live')
@@ -313,7 +317,7 @@ async function POST_youtubeWebhook(req, res) {
         }
     } catch (error) {
         logger.ERR(error);
-        
+
     }
 
     res.status(200).end();
