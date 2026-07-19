@@ -24,8 +24,6 @@ const channels = require('../../.botconfig/channels.json');
 const submit = require('../commands/records/submit');
 const checkAttachments = require('../checkAttachments')
 
-///////////////////////////////////////////////////////////
-
 /**
  * List of user IDs that are whitelisted to use certain commands.
  * This is used to restrict access to commands that should only be available to specific users.
@@ -38,7 +36,9 @@ const usersWhitelist = [
 ];
 
 /**
- * @param {string} content
+ * Gets the parameters of a command.
+ * 
+ * @param {string} content 
  * @returns {string[]} 
  */
 function getCommandParameters(content) {
@@ -54,7 +54,9 @@ function getCommandParameters(content) {
 }
 
 /**
+ * Checks if the replied message contains an embed submit pack.
  * 
+ * @param {Client} client 
  * @param {Message} message 
  * @returns {Promise<boolean}
  */
@@ -69,8 +71,10 @@ async function repliedMessageContainsEmbedSubmitPack(client, message) {
 }
 
 /**
- * @param {Message} message
- * @param {string} command
+ * Checks if the message starts with a specific command.
+ * 
+ * @param {Message} message 
+ * @param {string} command 
  * @returns {boolean}
  */
 function isCommand(message, command) {
@@ -101,7 +105,7 @@ module.exports = {
                     return
                 }
 
-                activity.log(database, message.guild, message.content, message.attachments.size > 0, 
+                activity.log(database, message.guild, message.content, message.attachments.size > 0,
                     message.author.id, message.author.username);
 
                 if (isCommand(message, '--update')) {
@@ -126,7 +130,7 @@ module.exports = {
                     if (utils.hasUserPermissions(message.member))
                         await require('../commands/leveling/activity').setPoints(getCommandParameters(message.content), message)
                 }
-                
+
                 else if (isCommand(message, '--aceptar') && (message.channel.id === channels.SUBMITS || message.channel.id === channels.PL_SUBMITS)) {
                     const submitPack = await repliedMessageContainsEmbedSubmitPack(client, message)
                     if (utils.hasUserPermissions(message.member) || usersWhitelist.includes(message.member.id))
@@ -159,7 +163,7 @@ module.exports = {
                         }
                     }
                 }
-                
+
                 else if (isCommand(message, '--denegar') && message.channel.id === /*'1119807234076049428'*/ channels.MODERATION) {
                     if (utils.hasUserPermissions(message.member))
                         await require('../commands/user-verification').denyUser(client, database, message, getCommandParameters(message.content))
