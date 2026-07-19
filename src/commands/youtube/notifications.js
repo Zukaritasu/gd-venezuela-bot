@@ -368,6 +368,7 @@ async function configureYoutubeNotifications(interaction) {
 
         const labelChannelNameInput = new LabelBuilder(
             {
+                description: 'Nombre del canal de YouTube. Puedes poner tu nombre de usuario o el nombre de tu canal',
                 label: 'Nombre del canal',
                 type: ComponentType.TextInput,
                 component: new TextInputBuilder({
@@ -381,6 +382,7 @@ async function configureYoutubeNotifications(interaction) {
 
         const labelChannelIdInput = new LabelBuilder(
             {
+                description: 'ID del Canal de YouTube. Puedes encontrarlo en la URL de tu canal o en la información del canal',
                 label: 'ID del Canal',
                 type: ComponentType.TextInput,
                 component: new TextInputBuilder({
