@@ -15,7 +15,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-const { ChatInputCommandInteraction, GuildMember, MessageFlags, ModalSubmitInteraction, ActionRowBuilder, TextInputBuilder, ModalBuilder, TextInputStyle, ButtonBuilder, ButtonStyle } = require("discord.js");
+const { ChatInputCommandInteraction, GuildMember, MessageFlags, ModalSubmitInteraction, ActionRowBuilder, TextInputBuilder, ModalBuilder, TextInputStyle, ButtonBuilder, ButtonStyle, LabelBuilder, ComponentType, CheckboxBuilder } = require("discord.js");
 const { COLL_YOUTUBE_CHANNELS } = require('../../../.botconfig/database-info.json')
 const { YOUTUBE_WEBHOOK_SECRET, YOUTUBE_NOTIFICATIONS_PORT } = require('../../../.botconfig/token.json')
 const { Db } = require("mongodb");
@@ -55,29 +55,29 @@ const globalRef = global;
  * otherwise false.
  */
 async function subscribeUnsubscribe(webhookUrl, channelId, isSubscribe) {
-	const params = new URLSearchParams();
-	params.append('hub.callback', webhookUrl);
-	params.append('hub.topic', `https://www.youtube.com/xml/feeds/videos.xml?channel_id=${channelId}`);
-	params.append('hub.mode', isSubscribe ? 'subscribe' : 'unsubscribe');
+    const params = new URLSearchParams();
+    params.append('hub.callback', webhookUrl);
+    params.append('hub.topic', `https://www.youtube.com/xml/feeds/videos.xml?channel_id=${channelId}`);
+    params.append('hub.mode', isSubscribe ? 'subscribe' : 'unsubscribe');
 
-	if (isSubscribe) {
-		params.append('hub.lease_seconds', '345600'); // 4 days
-		params.append('hub.secret', YOUTUBE_WEBHOOK_SECRET);
-	}
+    if (isSubscribe) {
+        params.append('hub.lease_seconds', '345600'); // 4 days
+        params.append('hub.secret', YOUTUBE_WEBHOOK_SECRET);
+    }
 
-	try {
-		const response = await axios.post('https://pubsubhubbub.appspot.com/subscribe', params, {
-			headers: {
-				'Content-Type': 'application/x-www-form-urlencoded'
-			}
-		});
+    try {
+        const response = await axios.post('https://pubsubhubbub.appspot.com/subscribe', params, {
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded'
+            }
+        });
 
-		return response.status === 202
-	} catch (e) {
-		logger.ERR(e)
-	}
+        return response.status === 202
+    } catch (e) {
+        logger.ERR(e)
+    }
 
-	return false
+    return false
 }
 
 /**
@@ -92,60 +92,60 @@ async function subscribeUnsubscribe(webhookUrl, channelId, isSubscribe) {
  * @returns {Promise<Message | void>} A promise that resolves when the interaction reply is edited.
  */
 async function setEnabled(interaction, isEnabled) {
-	try {
-		await interaction.deferReply({ flags: MessageFlags.Ephemeral })
+    try {
+        await interaction.deferReply({ flags: MessageFlags.Ephemeral })
 
-		/** @type {YouTubeChannel} */
-		const channel = await globalRef.database.collection(COLL_YOUTUBE_CHANNELS).findOne({
-			userId: interaction.user.id
-		})
+        /** @type {YouTubeChannel} */
+        const channel = await globalRef.database.collection(COLL_YOUTUBE_CHANNELS).findOne({
+            userId: interaction.user.id
+        })
 
-		if (!channel) {
-			return await interaction.editReply({
-				content: 'No tienes configurado un canal de YouTube en el bot'
-			})
-		}
+        if (!channel) {
+            return await interaction.editReply({
+                content: 'No tienes configurado un canal de YouTube en el bot'
+            })
+        }
 
-		if (channel.isEnabled !== isEnabled) {
-			const isSubscribeSuccessful = await subscribeUnsubscribe(
-				WEBHOOK_URL,
-				channel.channelId,
-				isEnabled
-			)
+        if (channel.isEnabled !== isEnabled) {
+            const isSubscribeSuccessful = await subscribeUnsubscribe(
+                WEBHOOK_URL,
+                channel.channelId,
+                isEnabled
+            )
 
-			if (!isSubscribeSuccessful) {
-				await interaction.editReply({
-					content: 'No se ha podido ' + (isEnabled ? 'suscribir' : 'desuscribir')
-						+ ' tu canal de YouTube. Revisa que el link de tu canal sea válido'
-				})
-			} else {
-				await globalRef.database.collection(COLL_YOUTUBE_CHANNELS).updateOne(
-					{ userId: interaction.user.id },
-					{
-						$set: {
-							isEnabled,
-							datetimeSub: isEnabled ? Date.now() : channel.datetimeSub
-						}
-					}
-				)
+            if (!isSubscribeSuccessful) {
+                await interaction.editReply({
+                    content: 'No se ha podido ' + (isEnabled ? 'suscribir' : 'desuscribir')
+                        + ' tu canal de YouTube. Revisa que el link de tu canal sea válido'
+                })
+            } else {
+                await globalRef.database.collection(COLL_YOUTUBE_CHANNELS).updateOne(
+                    { userId: interaction.user.id },
+                    {
+                        $set: {
+                            isEnabled,
+                            datetimeSub: isEnabled ? Date.now() : channel.datetimeSub
+                        }
+                    }
+                )
 
-				await interaction.editReply({
-					content: 'Actualizado con éxito!'
-				})
-			}
-		} else {
-			await interaction.editReply({
-				content: 'El canal ya se encuentra ' + (isEnabled ? 'suscrito' : 'desuscrito')
-			})
-		}
-	} catch (error) {
-		try {
-			logger.ERR(error)
-			await interaction.editReply('Ha ocurrido un error desconocido. Inténtalo más tarde')
-		} catch {
+                await interaction.editReply({
+                    content: 'Actualizado con éxito!'
+                })
+            }
+        } else {
+            await interaction.editReply({
+                content: 'El canal ya se encuentra ' + (isEnabled ? 'suscrito' : 'desuscrito')
+            })
+        }
+    } catch (error) {
+        try {
+            logger.ERR(error)
+            await interaction.editReply('Ha ocurrido un error desconocido. Inténtalo más tarde')
+        } catch {
 
-		}
-	}
+        }
+    }
 }
 
 /**
@@ -160,11 +160,11 @@ async function setEnabled(interaction, isEnabled) {
  * @returns {boolean} True if any illegal tags or patterns are detected, otherwise false.
  */
 function containsIllegalTags(comment) {
-	const hasEveryoneOrHere = /@(everyone|here)\b/i.test(comment);
-	const hasDiscordTags = /<(@|@&|#|\/)[^>]+>/.test(comment);
-	const hasMaskedLinks = /\[[^\]]+\]\(\s*https?:\/\/[^\s)]+\)/i.test(comment);
+    const hasEveryoneOrHere = /@(everyone|here)\b/i.test(comment);
+    const hasDiscordTags = /<(@|@&|#|\/)[^>]+>/.test(comment);
+    const hasMaskedLinks = /\[[^\]]+\]\(\s*https?:\/\/[^\s)]+\)/i.test(comment);
 
-	return hasEveryoneOrHere || hasDiscordTags || hasMaskedLinks;
+    return hasEveryoneOrHere || hasDiscordTags || hasMaskedLinks;
 }
 
 /**
@@ -210,7 +210,7 @@ async function configure(interaction) {
         const isParametersCompleted = channelName && channelId && commentNewVideo && commentNewStream
         if (channelId && !/^UC[a-zA-Z0-9_-]{22}$/.test(channelId)) {
             return await interaction.editReply({
-                content: 'El ID del canal no es válido. Debe comenzar con "UC" y tener exactamente 24 caracteres' 
+                content: 'El ID del canal no es válido. Debe comenzar con "UC" y tener exactamente 24 caracteres'
             })
         }
 
@@ -269,7 +269,7 @@ async function configure(interaction) {
             }
         } else {
             oldChannelId = channel.channelId
-            
+
             if (channelId && oldChannelId !== channelId) {
                 channel.channelId = channelId;
                 if (channel.isEnabled) {
@@ -284,7 +284,7 @@ async function configure(interaction) {
         }
 
         let isSubscribeSuccessful = true
-        
+
         if (channel.isEnabled && channelId && oldChannelId !== channelId) {
             if (oldChannelId) {
                 const ok = await subscribeUnsubscribe(
@@ -302,7 +302,7 @@ async function configure(interaction) {
 
             isSubscribeSuccessful = await subscribeUnsubscribe(
                 WEBHOOK_URL,
-                channelId, 
+                channelId,
                 true
             )
         }
@@ -366,7 +366,90 @@ async function configureYoutubeNotifications(interaction) {
             .setCustomId('configureYoutubeNotifications')
             .setTitle('Configurar Notificaciones de YouTube');
 
-        const channelNameInput = new TextInputBuilder()
+        const labelChannelNameInput = new LabelBuilder(
+            {
+                description: 'Define el nombre de tu canal de YouTube',
+                label: 'Nombre del canal',
+                type: ComponentType.TextInput,
+                component: new TextInputBuilder({
+                    customId: 'channel_name',
+                    style: TextInputStyle.Short,
+                    value: channel?.channelName || '',
+                    required: true
+                })
+            }
+        )
+
+        const labelChannelIdInput = new LabelBuilder(
+            {
+                description: 'ID del Canal',
+                label: 'ID del Canal',
+                type: ComponentType.TextInput,
+                component: new TextInputBuilder({
+                    customId: 'channel_id',
+                    style: TextInputStyle.Short,
+                    value: channel?.channelId || '',
+                    required: true
+                })
+            }
+        )
+
+        const labelVideoMessageInput = new LabelBuilder(
+            {
+                description: 'El mensaje que se mostrará cuando tu canal publique un nuevo video',
+                label: 'Mensaje para nuevos videos',
+                type: ComponentType.TextInput,
+                component: new TextInputBuilder({
+                    customId: 'message_video',
+                    style: TextInputStyle.Paragraph,
+                    value: channel?.commentNewVideo || '',
+                    required: false
+                })
+            }
+        )
+
+        const labelStreamMessageInput = new LabelBuilder(
+            {
+                description: 'El mensaje que se mostrará cuando tu canal inicie un directo',
+                label: 'Mensaje para nuevos directos',
+                type: ComponentType.TextInput,
+                component: new TextInputBuilder({
+                    customId: 'message_stream',
+                    style: TextInputStyle.Paragraph,
+                    value: channel?.commentNewStream || '',
+                    required: false
+                })
+            }
+        )
+
+        const labelVideoFilterInput = new LabelBuilder(
+            {
+                description: 'Filtra videos que en su titulo contienen palabras clave',
+                label: 'Filtro de vídeos',
+                type: ComponentType.TextInput,
+                component: new TextInputBuilder({
+                    customId: 'video_filter',
+                    style: TextInputStyle.Paragraph,
+                    value: channel?.videoFilter?.join(', ') || '',
+                    placeholder: 'No notificar si el título contiene palabras clave. Separar con comas (,)',
+                    required: false
+                })
+            }
+        )
+
+        const labelEnableShortsInput = new LabelBuilder(
+            {
+                description: 'Si está activo, se notificarán también los shorts',
+                label: 'Notificar Shorts',
+                type: ComponentType.Checkbox,
+                component: new CheckboxBuilder({
+                    custom_id: 'enable_shorts',
+                    default: channel?.enableShorts || false
+                })
+            }
+        )
+
+        /* const channelNameInput = new TextInputBuilder()
             .setCustomId('channel_name')
             .setLabel('Define el nombre de tu canal de YouTube')
             .setStyle(TextInputStyle.Short)
@@ -400,15 +483,18 @@ async function configureYoutubeNotifications(interaction) {
             .setStyle(TextInputStyle.Paragraph)
             .setValue(channel?.videoFilter?.join(', ') || '')
             .setPlaceholder('No notificar si el título contiene palabras clave. Separar con comas (,)')
-            .setRequired(false)
+            .setRequired(false) */
 
-        const firstRow = new ActionRowBuilder().addComponents(channelNameInput);
-        const secondRow = new ActionRowBuilder().addComponents(channelIdInput);
-        const thirdRow = new ActionRowBuilder().addComponents(videoMessageInput);
-        const fourthRow = new ActionRowBuilder().addComponents(streamMessageInput);
-        const fifthRow = new ActionRowBuilder().addComponents(videoFilterInput);
+        /*  const firstRow = new ActionRowBuilder().addComponents(channelNameInput);
+         const secondRow = new ActionRowBuilder().addComponents(channelIdInput);
+         const thirdRow = new ActionRowBuilder().addComponents(videoMessageInput);
+         const fourthRow = new ActionRowBuilder().addComponents(streamMessageInput);
+         const fifthRow = new ActionRowBuilder().addComponents(videoFilterInput); 
+ 
+         modal.addComponents(firstRow, secondRow, thirdRow, fourthRow, fifthRow);*/
 
-        modal.addComponents(firstRow, secondRow, thirdRow, fourthRow, fifthRow);
+        modal.addLabelComponents(labelChannelNameInput, labelChannelIdInput, labelVideoMessageInput,
+            labelStreamMessageInput, labelVideoFilterInput, labelEnableShortsInput);
 
         await interaction.showModal(modal);
     } catch (error) {
@@ -431,43 +517,43 @@ async function configureYoutubeNotifications(interaction) {
  * @returns {Promise<Message | void>} A promise that resolves when the test notification is sent.
  */
 async function testNotification(interaction) {
-	try {
-		await interaction.deferReply({ flags: MessageFlags.Ephemeral })
+    try {
+        await interaction.deferReply({ flags: MessageFlags.Ephemeral })
 
-		/** @type {YouTubeChannel} */
-		const channel = await globalRef.database.collection(COLL_YOUTUBE_CHANNELS).findOne({
-			userId: interaction.user.id
-		})
+        /** @type {YouTubeChannel} */
+        const channel = await globalRef.database.collection(COLL_YOUTUBE_CHANNELS).findOne({
+            userId: interaction.user.id
+        })
 
-		if (!channel) {
-			return await interaction.editReply({
-				content: 'No tienes configurado un canal de YouTube en el bot'
-			})
-		}
+        if (!channel) {
+            return await interaction.editReply({
+                content: 'No tienes configurado un canal de YouTube en el bot'
+            })
+        }
 
-		const typeNotif = interaction.options.getString('type')
+        const typeNotif = interaction.options.getString('type')
 
-		if (typeNotif === 'video') {
-			await interaction.editReply({
-				content: `<@&${process.env.ID_ROL_YOUTUBE_NOTIFICACIONES}>\n${channel.commentNewVideo} https://youtu.be/E_xqy5GjjzI`
-			})
-		} else if (typeNotif === 'stream') {
-			await interaction.editReply({
-				content: `<@&${process.env.ID_ROL_YOUTUBE_NOTIFICACIONES}>\n${channel.commentNewStream} https://youtu.be/E_xqy5GjjzI`
-			})
-		} else {
+        if (typeNotif === 'video') {
+            await interaction.editReply({
+                content: `<@&${process.env.ID_ROL_YOUTUBE_NOTIFICACIONES}>\n${channel.commentNewVideo} https://youtu.be/E_xqy5GjjzI`
+            })
+        } else if (typeNotif === 'stream') {
+            await interaction.editReply({
+                content: `<@&${process.env.ID_ROL_YOUTUBE_NOTIFICACIONES}>\n${channel.commentNewStream} https://youtu.be/E_xqy5GjjzI`
+            })
+        } else {
             await interaction.editReply({
                 content: 'Tipo de notificación no válido'
             })
         }
-	} catch (error) {
-		try {
+    } catch (error) {
+        try {
             logger.ERR(error)
             await interaction.editReply('Ha ocurrido un error desconocido. Inténtalo más tarde')
         } catch {
 
         }
-	}
+    }
 }
 
 /**
@@ -608,9 +694,9 @@ async function listYouTubeChannels(interaction) {
 }
 
 module.exports = {
-	setEnabled,
-	testNotification,
-	subscribeUnsubscribe,
+    setEnabled,
+    testNotification,
+    subscribeUnsubscribe,
     configureYoutubeNotifications,
     handleModalSubmit,
     listYouTubeChannels
