@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2024 Zukaritasu
+ * Copyright (C) 2024 - 2026 Zukaritasu
  * 
  * his program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,23 +15,27 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-const { SlashCommandBuilder, ChatInputCommandInteraction, EmbedBuilder } = require('discord.js');
+const { SlashCommandBuilder, ChatInputCommandInteraction, EmbedBuilder, Client } = require('discord.js');
 const { states } = require('../../../.botconfig/country-states.json')
+const { Db } = require('mongodb');
 const logger = require('../../logger');
 
-///////////////////////////////////////////
-
 /**
- * @param {Client} client 
  * @param {ChatInputCommandInteraction} interaction 
  * @returns 
  */
-async function embedNumberPlayers(_client, _database, interaction) {
+async function embedNumberPlayers(interaction) {
     let fields = [];
+
+    try {
+        await interaction.guild.members.fetch({ force: true });
+    } catch (e) {
+        // Fallback to cached member counts if fetching all members fails
+    }
 
     for (const state of states) {
         const role = interaction.guild.roles.cache.get(state.roleId);
-        if (role !== undefined) {
+        if (role) {
             fields.push(
                 {
                     name: state.name,
@@ -57,7 +61,6 @@ async function embedNumberPlayers(_client, _database, interaction) {
     });
 
     return {
-        content: '',
         embeds: [
             new EmbedBuilder()
                 .setColor(0x2b2d31)
@@ -65,35 +68,32 @@ async function embedNumberPlayers(_client, _database, interaction) {
                 .addFields(fields)
                 .setTimestamp()
                 .setFooter({ text: `GD Venezuela` })
-                //.setThumbnail('https://flagcdn.com/256x192/ve.png')
                 .setAuthor({
                     name: 'Venezuela',
                     iconURL: 'https://flagcdn.com/w640/ve.png'
                 })
-        ],
-        components: []
+        ]
     };
 }
 
 /**
  * 
- * @param {*} _client 
- * @param {*} _database 
+ * @param {Client} _client 
+ * @param {Db} _database 
  * @param {ChatInputCommandInteraction} interaction 
  */
-async function execute(client, database, interaction) {
+async function execute(_client, _database, interaction) {
     try {
         await interaction.deferReply();
-        await interaction.editReply(await embedNumberPlayers(client, database, interaction));
+        await interaction.editReply(await embedNumberPlayers(interaction));
     } catch (e) {
         logger.ERR(e);
-        await interaction.editReply(
-            {
-                content: 'An unknown error has occurred',
-                embeds: [],
-                components: []
-            }
-        );
+        try {
+            interaction.deferred ? await interaction.editReply('An unknown error has occurred') :
+                await interaction.reply('An unknown error has occurred')
+        } catch {
+
+        }
     }
 }
 
