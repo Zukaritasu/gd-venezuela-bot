@@ -22,7 +22,7 @@ const logger = require('../../logger');
 
 /**
  * @param {ChatInputCommandInteraction} interaction 
- * @returns 
+ * @returns {Promise<{embeds: EmbedBuilder[]}>}
  */
 async function embedNumberPlayers(interaction) {
     let fields = [];
