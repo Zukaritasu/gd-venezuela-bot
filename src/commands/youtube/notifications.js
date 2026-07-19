@@ -494,7 +494,7 @@ async function configureYoutubeNotifications(interaction) {
          modal.addComponents(firstRow, secondRow, thirdRow, fourthRow, fifthRow);*/
 
         modal.addLabelComponents(labelChannelNameInput, labelChannelIdInput, labelVideoMessageInput,
-            labelStreamMessageInput, labelVideoFilterInput, labelEnableShortsInput);
+            labelStreamMessageInput, labelVideoFilterInput);
 
         await interaction.showModal(modal);
     } catch (error) {
