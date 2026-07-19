@@ -15,7 +15,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-const { ChatInputCommandInteraction, GuildMember, MessageFlags, ModalSubmitInteraction, ActionRowBuilder, TextInputBuilder, ModalBuilder, TextInputStyle, ButtonBuilder, ButtonStyle, LabelBuilder, ComponentType, CheckboxBuilder } = require("discord.js");
+const { ChatInputCommandInteraction, GuildMember, MessageFlags, ModalSubmitInteraction, ActionRowBuilder, TextInputBuilder, ModalBuilder, TextInputStyle, ButtonBuilder, ButtonStyle, LabelBuilder, ComponentType } = require("discord.js");
 const { COLL_YOUTUBE_CHANNELS } = require('../../../.botconfig/database-info.json')
 const { YOUTUBE_WEBHOOK_SECRET, YOUTUBE_NOTIFICATIONS_PORT } = require('../../../.botconfig/token.json')
 const { Db } = require("mongodb");
@@ -368,7 +368,6 @@ async function configureYoutubeNotifications(interaction) {
 
         const labelChannelNameInput = new LabelBuilder(
             {
-                description: 'Define el nombre de tu canal de YouTube',
                 label: 'Nombre del canal',
                 type: ComponentType.TextInput,
                 component: new TextInputBuilder({
@@ -382,7 +381,6 @@ async function configureYoutubeNotifications(interaction) {
 
         const labelChannelIdInput = new LabelBuilder(
             {
-                description: 'ID del Canal',
                 label: 'ID del Canal',
                 type: ComponentType.TextInput,
                 component: new TextInputBuilder({
@@ -424,74 +422,18 @@ async function configureYoutubeNotifications(interaction) {
 
         const labelVideoFilterInput = new LabelBuilder(
             {
-                description: 'Filtra videos que en su titulo contienen palabras clave',
+                description: 'Filtra los vídeos cuyo título contenga palabras clave para descartar la notificación. Separar con comas (,)',
                 label: 'Filtro de vídeos',
                 type: ComponentType.TextInput,
                 component: new TextInputBuilder({
                     customId: 'video_filter',
                     style: TextInputStyle.Paragraph,
                     value: channel?.videoFilter?.join(', ') || '',
-                    placeholder: 'No notificar si el título contiene palabras clave. Separar con comas (,)',
+                    placeholder: 'Separar con comas (,)',
                     required: false
                 })
             }
         )
-
-        const labelEnableShortsInput = new LabelBuilder(
-            {
-                description: 'Si está activo, se notificarán también los shorts',
-                label: 'Notificar Shorts',
-                type: ComponentType.Checkbox,
-                component: new CheckboxBuilder({
-                    custom_id: 'enable_shorts',
-                    default: channel?.enableShorts || false
-                })
-            }
-        )
-
-        /* const channelNameInput = new TextInputBuilder()
-            .setCustomId('channel_name')
-            .setLabel('Define el nombre de tu canal de YouTube')
-            .setStyle(TextInputStyle.Short)
-            .setValue(channel?.channelName || '')
-            .setRequired(true)
-
-        const channelIdInput = new TextInputBuilder()
-            .setCustomId('channel_id')
-            .setLabel('ID del Canal')
-            .setStyle(TextInputStyle.Short)
-            .setValue(channel?.channelId || '')
-            .setRequired(true)
-
-        const videoMessageInput = new TextInputBuilder()
-            .setCustomId('message_video')
-            .setLabel('Mensaje para nuevos videos')
-            .setStyle(TextInputStyle.Paragraph)
-            .setValue(channel?.commentNewVideo || '')
-            .setRequired(false)
-
-        const streamMessageInput = new TextInputBuilder()
-            .setCustomId('message_stream')
-            .setLabel('Mensaje para nuevos directos')
-            .setStyle(TextInputStyle.Paragraph)
-            .setValue(channel?.commentNewStream || '')
-            .setRequired(false)
-
-        const videoFilterInput = new TextInputBuilder()
-            .setCustomId('video_filter')
-            .setLabel('Filtro de vídeos')
-            .setStyle(TextInputStyle.Paragraph)
-            .setValue(channel?.videoFilter?.join(', ') || '')
-            .setPlaceholder('No notificar si el título contiene palabras clave. Separar con comas (,)')
-            .setRequired(false) */
-
-        /*  const firstRow = new ActionRowBuilder().addComponents(channelNameInput);
-         const secondRow = new ActionRowBuilder().addComponents(channelIdInput);
-         const thirdRow = new ActionRowBuilder().addComponents(videoMessageInput);
-         const fourthRow = new ActionRowBuilder().addComponents(streamMessageInput);
-         const fifthRow = new ActionRowBuilder().addComponents(videoFilterInput); 
- 
-         modal.addComponents(firstRow, secondRow, thirdRow, fourthRow, fifthRow);*/
 
         modal.addLabelComponents(labelChannelNameInput, labelChannelIdInput, labelVideoMessageInput,
             labelStreamMessageInput, labelVideoFilterInput);
