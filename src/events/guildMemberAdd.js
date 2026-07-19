@@ -23,15 +23,13 @@ const { Db } = require('mongodb');
 const checkAccounts = require('../checkAccounts');
 const channels = require('../../.botconfig/channels.json');
 
-//////////////////////////////////////////////////////////////
-
 Canvas.registerFont(path.join(__dirname, '../../fonts/Franklin Gothic Condensed.ttf'), { family: 'FranklinGothic' });
 
-/////////////////////////////////////////////////////////////
-
 /**
+ * Sends a welcome message to a member.
  * 
- * @param {GuildMember} member 
+ * @param {GuildMember} member - The member to send the welcome message to.
+ * @param {boolean} test - Whether the welcome message is for testing purposes.
  */
 async function welcomeMessageMember(member, test = false) {
     try {
@@ -47,7 +45,7 @@ async function welcomeMessageMember(member, test = false) {
             ctx.drawImage(background, 0, 0, canvas.width, canvas.height);
 
             let avatarImage = member.user.avatarURL({ extension: 'png' }) || member.user.defaultAvatarURL;
-            
+
             const avatar = await Canvas.loadImage(avatarImage);
 
             const radius = 124;
@@ -91,7 +89,7 @@ async function welcomeMessageMember(member, test = false) {
 
             const attachment = new AttachmentBuilder(canvas.toBuffer(), { name: 'welcome-image.png' });*/
 
-            const y2 =  y + 20
+            const y2 = y + 20
 
             ctx.font = 'bold 82px FranklinGothic';
             ctx.fillStyle = '#ffffff';
@@ -130,7 +128,7 @@ module.exports = {
      */
     async execute(_client, database, member) {
         try {
-            if (member.guild.id !== '1119795689984102455') return;
+            if (member.guild.id !== process.env.SERVER_GD_VENEZUELA_ID) return;
             if (await checkAccounts.checkUserAccountAge(member.guild, database, member)) {
                 // Updates the cache for the member in the guild. This is necessary to ensure 
                 // that the member is properly cached after they join the guild.
