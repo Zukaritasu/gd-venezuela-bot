@@ -118,9 +118,17 @@ async function GET_verifyWebhook(req, res) {
 }
 
 /**
- * 
- * @param {YouTubeVideo} videoInfo 
- * @returns {Promise<void>}
+ * Send a notification for a new YouTube video or stream.
+ *
+ * This function checks if the video is new, verifies the channel
+ * is configured and enabled for notifications, and posts a message
+ * to the configured Discord channel. It will also respect the
+ * channel-specific video filter to avoid sending notifications for
+ * filtered titles.
+ *
+ * @param {YouTubeVideo} videoInfo - Object containing video metadata (videoId, channelId, title, etc.).
+ * @param {boolean} isStream - True if the notification is for a live stream; false for a regular video.
+ * @returns {Promise<void>} Resolves when processing and (optionally) sending the notification is complete.
  */
 async function sendNewVideo(videoInfo, isStream) {
     /** @type {YouTubeChannel} */
@@ -136,8 +144,9 @@ async function sendNewVideo(videoInfo, isStream) {
 
         logger.DBG(`Video sended: ${videoInfo.videoId}`)
         if (videoInfo.channelId !== 'UCdwIt6BJez93HG-rxNnttNw') {
-            await channel.send(`<@&${process.env.ID_ROL_YOUTUBE_NOTIFICACIONES}>\n${isStream ? youtubeChannel.commentNewStream : youtubeChannel.commentNewVideo
-                } https://youtu.be/${videoInfo.videoId}`);
+            await channel.send(`<@&${process.env.ID_ROL_YOUTUBE_NOTIFICACIONES}>\n${
+                isStream ? youtubeChannel.commentNewStream : youtubeChannel.commentNewVideo
+            } https://youtu.be/${videoInfo.videoId}`);
         }
     }
 }
@@ -300,13 +309,12 @@ async function POST_youtubeWebhook(req, res) {
 
             if (!videoInfo.published || !videoInfo.updated || !videoInfo.videoId || !videoInfo.channelId)
                 continue;
+            // Skip videos older than 2 weeks
+            if (Date.now() - videoInfo.published >= 1209600000)
+                continue
 
             const videoItem = await youtubeApi.fetchVideoDetails(videoInfo.videoId)
             if (videoItem) {
-                // Skip videos older than 2 weeks
-                if (Date.now() - videoInfo.published >= 1209600000)
-                    continue
-
                 const videoType = await youtubeApi.getVideoType(videoItem)
                 if (videoType) {
                     if (videoType === 'stream' && videoItem.snippet?.liveBroadcastContent !== 'live')
