@@ -22,7 +22,6 @@ const utils = require('../utils');
 const activity = require('../commands/leveling/activity');
 const channels = require('../../.botconfig/channels.json');
 const submit = require('../commands/records/submit');
-const checkAttachments = require('../checkAttachments')
 
 /**
  * List of user IDs that are whitelisted to use certain commands.
@@ -185,8 +184,6 @@ module.exports = {
                             await message.react('❌');
                         }
                     }
-                } else if (message.attachments.size > 0 && !utils.hasUserPermissions(message.member) && !message.member.roles.cache.has(process.env.ID_ROL_NOTABLE)) {
-                    await checkAttachments.check(database, message)
                 }
 
                 else if (isCommand(message, '--test-welcome') && message.member.id === '591640548490870805') {

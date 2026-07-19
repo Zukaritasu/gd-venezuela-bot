@@ -30,35 +30,35 @@ process.chdir(__dirname);
 
 (async () => {
     /** @type {Db} */
-	let database = null
+    let database = null
 
-	try {
-		database = (await (mongodb = new MongoClient(URI_DATABASE)).connect())
-			.db(DATABASE_NAME)
+    try {
+        database = (await (mongodb = new MongoClient(URI_DATABASE)).connect())
+            .db(DATABASE_NAME)
         global.database = database
         logger.INF('Database connection successful!');
-	} catch (e) {
+    } catch (e) {
         logger.ERR(e)
-		return
-	}
+        return
+    }
 
     // Modules are loaded to define the redis object
-    const modules = [ './apipcrate', './aredlapi', './robtopapi', './gdvzlalistapi', './checkAttachments', './commands/text-commands/save-hashes' ]
+    const modules = ['./apipcrate', './aredlapi', './robtopapi', './gdvzlalistapi', './commands/text-commands/save-hashes']
     const redisClient = redis.createClient()
 
     try {
         await redisClient.connect();
         global.redisClient = redisClient
         logger.INF('Redis client connected!')
-        
+
         modules.forEach(module => require(module).setRedisClientObject(redisClient))
-        
+
         // Initialize activity module with Redis and database
-        
+
         await require('./commands/leveling/activity').initializeActivityLog()
     } catch (e) {
         logger.ERR(e)
-		return
+        return
     }
 
     // The bot client instance is created
@@ -87,17 +87,17 @@ process.chdir(__dirname);
     });
 
     client.commands = botenv.getCommandsCollection();
-    
+
     // Loading of bot event modules
     botenv.getEventsCollection().forEach(event => {
-		const eventFunc = (...args) => event.execute(client, database, ...args)
-		if (event.once) {
-			client.once(event.name, eventFunc);
-		} else {
-			client.on(event.name, eventFunc);
-		}
-	})
-    
+        const eventFunc = (...args) => event.execute(client, database, ...args)
+        if (event.once) {
+            client.once(event.name, eventFunc);
+        } else {
+            client.on(event.name, eventFunc);
+        }
+    })
+
     client.login(TOKEN).catch((error) => {
         logger.ERR(error)
     }).then(() => {
