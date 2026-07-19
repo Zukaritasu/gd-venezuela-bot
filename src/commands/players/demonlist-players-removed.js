@@ -206,10 +206,7 @@ async function createEmbedLeaderboard(interaction) {
             await confirmation.deferUpdate();
 
             if (confirmation.customId === 'close') {
-                message.components.forEach(rows => {
-                    rows.components.forEach(component => component.setDisabled(true));
-                });
-                await confirmation.editReply(message);
+                await confirmation.deleteReply();
                 break;
             } else if (confirmation.customId === 'next') {
                 if (currentPage < totalPages - 1) {
