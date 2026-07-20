@@ -57,7 +57,6 @@ async function sendSystemStatus(message) {
 		};
 
 		const embed = new EmbedBuilder()
-			.setColor(0x5865F2)
 			.setTitle('Server Status')
 			.setDescription('Information about the VPS where the bot is running')
 			.addFields(
