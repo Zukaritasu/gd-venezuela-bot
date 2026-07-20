@@ -186,6 +186,11 @@ module.exports = {
                     }
                 }
 
+                else if (isCommand(message, '--systeminfo')) {
+                    if (utils.hasUserPermissions(message.member))
+                        await require('../commands/text-commands/systeminfo').sendSystemStatus(message)
+                }
+
                 else if (isCommand(message, '--test-welcome') && message.member.id === '591640548490870805') {
                     await require('./guildMemberAdd').welcomeMessageMember(message.member, true)
                 }
