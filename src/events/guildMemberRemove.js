@@ -28,6 +28,8 @@ module.exports = {
 	 */
 	async execute(_, database, member) {
 		try {
+			if (member.guild.id !== process.env.SERVER_GD_VENEZUELA_ID) 
+				return;
 			await require('../commands/leveling/activity').removeMember(database, member)
 		} catch (e) {
 			logger.ERR(e)
