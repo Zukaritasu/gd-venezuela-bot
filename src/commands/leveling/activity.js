@@ -478,12 +478,73 @@ async function verifyGuildMembers(members) {
 	}
 }
 
+/**
+ * Removes a guild member from the member tracking state.
+ *
+ * This function updates the cached activity record for the specified user,
+ * marking them as no longer a member. It also updates the corresponding
+ * database document in the users activity collection to reflect the member
+ * removal state.
+ *
+ * @param {Db} db - The database object used to persist the updated member state.
+ * @param {GuildMember} member - The guild member to remove from member tracking.
+ */
+async function removeMember(db, member) {
+	const userActivity = await getUserActivity(member.user.id);
+	if (userActivity) {
+		userActivity.isMember = false;
+		// Ignore the return value from updateUserActivity because the important
+		// part is to persist the member removal in the database so that a user
+		// who is no longer a member is excluded from text and voice leaderboards.
+		await updateUserActivity(userActivity);
+
+		try {
+			await db.collection(COLL_USERS_ACTIVITY).updateOne(
+				{ userId: member.user.id },
+				{ $set: { isMember: false } }
+			)
+		} catch (error) {
+			logger.ERR(error)
+		}
+	}
+}
+
+/**
+ * Adds a guild member to the member tracking state.
+ *
+ * This function updates the cached activity record for the specified user,
+ * marking them as a member. It also updates the corresponding database
+ * document in the users activity collection to reflect the member state.
+ *
+ * @param {Db} db - The database object used to persist the updated member state.
+ * @param {GuildMember} member - The guild member to add to member tracking.
+ */
+async function addMember(db, member) {
+    const userActivity = await getUserActivity(member.user.id);
+    if (userActivity) {
+        userActivity.isMember = true;
+        // Persist the change in cache first so leaderboards include the member again.
+        await updateUserActivity(userActivity);
+
+        try {
+            await db.collection(COLL_USERS_ACTIVITY).updateOne(
+                { userId: member.user.id },
+                { $set: { isMember: true } }
+            )
+        } catch (error) {
+            logger.ERR(error)
+        }
+    }
+}
+
 module.exports = {
 	log,
 	getUserActivityData,
 	getTopUsersData,
 	voiceEvent,
 	verifyGuildMembers,
+	removeMember,
+	addMember,
 
 	/**
 	 * Sets the user as a booster in the Redis cache.

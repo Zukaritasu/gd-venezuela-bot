@@ -134,6 +134,7 @@ module.exports = {
                 // that the member is properly cached after they join the guild.
                 await member.guild.members.fetch(member.id);
                 await welcomeMessageMember(member);
+                await require('../commands/leveling/activity').addMember(database, member)
             }
         } catch (e) {
             logger.ERR(e)
