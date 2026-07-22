@@ -74,14 +74,15 @@ async function getUserActivity(userId) {
 }
 
 /**
- * Updates the user activity data for a given user ID.
+ * Updates the user activity data in the Redis cache using optimistic concurrency control.
  * 
- * This function updates the user activity data in the Redis cache. It takes the user ID
- * and the updated user activity data as parameters. If there is an error while updating the data, it
- * logs the error.
- * @param {string} userId - The ID of the user.
- * @param {UserActivity} userActivity - The updated user activity data to be stored in the cache.
- * @returns {Promise<boolean>} - Returns true if the update was successful, false otherwise.
+ * It monitors the Redis key for concurrent modifications via WATCH/MULTI transactions.
+ * If a version mismatch or transaction conflict occurs, it will retry up to 3 times
+ * before logging an error. Upon a successful update, it increments the activity version
+ * and flags the user ID in the dirty users set.
+ * 
+ * @param {UserActivity} userActivity - The user activity payload to store.
+ * @returns {Promise<boolean>} Resolves to `true` if updated successfully, `false` otherwise.
  */
 async function updateUserActivity(userActivity) {
 	try {
@@ -93,11 +94,12 @@ async function updateUserActivity(userActivity) {
 		while (retries > 0) {
 			await global.redisClient.watch(key);
 
-			const currentData = await global.redisClient.get(key);
-			if (currentData) {
-				const currentActivity = JSON.parse(currentData);
+			const value = await global.redisClient.get(key);
+			if (value) {
+				const currentActivity = JSON.parse(value);
 				if (currentActivity.version !== userActivity.version) {
 					await global.redisClient.unwatch();
+					userActivity.version = currentActivity.version;
 					retries--;
 					continue;
 				}
