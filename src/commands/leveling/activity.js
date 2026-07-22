@@ -181,6 +181,8 @@ async function loadBackupData(db) {
 		const isLoaded = await global.redisClient.get(KEY_IS_LOADED_ACTIVITY);
 		if (isLoaded) return true
 
+		logger.DBG(`Loading backup dataLoading backup data for user activity!`)
+
 		await global.redisClient.set(KEY_IS_LOADED_ACTIVITY, "true");
 
 		const cursor = db.collection(COLL_USERS_ACTIVITY).find({});
