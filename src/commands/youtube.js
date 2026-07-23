@@ -33,9 +33,11 @@ async function execute(_client, _db, interaction) {
 	} else if (subcommand === 'activar') {
 		await require('./youtube/notifications').setEnabled(interaction, true);
 	} else if (subcommand === 'testear') {
-		await require('./youtube/notifications').testNotification(interaction);
+		await require('./youtube/notifications').notify(interaction, true);
 	} else if (subcommand === 'lista') {
 		await require('./youtube/notifications').listYouTubeChannels(interaction);
+	} else if (subcommand === 'notificar') {
+		await require('./youtube/notifications').notify(interaction, false);
 	}
 }
 
@@ -62,6 +64,25 @@ module.exports = {
 			subcommand
 				.setName('lista')
 				.setDescription('Lista de canales registrados (solo personal autorizado)')
+		)
+		.addSubcommand(subcommand =>
+			subcommand
+				.setName('notificar')
+				.setDescription('Notificar un video (Si el bot no notifica)')
+				.addStringOption(option =>
+					option
+						.setName('type')
+						.setDescription('Video o Stream')
+						.addChoices(
+							{ name: 'Video', value: 'video' },
+							{ name: 'Stream', value: 'stream' }
+						)
+				)
+				.addStringOption(option =>
+					option
+						.setName('video_id')
+						.setDescription('Id del video de YouTube')
+				)
 		)
 		.addSubcommand(subcommand =>
 			subcommand

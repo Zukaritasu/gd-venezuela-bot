@@ -18,6 +18,7 @@
 const { ChatInputCommandInteraction, GuildMember, MessageFlags, ModalSubmitInteraction, ActionRowBuilder, TextInputBuilder, ModalBuilder, TextInputStyle, ButtonBuilder, ButtonStyle, LabelBuilder, ComponentType } = require("discord.js");
 const { COLL_YOUTUBE_CHANNELS } = require('../../../.botconfig/database-info.json')
 const { YOUTUBE_WEBHOOK_SECRET, YOUTUBE_NOTIFICATIONS_PORT } = require('../../../.botconfig/token.json')
+const { YOUTUBE_NOTIFICATIONS } = require('../../../.botconfig/channels.json')
 const { Db } = require("mongodb");
 const axios = require('axios')
 const logger = require('../../logger')
@@ -458,42 +459,78 @@ async function configureYoutubeNotifications(interaction) {
  * or stream notification layout, including the custom message and role mention.
  * 
  * @param {ChatInputCommandInteraction} interaction - The Discord slash command interaction object.
+ * @param {boolean} isTest 
  * @returns {Promise<Message | void>} A promise that resolves when the test notification is sent.
  */
-async function testNotification(interaction) {
+async function notify(interaction, isTest) {
+    const print = async (message) => {
+        if (interaction.deferred || interaction.replied) {
+            return await interaction.editReply(message);
+        }
+        return await interaction.reply(message);
+    };
+
     try {
-        await interaction.deferReply({ flags: MessageFlags.Ephemeral })
+        await interaction.deferReply({ 
+            flags: isTest ? MessageFlags.Ephemeral : undefined 
+        });
 
-        /** @type {YouTubeChannel} */
-        const channel = await globalRef.database.collection(COLL_YOUTUBE_CHANNELS).findOne({
+        let channel = await globalRef.database.collection(COLL_YOUTUBE_CHANNELS).findOne({
             userId: interaction.user.id
-        })
+        });
 
-        if (!channel) {
-            return await interaction.editReply({
-                content: 'No tienes configurado un canal de YouTube en el bot'
-            })
+        if (!channel && isTest) {
+            return await print({
+                content: 'No tienes configurado un canal de YouTube en el bot.'
+            });
         }
 
-        const typeNotif = interaction.options.getString('type')
+        const typeNotif = interaction.options.getString('type');
 
-        if (typeNotif === 'video') {
-            await interaction.editReply({
-                content: `<@&${process.env.ID_ROL_YOUTUBE_NOTIFICACIONES}>\n${channel.commentNewVideo} https://youtu.be/E_xqy5GjjzI`
-            })
-        } else if (typeNotif === 'stream') {
-            await interaction.editReply({
-                content: `<@&${process.env.ID_ROL_YOUTUBE_NOTIFICACIONES}>\n${channel.commentNewStream} https://youtu.be/E_xqy5GjjzI`
-            })
+        if (isTest) {
+            const comment = typeNotif === 'video' ? channel.commentNewVideo : channel.commentNewStream;
+            
+            return await print({
+                content: `<@&${process.env.ID_ROL_YOUTUBE_NOTIFICACIONES}>\n${comment} https://youtu.be/E_xqy5GjjzI`
+            });
         } else {
-            await interaction.editReply({
-                content: 'Tipo de notificación no válido'
-            })
+            const videoId = interaction.options.getString('video_id');
+            if (!videoId || !/^[a-zA-Z0-9_-]{11}$/.test(videoId)) {
+                return await print({ 
+                    content: 'El ID del vídeo de YouTube no es válido. Debe tener exactamente 11 caracteres.' 
+                });
+            }
+
+            const guild = await interaction.client.guilds.fetch(process.env.SERVER_GD_VENEZUELA_ID);
+            if (!guild) {
+                throw new Error(`Guild not found: ${process.env.SERVER_GD_VENEZUELA_ID}`);
+            }
+
+            const notificationChannel = await guild.channels.fetch(process.env.YOUTUBE_NOTIFICATIONS).catch(() => null);
+            if (!notificationChannel) {
+                return await print({ content: 'Canal de notificaciones no encontrado.' });
+            }
+
+            if (!channel) {
+                const username = interaction.member?.user?.username || interaction.user.username;
+                channel = {
+                    commentNewVideo: `**${username}** ¡ha subido un nuevo video!`,
+                    commentNewStream: `**${username}** ¡ha iniciado un nuevo directo!`
+                };
+            }
+
+            const comment = typeNotif === 'video' ? channel.commentNewVideo : channel.commentNewStream;
+
+            await notificationChannel.send({
+                content: `<@&${process.env.ID_ROL_YOUTUBE_NOTIFICACIONES}>\n${comment} https://youtu.be/${videoId}`
+            });
+
+            return await print({ content: '¡Notificación enviada con éxito!' });
         }
     } catch (error) {
+        logger.ERR(error);
         try {
-            logger.ERR(error)
-            await interaction.editReply('Ha ocurrido un error desconocido. Inténtalo más tarde')
+            await print({ content: 'Ha ocurrido un error desconocido. Inténtalo más tarde.' });
         } catch {
 
         }
@@ -639,7 +676,7 @@ async function listYouTubeChannels(interaction) {
 
 module.exports = {
     setEnabled,
-    testNotification,
+    notify,
     subscribeUnsubscribe,
     configureYoutubeNotifications,
     handleModalSubmit,
