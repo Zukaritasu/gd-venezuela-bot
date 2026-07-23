@@ -143,11 +143,10 @@ async function sendNewVideo(videoInfo, isStream) {
             return
 
         logger.DBG(`Video sended: ${videoInfo.videoId}`)
-        if (videoInfo.channelId !== 'UCdwIt6BJez93HG-rxNnttNw') {
-            await channel.send(`<@&${process.env.ID_ROL_YOUTUBE_NOTIFICACIONES}>\n${
-                isStream ? youtubeChannel.commentNewStream : youtubeChannel.commentNewVideo
-            } https://youtu.be/${videoInfo.videoId}`);
-        }
+        
+        await channel.send(`<@&${process.env.ID_ROL_YOUTUBE_NOTIFICACIONES}>\n${
+            isStream ? youtubeChannel.commentNewStream : youtubeChannel.commentNewVideo
+        } https://youtu.be/${videoInfo.videoId}`);
     }
 }
 
