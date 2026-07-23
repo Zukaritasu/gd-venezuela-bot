@@ -139,7 +139,7 @@ async function sendNewVideo(videoInfo, isStream) {
     if (await saveVideo(videoInfo) && youtubeChannel && youtubeChannel.isEnabled) {
         /** @type {TextChannel} */
         const channel = globalRef.guild.channels.cache.get(YOUTUBE_NOTIFICATIONS);
-        if (!channel || youtubeChannel?.videoFilter.some(item => videoInfo.title.toLowerCase().includes(item.toLowerCase())))
+        if (!channel || youtubeChannel?.videoFilter?.some(item => videoInfo.title.toLowerCase().includes(item.toLowerCase())))
             return
 
         logger.DBG(`Video sended: ${videoInfo.videoId}`)
