@@ -600,6 +600,7 @@ async function listYouTubeChannels(interaction) {
             return { embeds: [embed], components: [row] }
         }
 
+        let closed = false
         const initial = await buildResponse(page)
         await interaction.editReply(initial)
         const msg = await interaction.fetchReply()
@@ -612,8 +613,8 @@ async function listYouTubeChannels(interaction) {
                 } else if (i.customId === 'next') {
                     if (page < totalPages) page++
                 } else if (i.customId === 'close') {
-                    const disabledRow = createButtonRow(page, -1)
-                    await i.update({ components: [disabledRow] })
+                    closed = true
+                    await i.deleteReply()
                     collector.stop()
                     return
                 }
@@ -626,6 +627,7 @@ async function listYouTubeChannels(interaction) {
 
         collector.on('end', async () => {
             try {
+                if (closed) return
                 const disabledRow = createButtonRow(page, -1)
                 await msg.edit({ components: [disabledRow] })
             } catch (err) {
