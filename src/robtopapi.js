@@ -63,9 +63,13 @@ async function getGJUsers20(username) {
 }
 
 /**
- * 
- * @param {string} str 
- * @returns {Map<string, string>}
+ * Parse a RobTop response string into a map of known user property keys and values.
+ * The input is a colon-separated sequence of key/value pairs. Each key is looked up
+ * in the robtopUser description table, and matching values are decoded to UTF-8 when
+ * the field represents a message.
+ *
+ * @param {string} str - The raw response string containing colon-separated key/value pairs.
+ * @returns {Map<string, string>} A map where the keys are property names and the values are parsed values.
  */
 function extractKeyValuePairs(str) {
     const map = new Map();
@@ -145,6 +149,46 @@ async function getUserInfo(accountID) {
     return extractKeyValuePairs(response.data);
 }
 
+/**
+ * Fetch the pending friend requests for a Geometry Dash account.
+ *
+ * Sends a request to the RobTop API endpoint using the provided account ID and
+ * encrypted password token (gjp2). The request is routed through a local SOCKS5
+ * proxy at 127.0.0.1:9050.
+ *
+ * @param {number} accountID - The Geometry Dash account ID.
+ * @param {string} gjp2 - The encrypted password token used for authentication.
+ * @returns {Promise<string | null>} The raw server response as a string, or null if the request fails.
+ */
+async function getGJFriendRequests20(accountID, gjp2) {
+    const agent = new SocksProxyAgent('socks5h://127.0.0.1:9050');
+
+    const data = new URLSearchParams({
+        "secret": "Wmfd2893gb7",
+        "accountID": accountID,
+        "gjp2": gjp2
+    });
+
+    try {
+        const data = await axios.post('http://www.boomlings.com/database/getGJFriendRequests20.php', data, {
+            headers: {
+                'User-Agent': '',
+                'Content-Type': 'application/x-www-form-urlencoded'
+            },
+            httpsAgent: agent,
+            httpAgent: agent,
+        })
+
+        return data.toString()
+    } catch (error) {
+        if (error?.response?.status !== 429 && error?.response?.status !== 403) {
+            logger.ERR('Error fetching user info:', error);
+        }
+    }
+
+    return null
+}
+
 module.exports = {
     setRedisClientObject: (redisObj) => redisObject = redisObj,
 
@@ -162,5 +206,9 @@ module.exports = {
      */
     getGJUsers20: async (username) => getUserData(username, getGJUsers20),
 
-    getUserInfo
+    getUserInfo,
+
+    getGJFriendRequests20,
+
+    extractKeyValuePairs
 }

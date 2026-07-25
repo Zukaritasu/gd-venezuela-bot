@@ -15,7 +15,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-const { PermissionsBitField, GuildMember, Guild, DiscordjsErrorCodes } = require("discord.js");
+const { PermissionsBitField, GuildMember, Guild, DiscordjsErrorCodes, ChatInputCommandInteraction, MessagePayload } = require("discord.js");
 const { YOUTUBE_API_KEY } = require('../.botconfig/token.json')
 const logger = require('./logger')
 const { states } = require('../.botconfig/country-states.json');
@@ -266,6 +266,50 @@ function formatTimeMilliseconds(ms) {
     return `${parts.slice(0, -1).join(', ')} y ${parts[parts.length - 1]}`;
 }
 
+/**
+ * Reply to an interaction or message-aware object.
+ * - message can be a string or an object (e.g. { embeds: [], content: '...' })
+ * - if interaction is already replied or deferred, try editReply then followUp
+ * @param {ChatInputCommandInteraction} interaction,
+ * @param {string | import("discord.js").InteractionReplyOptions | import("discord.js").InteractionEditReplyOptions} message 
+ */
+async function reply(interaction, message) {
+    if (!interaction) return null;
+    const payload = typeof message === 'string' ? { content: message } : message;
+    try {
+        // If interaction has been replied to or deferred, edit the reply when possible
+        if (interaction.replied || interaction.deferred) {
+            if (typeof interaction.editReply === 'function') {
+                return await interaction.editReply(payload).catch(async () => {
+                    if (typeof interaction.followUp === 'function')
+                        return await interaction.followUp(payload);
+                    return null;
+                });
+            }
+            if (typeof interaction.followUp === 'function')
+                return await interaction.followUp(payload);
+            return null;
+        }
+
+        // Normal reply path
+        if (typeof interaction.reply === 'function') {
+            return await interaction.reply(payload).catch(async () => {
+                if (typeof interaction.followUp === 'function')
+                    return await interaction.followUp(payload);
+                return null;
+            });
+        }
+
+        // Fallback to followUp if available
+        if (typeof interaction.followUp === 'function')
+            return await interaction.followUp(payload);
+    } catch (err) {
+        logger.ERR(err);
+    }
+
+    return null;
+}
+
 module.exports = {
     isValidYouTubeUrl,
     getYouTubeThumbnail,
@@ -281,5 +325,6 @@ module.exports = {
     formatTimeMilliseconds,
     getSHA256,
     getAllMembers,
-    sleep
+    sleep,
+    reply
 }

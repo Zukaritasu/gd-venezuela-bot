@@ -15,83 +15,32 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-const { SlashCommandBuilder, ChatInputCommandInteraction, ActionRowBuilder, ButtonBuilder, ButtonStyle, MessageComponentInteraction, MessageFlags } = require('discord.js');
+const { SlashCommandBuilder, ChatInputCommandInteraction, ActionRowBuilder, ButtonBuilder, ButtonStyle, MessageComponentInteraction, MessageFlags, Client } = require('discord.js');
 
 const axios = require('axios');
 const { Db } = require('mongodb');
 const crypto = require('crypto');
 const logger = require('../logger');
+const robtopapi = require('../robtopapi')
+const utils = require('../utils')
 const { PASSWORDGDBOT, ACCOUNTIDGDBOT } = require('../../.botconfig/token.json')
 const { COLL_GD_PROFILES } = require('../../.botconfig/database-info.json');
 
-/////////////////////////////////////////////
-
 const ERROR_TIMEOUT_MESSAGE = 'Collector received no interactions before ending with reason: time'
 
-const keysValues = [
-    {
-        key: 1,
-        value: 'userName'
-    },
-    {
-        key: 2,
-        value: 'playerID'
-    },
-    {
-        key: 9,
-        value: 'icon'
-    },
-    {
-        key: 10,
-        value: 'playerColor'
-    },
-    {
-        key: 11,
-        value: 'playerColor2'
-    },
-    {
-        key: 14,
-        value: 'iconType'
-    },
-    {
-        key: 15,
-        value: 'glow'
-    },
-    {
-        key: 16,
-        value: 'accountID'
-    },
-    {
-        key: 32,
-        value: 'friendRequestID'
-    },
-    {
-        key: 35,
-        value: 'message'
-    },
-    {
-        key: 37,
-        value: 'age'
-    },
-    {
-        key: 41,
-        value: 'NewFriendRequest'
-    },
-]
-
-/**********************************/
-
 /**
- * 
- * @returns string
+ * Generates a verification code used for friend registration.
+ * The code format is "AAA-BBB" where each letter is a random
+ * uppercase character from A-Z.
+ *
+ * @returns {string} A newly generated verification code (e.g. "QWE-RTY").
  */
 function generateCode() {
     const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
     let code = '';
 
     for (let i = 0; i < 3; i++) {
-        code += characters.charAt(Math.floor(Math.random() * characters.length));
-    }
+        code += characters.charAt(Math.floor(Math.random() * characters.length));    }
 
     code += '-';
 
@@ -103,9 +52,12 @@ function generateCode() {
 }
 
 /**
+ * Build the interaction payload asking the user to send a friend
+ * request to the official account with the provided verification code.
  * 
- * @param {string} code 
- * @returns 
+ * @param {string} code - Verification code to include in the message.
+ * @returns {{content: string, components: import('discord.js').ActionRowBuilder[]}}
+ * Message payload suitable for `interaction.editReply` or `interaction.reply`.
  */
 function createEmbed(code) {
     return {
@@ -130,168 +82,89 @@ function createEmbed(code) {
 }
 
 /**
- * 
- * @param {number} accountID 
- * @param {string} gjp2 
- * @returns 
+ * Verify the provided friend-request verification code against the
+ * OfficialGDVzla account's friend requests and, on success, insert
+ * a profile link into the database.
+ *
+ * This function queries the RobTop API for pending friend requests,
+ * searches for a request whose comment matches `code`, and then
+ * stores the association between the Discord `userId` and the
+ * Geometry Dash `playerID` / `accountID` in the configured collection.
+ *
+ * @param {Db} database - MongoDB database instance used to persist the link.
+ * @param {string} userId - Discord user ID that will be associated with the GD profile.
+ * @param {string} code - Verification code to look for in friend request comments.
+ * @returns {Promise<string>} Human-readable result message describing success or the error.
  */
-async function getGJFriendRequests20(accountID, gjp2) {
-    const data = new URLSearchParams({
-        "secret": "Wmfd2893gb7",
-        "accountID": accountID,
-        "gjp2": gjp2
-    });
+async function linkProfile(database, userId, code) {
+    const response = await robtopapi.getGJFriendRequests20(
+        ACCOUNTIDGDBOT,
+        crypto.createHash('sha1').update(`${PASSWORDGDBOT}mI29fmAnxgTs`).digest('hex')
+    )
 
-    return axios.post('http://www.boomlings.com/database/getGJFriendRequests20.php', data, {
-        headers: {
-            'User-Agent': '',
-            'Content-Type': 'application/x-www-form-urlencoded'
-        }
-    })
-}
-
-/**
- * 
- * @param {string} str 
- * @returns {Map<string, string>}
- */
-function extractKeyValuePairs(str) {
-    const map = new Map();
-    let key = '';
-    let value = '';
-    let isKey = true;
-
-    const addProperty = () => {
-        const item = keysValues.find(item => item.key == parseInt(key));
-        if (item) {
-            if (item.value === 'message')
-                value = Buffer.from(value, 'base64').toString('utf-8')
-            map.set(item.value, value);
-        }
+    if (!response || response === '-1' || response === '-2') {
+        return 'Ha ocurrido un error desconocido. Por favor, intente más tarde'
     }
 
-    for (let i = 0; i < str.length; i++) {
-        if (str[i] === ':') {
-            if (isKey) {
-                isKey = false;
-            } else {
-                addProperty()
-                key = ''; value = '';
-                isKey = true;
-            }
-        } else {
-            if (isKey) {
-                key += str[i];
-            } else {
-                value += str[i];
-            }
-        }
-    }
-
-    addProperty()
-
-    return map;
-}
-
-/**
- * 
- * @param {Db} database 
- * @param {ChatInputCommandInteraction} interaction 
- * @param {MessageComponentInteraction} confirmation 
- * @param {string} code 
- */
-async function checkMessage(database, interaction, confirmation, code) {
-    const data = (await getGJFriendRequests20(ACCOUNTIDGDBOT,
-        crypto.createHash('sha1').update(`${PASSWORDGDBOT}mI29fmAnxgTs`).digest('hex'))).data.toString()
-    if (data === '-1' || data === '-2') {
-        confirmation.update(
-            {
-                embeds: [],
-                content: 'Ha ocurrido un error desconocido. Por favor, intente más tarde',
-                components: []
-            }
-        )
-        return false
-    }
-
-    const requests = data.split('#')[0].split('|').map(request => extractKeyValuePairs(request))
+    const requests = response.split('#')[0].split('|').map(request => robtopapi.extractKeyValuePairs(request))
     const request = requests.find(map => map.get('message') === code)
     if (!request) {
-        confirmation.update(
-            {
-                embeds: [],
-                content: 'El codigo es invalido o aún no has enviado la solicitud de amistad a la cuenta con el código de comentario.\nSi lo has hecho, elimina la solicitud de amistad e inténtalo de nuevo.',
-                components: []
-            }
-        )
-        return false
-    } else {
-        const gdProfiles = database.collection(COLL_GD_PROFILES)
-        const result = await gdProfiles.insertOne(
-            {
-                userId: interaction.member.id,
-                playerID: request.get('playerID'),
-                accountID: request.get('accountID')
-            }
-        )
-
-        if (!result.acknowledged) {
-            confirmation.update(
-                {
-                    embeds: [],
-                    content: 'Ha ocurrido un error al vincular tu perfil. Por favor, inténtalo más tarde.\nSi el problema persiste, contacta con <@591640548490870805>.',
-                    components: []
-                }
-            )
-            return false
-        }
+        return 'El codigo es invalido o aún no has enviado la solicitud de amistad a la cuenta con el código de comentario.\nSi lo has hecho, elimina la solicitud de amistad e inténtalo de nuevo.'
     }
-    return true
+
+    const result = await database.collection(COLL_GD_PROFILES).insertOne(
+        {
+            userId,
+            playerID: request.get('playerID'),
+            accountID: request.get('accountID')
+        }
+    )
+
+    if (!result.acknowledged) {
+        return 'Ha ocurrido un error al vincular tu perfil. Por favor, inténtalo más tarde.\nSi el problema persiste, contacta con <@591640548490870805>.'
+    }
+
+    return 'Se ha vinculado con éxito tu perfil de GD!'
 }
 
 /**
- * 
- * @param {*} database 
- * @param {ChatInputCommandInteraction} interaction 
- * @return {Promise<void>}
+ * Handle the command flow: validate the Discord member, ensure they
+ * have the required role, generate a verification code, prompt the
+ * user to send the friend request, wait for the confirmation button
+ * and finally attempt to link the profile in the database.
+ *
+ * @param {Db} database - MongoDB database instance.
+ * @param {ChatInputCommandInteraction} interaction - The interaction that triggered the command.
+ * @returns {Promise<void>} Resolves when the operation completes (successfully or not).
  */
 async function processCode(database, interaction) {
     try {
-        const member = interaction.guild.members.cache.get(interaction.member.id)
+        const userId = interaction.member.id
+        const member = interaction.guild.members.cache.get(userId)
+
         if (!member) {
-            await interaction.editReply(
-                {
-                    content: 'Tu usuario no se encontro en el servidor. Intenta mas tarde'
-                }
-            );
-            return
+            return await utils.reply(interaction, 
+                'Tu usuario no se encontro en el servidor. Intenta mas tarde'
+            )
         }
 
-        if (!member.roles.cache.find(role => role.id === '1119804850620866600')) {
-            await interaction.editReply(
-                {
-                    content: 'Debes ser Venezolano para continuar...'
-                }
-            );
-            return
+        if (!member.roles.cache.find(role => role.id === process.env.ID_ROL_VENEZOLANO)) {
+            return await utils.reply(interaction, 
+                'Debes ser Venezolano para continuar...'
+            )
         }
 
-        const profile = await database.collection(COLL_GD_PROFILES).findOne({
-            userId: interaction.member.id
-        })
-
+        const profile = await database.collection(COLL_GD_PROFILES).findOne({ userId })
         if (profile) {
-            return await interaction.editReply(
-                {
-                    content: 'Tu perfil de Geometry Dash ya está vinculado al bot <:Cubo_Aleczd:1126884738108502106>',
-                }
-            );
+            return await utils.reply(interaction, 
+                'Tu perfil de Geometry Dash ya está vinculado al bot!'
+            )
         }
 
         const code = generateCode();
         const response = await interaction.editReply(createEmbed(code));
 
-        const collectorFilter = i => i.user.id === interaction.user.id;
+        const collectorFilter = i => i.user.id === userId;
         const confirmation = await response.awaitMessageComponent(
             {
                 filter: collectorFilter,
@@ -300,38 +173,23 @@ async function processCode(database, interaction) {
         );
 
         if (confirmation.customId === 'accept') {
-            if (await checkMessage(database, interaction, confirmation, code)) {
-                confirmation.update(
-                    {
-                        embeds: [],
-                        content: 'Se ha vinculado con éxito tu perfil de GD al del bot!',
-                        components: []
-                    }
-                )
-            }
+            const content = await linkProfile(database, userId, code)
+            await confirmation.update({ embeds: [], content, components: [] })
         } else { // cancel
-            await interaction.deleteReply(response)
+            await interaction.deleteReply()
         }
     } catch (e) {
         try {
+            let content = null
+
             if (e.message !== ERROR_TIMEOUT_MESSAGE) {
                 logger.ERR(e)
-                await interaction.editReply(
-                    {
-                        embeds: [],
-                        content: 'Ha ocurrido un error desconocido. Por favor, intente más tarde',
-                        components: []
-                    }
-                );
+                content = 'Ha ocurrido un error desconocido. Por favor, intente más tarde'
             } else {
-                await interaction.editReply(
-                    {
-                        embeds: [],
-                        content: 'El tiempo límite de 5 minutos ha finalizado. Por favor, intente volver a realizar la operación nuevamente',
-                        components: []
-                    }
-                );
+                content = 'El tiempo límite de 5 minutos ha finalizado. Por favor, intente volver a realizar la operación nuevamente'
             }
+
+            await utils.reply(interaction, {embeds: [], content, components: []})
         } catch {
             /** Do not catch the exception */
         }
@@ -339,18 +197,21 @@ async function processCode(database, interaction) {
 }
 
 /**
- * 
- * @param {*} client 
- * @param {*} database 
- * @param {ChatInputCommandInteraction} interaction 
+ * Command entrypoint invoked by the command dispatcher.
+ * It defers an ephemeral reply and delegates to `processCode`.
+ *
+ * @param {Client} _ - Discord Client instance (unused, kept for signature compatibility).
+ * @param {Db} database - MongoDB database instance.
+ * @param {ChatInputCommandInteraction} interaction - The interaction representing the command invocation.
+ * @returns {Promise<void>} Resolves when command handling finishes.
  */
-async function execute(_client, database, interaction) {
+async function execute(_, database, interaction) {
     try {
         await interaction.deferReply({ flags: MessageFlags.Ephemeral });
         await processCode(database, interaction);
     } catch (error) {
         logger.ERR(error)
-        await interaction.editReply('An unknown error has occurred. Please try again later');
+        await utils.reply(interaction, 'An unknown error has occurred. Please try again later');
     }
 }
 
