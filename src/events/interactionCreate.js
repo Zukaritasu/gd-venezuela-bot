@@ -1,7 +1,7 @@
 /**
  * Copyright (C) 2024 Zukaritasu
  * 
- * his program is free software: you can redistribute it and/or modify
+ * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
@@ -57,9 +57,10 @@ module.exports = {
             } else if (interaction.isModalSubmit()) {
                 if (interaction.customId === 'configureYoutubeNotifications') {
                     await require('../commands/youtube/notifications').handleModalSubmit(interaction)
+                } else if (interaction.customId === 'userResponse') {
+                    await require('../commands/user-response').handleModalSubmit(interaction, client)
                 }
             }
-
         } catch (error) {
             logger.ERR(error)
         }
