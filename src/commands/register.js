@@ -117,7 +117,7 @@ async function linkProfile(database, userId, code) {
     const result = await database.collection(COLL_GD_PROFILES).insertOne(
         {
             userId,
-            playerID: request.get('playerID'),
+            playerID: request.get('userID'),
             accountID: request.get('accountID')
         }
     )
