@@ -106,6 +106,8 @@ async function linkProfile(database, userId, code) {
         return 'Ha ocurrido un error desconocido. Por favor, intente más tarde'
     }
 
+    logger.DBG('Friend Requests:', response)
+
     const requests = response.split('#')[0].split('|').map(request => robtopapi.extractKeyValuePairs(request))
     const request = requests.find(map => map.get('message') === code)
     if (!request) {
