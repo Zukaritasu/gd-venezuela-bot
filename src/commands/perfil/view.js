@@ -101,9 +101,9 @@ async function view(client, database, interaction) {
 					value: `${profile.birthday.day.toString().padStart(2, '0')}/${profile.birthday.month.toString().padStart(2, '0')}`,
 					inline: true
 				} : null,
-			member.joinedAt ? {
+			member.joinedTimestamp ? {
 				name: 'Unido desde',
-				value: utils.formatDate(member.joinedAt),
+				value: `<t:${Math.floor(member.joinedTimestamp / 1000)}:F>`,
 				inline: true
 			} : null,
 			profile?.hardestName ?
