@@ -121,14 +121,14 @@ async function getUserData(param, func) {
 async function getUserInfo(accountID) {
     const agent = new SocksProxyAgent('socks5h://127.0.0.1:9050');
     
-    const data = new URLSearchParams({
+    const searchParams = new URLSearchParams({
         "secret": "Wmfd2893gb7",
         "targetAccountID": accountID
     });
 
     let response = null;
     try {
-        response = await axios.post('http://www.boomlings.com/database/getGJUserInfo20.php', data, {
+        response = await axios.post('http://www.boomlings.com/database/getGJUserInfo20.php', searchParams, {
             headers: {
                 'User-Agent': '',
                 'Content-Type': 'application/x-www-form-urlencoded'
@@ -163,14 +163,14 @@ async function getUserInfo(accountID) {
 async function getGJFriendRequests20(accountID, gjp2) {
     const agent = new SocksProxyAgent('socks5h://127.0.0.1:9050');
 
-    const data = new URLSearchParams({
+    const searchParams = new URLSearchParams({
         "secret": "Wmfd2893gb7",
         "accountID": accountID,
         "gjp2": gjp2
     });
 
     try {
-        const data = await axios.post('http://www.boomlings.com/database/getGJFriendRequests20.php', data, {
+        const response = await axios.post('http://www.boomlings.com/database/getGJFriendRequests20.php', searchParams, {
             headers: {
                 'User-Agent': '',
                 'Content-Type': 'application/x-www-form-urlencoded'
@@ -179,7 +179,7 @@ async function getGJFriendRequests20(accountID, gjp2) {
             httpAgent: agent,
         })
 
-        return data.toString()
+        return response.data.toString()
     } catch (error) {
         if (error?.response?.status !== 429 && error?.response?.status !== 403) {
             logger.ERR('Error fetching user info:', error);
