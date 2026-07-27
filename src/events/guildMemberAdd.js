@@ -1,7 +1,7 @@
 /**
  * Copyright (C) 2024 Zukaritasu
  * 
- * his program is free software: you can redistribute it and/or modify
+ * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
@@ -20,7 +20,7 @@ const logger = require('../logger')
 const Canvas = require('canvas');
 const path = require('path');
 const { Db } = require('mongodb');
-const checkAccounts = require('../checkAccounts');
+const checkAccounts = require('../security/checkAccounts');
 const channels = require('../../.botconfig/channels.json');
 
 Canvas.registerFont(path.join(__dirname, '../../fonts/Franklin Gothic Condensed.ttf'), { family: 'FranklinGothic' });

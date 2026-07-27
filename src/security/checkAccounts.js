@@ -1,7 +1,7 @@
 /**
- * Copyright (C) 2024 Zukaritasu
+ * Copyright (C) 2024 - 2026 Zukaritasu
  * 
- * his program is free software: you can redistribute it and/or modify
+ * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
@@ -15,14 +15,14 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-const { Guild, GuildMember, EmbedBuilder } = require("discord.js");
+const { Guild, GuildMember, EmbedBuilder, Client } = require("discord.js");
 const { Db } = require("mongodb");
-const logger = require('./logger');
-const userKickManager = require('./userKickManager')
-const utils = require('./utils');
-const channels = require('../.botconfig/channels.json');
-const { COLL_SERVER_NEW_ACCOUNTS } = require('../.botconfig/database-info.json')
-const { ACCOUNT_MINIMUM_AGE } = require('../.botconfig/token.json');
+const logger = require('../logger');
+const userKickManager = require('../userKickManager')
+const utils = require('../utils');
+const channels = require('../../.botconfig/channels.json');
+const { COLL_SERVER_NEW_ACCOUNTS } = require('../../.botconfig/database-info.json')
+const { ACCOUNT_MINIMUM_AGE } = require('../../.botconfig/token.json');
 const { RESTJSONErrorCodes } = require('discord-api-types/v10')
 
 /////////////////////////////////////////////////
@@ -161,7 +161,7 @@ async function generateAltServerInvite(client) {
 		reason: 'Invitation to verify new account'
 	});
 
-	return `https://discord.gg/${invite.code}`;
+	return invite.url;
 }
 
 /**
