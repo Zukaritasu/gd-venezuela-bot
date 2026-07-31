@@ -27,7 +27,7 @@ const path = require('node:path')
 const Canvas = require('canvas');
 const StackBlur = require('stackblur-canvas');
 const logger = require('../../logger');
-const aredlapi = require('../../aredlapi');
+const aredlapi = require('../../apis/aredlapi');
 const { AttachmentBuilder, EmbedBuilder } = require('discord.js');
 
 function getLevelNormalizedName(levelName) {

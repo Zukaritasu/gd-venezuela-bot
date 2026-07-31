@@ -19,7 +19,7 @@ const { EmbedBuilder, ChatInputCommandInteraction, ActionRowBuilder,
     ButtonBuilder, ButtonStyle, StringSelectMenuBuilder, StringSelectMenuOptionBuilder,
     Client } = require('discord.js');
 const utils = require('../../utils');
-const apipcrate = require('../../apipcrate');
+const apipcrate = require('../../apis/apipcrate');
 const logger = require('../../logger');
 const { Db } = require('mongodb');
 const playerProfile = require('./demonlist/profile')

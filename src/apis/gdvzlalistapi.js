@@ -16,8 +16,7 @@
  */
 
 const { Guild, GuildMember, User } = require('discord.js');
-const logger = require('./logger');
-const GITHUB_TOKEN = require('../.botconfig/token.json').GITHUB_TOKEN;
+const GITHUB_TOKEN = require('../../.botconfig/token.json').GITHUB_TOKEN;
 const axios = require('axios');
 
 const TypeList = {

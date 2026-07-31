@@ -1,7 +1,7 @@
 /**
  * Copyright (C) 2024 Zukaritasu
  * 
- * his program is free software: you can redistribute it and/or modify
+ * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
@@ -33,28 +33,40 @@ process.chdir(__dirname);
     let database = null
 
     try {
-        database = (await (mongodb = new MongoClient(URI_DATABASE)).connect())
-            .db(DATABASE_NAME)
+        const mongodb = new MongoClient(URI_DATABASE)
+
+        database = (await mongodb.connect()).db(DATABASE_NAME)
         global.database = database
+
         logger.INF('Database connection successful!');
     } catch (e) {
         logger.ERR(e)
         return
     }
 
-    // Modules are loaded to define the redis object
-    const modules = ['./apipcrate', './aredlapi', './robtopapi', './gdvzlalistapi', './commands/text-commands/save-hashes']
     const redisClient = redis.createClient()
+
+    redisClient.on('error', (error) => { logger.INF('[REDIS]', error); });
+    redisClient.on('connect', () => { logger.INF('[REDIS] Connecting...'); });
+    redisClient.on('reconnecting', () => { logger.INF('[REDIS] Reconnecting...'); });
+    redisClient.on('ready', () => { logger.INF('[REDIS] Client connected!'); });
 
     try {
         await redisClient.connect();
         global.redisClient = redisClient
-        logger.INF('Redis client connected!')
+
+        // Modules are loaded to define the redis object
+        const modules = [
+            './apis/apipcrate',
+            './apis/aredlapi',
+            './apis/robtopapi',
+            './apis/gdvzlalistapi',
+            './commands/text-commands/save-hashes'
+        ]
 
         modules.forEach(module => require(module).setRedisClientObject(redisClient))
 
-        // Initialize activity module with Redis and database
-
+        // Initialize activity module with Redis
         await require('./commands/leveling/activity').initializeActivityLog()
     } catch (e) {
         logger.ERR(e)

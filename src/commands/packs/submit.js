@@ -19,7 +19,7 @@ const { Client, ChatInputCommandInteraction, MessageFlags, ChannelType, EmbedBui
 const logger = require('../../logger')
 const utils = require('../../utils')
 const channels = require('../../../.botconfig/channels.json')
-const gdvzlalistapi = require('../../gdvzlalistapi');
+const gdvzlalistapi = require('../../apis/gdvzlalistapi');
 const { COLL_GDVZLA_LIST_PROFILES } = require('../../../.botconfig/database-info.json')
 const { Db } = require('mongodb')
 

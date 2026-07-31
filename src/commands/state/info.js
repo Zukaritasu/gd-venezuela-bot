@@ -21,7 +21,7 @@ const { SlashCommandBuilder, ChatInputCommandInteraction, ActionRowBuilder,
 const { states } = require('../../../.botconfig/country-states.json');
 const { Db } = require('mongodb');
 const utils = require('../../utils')
-const aredlapi = require('../../aredlapi')
+const aredlapi = require('../../apis/aredlapi')
 const { COLL_STATES } = require('../../../.botconfig/database-info.json');
 const logger = require('../../logger');
 

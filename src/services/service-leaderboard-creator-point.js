@@ -16,7 +16,7 @@
  */
 
 const logger = require('../logger');
-const robtopapi = require('../robtopapi');
+const robtopapi = require('../apis/robtopapi');
 const { TOP_CREATOR_POINTS } = require('../../.botconfig/channels.json');
 const { COLL_CREATOR_POINT_PLAYERS, COLL_CONFIG } = require('../../.botconfig/database-info.json');
 const { Client, Message, TextChannel } = require('discord.js');

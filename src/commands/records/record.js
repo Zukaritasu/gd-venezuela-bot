@@ -18,7 +18,7 @@
 const { SlashCommandBuilder, ChatInputCommandInteraction, Message, Guild, GuildMember, TextChannel } = require('discord.js');
 const logger = require('../../logger');
 const { RESTJSONErrorCodes } = require('discord-api-types/v10')
-const aredlapi = require('../../aredlapi');
+const aredlapi = require('../../apis/aredlapi');
 const path = require("path");
 const GITHUB_TOKEN = require('../../../.botconfig/token.json').GITHUB_TOKEN;
 const axios = require('axios');

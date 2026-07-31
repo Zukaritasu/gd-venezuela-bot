@@ -20,9 +20,9 @@ const { RESTJSONErrorCodes, MessageFlags } = require('discord-api-types/v10')
 const { Db } = require('mongodb');
 const utils = require('../../utils')
 const logger = require('../../logger');
-const aredlapi = require('../../aredlapi');
+const aredlapi = require('../../apis/aredlapi');
 const channels = require('../../../.botconfig/channels.json');
-const gdvzlalistapi = require('../../gdvzlalistapi');
+const gdvzlalistapi = require('../../apis/gdvzlalistapi');
 const { COLL_GDVZLA_LIST_PROFILES } = require('../../../.botconfig/database-info.json');
 
 /**

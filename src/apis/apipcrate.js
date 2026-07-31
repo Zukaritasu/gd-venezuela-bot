@@ -16,17 +16,14 @@
  */
 
 const https = require('https');
-const logger = require('./logger');
-
-////////////////////////////////////////////////////////
-
+const logger = require('../logger');
 
 /** @type {import('redis').RedisClientType} */
 let redisObject = null
 
 /**
- * 
- * @param {string} url 
+ * Get a response from pointercrate
+ * @param {string} url - The URL to fetch from pointercrate
  * @returns {Promise<Object>}
  */
 async function getResponseJSON(url) {
@@ -69,7 +66,9 @@ async function getResponseJSON(url) {
 }
 
 /**
- * @param {string} id 
+ * Get extra player information
+ * @param {string} id - The ID of the player
+ * @returns {Promise<Object>}
  */
 async function getPlayerExtraInfo(id) {
     const response = await getResponseJSON(`api/v1/players/${id}`)
@@ -95,8 +94,8 @@ async function getPlayerExtraInfo(id) {
 }
 
 /**
- * 
- * @param {object} params 
+ * Get the number of demons by category
+ * @param {Array<Object>} records 
  * @returns string
  */
 function getNumberDemonsByCategory(records) {
@@ -121,17 +120,13 @@ function getNumberDemonsByCategory(records) {
     return `${mainCount} Main, ${extendedCount} Extended, ${legacyCount} Legacy`;
 }
 
-//
-//============================================================================
-//
-
 module.exports = {
     setRedisClientObject: (redisObj) => redisObject = redisObj,
-    
+
     getDemon: (id) => getResponseJSON(`api/v2/demons/${id}`),
     getCountryLeaderboard: (code) => getResponseJSON(`api/v1/players?nation=${code}`),
     getPlayerInfo: (id) => getResponseJSON(`api/v1/players/${id}`),
-    
+
     getPlayerExtraInfo,
     utils: {
         getNumberDemonsByCategory

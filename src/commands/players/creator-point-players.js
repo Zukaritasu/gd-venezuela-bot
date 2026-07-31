@@ -17,7 +17,7 @@
 
 const { EmbedBuilder, ChatInputCommandInteraction, Client, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
 const { Db } = require('mongodb');
-const robtopapi = require('../../robtopapi');
+const robtopapi = require('../../apis/robtopapi');
 const { COLL_CREATOR_POINT_PLAYERS } = require('../../../.botconfig/database-info.json');
 const logger = require('../../logger');
 

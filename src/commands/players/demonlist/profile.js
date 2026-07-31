@@ -21,7 +21,7 @@ const { SlashCommandBuilder, EmbedBuilder, ChatInputCommandInteraction, ActionRo
 
 const logger = require('../../../logger');
 
-const apipcrate = require('../../../apipcrate');
+const apipcrate = require('../../../apis/apipcrate');
 const demonsTrophy = require('../../../../resources/demon_trophy.json');
 
 /**

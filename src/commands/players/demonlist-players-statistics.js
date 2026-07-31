@@ -18,7 +18,7 @@
 const { ChatInputCommandInteraction, EmbedBuilder, Message, ActionRowBuilder, ButtonStyle, ButtonBuilder } = require("discord.js")
 const { Db } = require("mongodb")
 const logger = require('../../logger');
-const apipcrate = require('../../apipcrate');
+const apipcrate = require('../../apis/apipcrate');
 const fs = require('fs');
 
 /**

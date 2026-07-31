@@ -1,7 +1,7 @@
 /**
  * Copyright (C) 2026 Zukaritasu
  * 
- * his program is free software: you can redistribute it and/or modify
+ * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
@@ -22,7 +22,7 @@ const axios = require('axios')
 const crypto = require('crypto')
 const logger = require('../logger.js');
 const utils = require('../utils.js');
-const youtubeApi = require('../youtubeapi.js');
+const youtubeApi = require('../apis/youtubeapi.js');
 const { YOUTUBE_NOTIFICATIONS, BOT_TESTING } = require('../../.botconfig/channels.json')
 const { COLL_YOUTUBE_CHANNELS, COLL_YOUTUBE_VIDEOS } = require('../../.botconfig/database-info.json')
 const { PUBLIC_IP, YOUTUBE_NOTIFICATIONS_PORT, YOUTUBE_API_KEY, YOUTUBE_WEBHOOK_SECRET } = require('../../.botconfig/token.json')
@@ -143,10 +143,8 @@ async function sendNewVideo(videoInfo, isStream) {
             return
 
         logger.DBG(`Video sended: ${videoInfo.videoId}`)
-        
-        await channel.send(`<@&${process.env.ID_ROL_YOUTUBE_NOTIFICACIONES}>\n${
-            isStream ? youtubeChannel.commentNewStream : youtubeChannel.commentNewVideo
-        } https://youtu.be/${videoInfo.videoId}`);
+
+        await channel.send(`<@&${process.env.ID_ROL_YOUTUBE_NOTIFICACIONES}>\n${isStream ? youtubeChannel.commentNewStream : youtubeChannel.commentNewVideo} https://youtu.be/${videoInfo.videoId}`);
     }
 }
 

@@ -17,7 +17,7 @@
 
 const { ChatInputCommandInteraction, Client, StringSelectMenuBuilder, StringSelectMenuOptionBuilder, ActionRowBuilder, EmbedBuilder, ButtonBuilder, ButtonStyle } = require("discord.js")
 const { Db } = require("mongodb")
-const robtopapi = require('../../robtopapi')
+const robtopapi = require('../../apis/robtopapi')
 const utils = require('../../utils')
 const { states } = require('../../../.botconfig/country-states.json');
 const { COLL_GD_PROFILES } = require('../../../.botconfig/database-info.json');

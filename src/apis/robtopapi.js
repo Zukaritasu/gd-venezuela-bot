@@ -17,9 +17,9 @@
 
 const axios = require('axios');
 const { SocksProxyAgent } = require('socks-proxy-agent');
-const logger = require('./logger')
+const logger = require('../logger')
 
-const robtopUser = require('../resources/robtop_objects/user.json')
+const robtopUser = require('../../resources/robtop_objects/user.json')
 
 /** @type {import('redis').RedisClientType} */
 let redisObject = null

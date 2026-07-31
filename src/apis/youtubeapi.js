@@ -16,8 +16,8 @@
  */
 
 const axios = require('axios')
-const logger = require('./logger')
-const { YOUTUBE_API_KEY } = require('../.botconfig/token.json')
+const logger = require('../logger')
+const { YOUTUBE_API_KEY } = require('../../.botconfig/token.json')
 
 /**
  * @typedef {Object} YouTubeVideoItem

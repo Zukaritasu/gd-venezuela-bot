@@ -16,7 +16,7 @@
  */
 
 const { SlashCommandBuilder, ChatInputCommandInteraction, MessageFlags } = require('discord.js');
-const aredlapi = require('../aredlapi');
+const aredlapi = require('../apis/aredlapi');
 const logger = require('../logger');
 
 /**

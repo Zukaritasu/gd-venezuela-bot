@@ -18,7 +18,7 @@
 const { Message, Client } = require('discord.js');
 const logger = require('../../logger');
 const channels = require('../../../.botconfig/channels.json');
-const gdvzlalistapi = require('../../gdvzlalistapi');
+const gdvzlalistapi = require('../../apis/gdvzlalistapi');
 const { RESTJSONErrorCodes } = require('discord-api-types/v10')
 
 /**

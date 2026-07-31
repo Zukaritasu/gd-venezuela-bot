@@ -19,7 +19,7 @@ const { SlashCommandBuilder, EmbedBuilder, ChatInputCommandInteraction, ActionRo
     ButtonBuilder, ButtonStyle,
     Client } = require('discord.js');
 const utils = require('../utils');
-const apipcrate = require('../apipcrate');
+const apipcrate = require('../apis/apipcrate');
 const logger = require('../logger');
 const { Db } = require('mongodb');
 const { COLL_CONFIG } = require('../../.botconfig/database-info.json')
