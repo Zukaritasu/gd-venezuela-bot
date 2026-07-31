@@ -314,8 +314,14 @@ async function POST_youtubeWebhook(req, res) {
             if (videoItem) {
                 const videoType = await youtubeApi.getVideoType(videoItem)
                 if (videoType) {
-                    if (videoType === 'stream' && videoItem.snippet?.liveBroadcastContent !== 'live')
-                        continue
+                    if (videoType === 'stream' && videoItem.snippet?.liveBroadcastContent !== 'live') {
+                        if (videoItem.status?.uploadStatus === 'uploaded') {
+                            continue
+                        }
+
+                        videoType = 'video'
+                    }
+                    
                     await sendNewVideo(videoInfo, videoType === 'stream')
                 }
             }
