@@ -315,6 +315,7 @@ async function POST_youtubeWebhook(req, res) {
                 const videoType = await youtubeApi.getVideoType(videoItem)
                 if (videoType) {
                     if (videoType === 'stream' && videoItem.snippet?.liveBroadcastContent !== 'live') {
+                        // Avoid treating uploaded videos or premieres as live streams
                         if (videoItem.status?.uploadStatus === 'uploaded') {
                             continue
                         }
