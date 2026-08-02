@@ -461,7 +461,15 @@ async function voiceEvent(oldState, newState) {
 }
 
 /**
- * @param {Map<string, GuildMember>} members 
+ * Verifies cached user activity entries against the current guild member list.
+ *
+ * This function iterates through all stored user activity records in Redis and
+ * checks whether each user is still a member of the guild. If a user no longer
+ * exists in the current guild member map, their cached activity entry is marked
+ * as no longer a member. If an entry belongs to a current guild member but
+ * lacks the member flag, it is marked as a member.
+ *
+ * @param {Map<string, GuildMember>} members - Map of current guild members keyed by user ID.
  */
 async function verifyGuildMembers(members) {
 	const keys = await global.redisClient.keys(PREFIX_USER_ACTIVITY + '*');
