@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2024 Zukaritasu
+ * Copyright (C) 2024 - 2026 Zukaritasu
  * 
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,7 +15,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-const { Events, Client, GuildMember, AttachmentBuilder } = require('discord.js');
+const { Events, Client, GuildMember, AttachmentBuilder, TextChannel } = require('discord.js');
 const logger = require('../logger')
 const Canvas = require('canvas');
 const path = require('path');
@@ -33,6 +33,7 @@ Canvas.registerFont(path.join(__dirname, '../../fonts/Franklin Gothic Condensed.
  */
 async function welcomeMessageMember(member, test = false) {
     try {
+        /** @type {TextChannel} */
         const channel = member.guild.channels.cache.get(test ? channels.BOT_TESTING : channels.WELCOME);
         if (channel) {
             const guild = member.guild;
@@ -75,20 +76,6 @@ async function welcomeMessageMember(member, test = false) {
             ctx.drawImage(avatar, x - (radius - 12), y - (radius - 12), (radius - 12) * 2, (radius - 12) * 2);
             ctx.restore();
 
-            /*ctx.font = 'bold 64px FranklinGothic';
-            ctx.fillStyle = '#ffffff';
-            ctx.textAlign = 'center';
-            ctx.shadowColor = 'rgb(0, 0, 0)';
-            ctx.shadowBlur = 10;
-            ctx.shadowOffsetX = 4;
-            ctx.shadowOffsetY = 4;
-            ctx.fillText('BIENVENID@', x, y + radius + 60);
-
-            ctx.font = '36px FranklinGothic';
-            ctx.fillText(member.user.username.replace(/@/g, '@\u200b'), x, y + radius + 106);
-
-            const attachment = new AttachmentBuilder(canvas.toBuffer(), { name: 'welcome-image.png' });*/
-
             const y2 = y + 20
 
             ctx.font = 'bold 82px FranklinGothic';
@@ -106,12 +93,10 @@ async function welcomeMessageMember(member, test = false) {
             const attachment = new AttachmentBuilder(canvas.toBuffer(), { name: 'welcome-image.png' });
 
 
-            channel.send(
-                {
-                    content: `# Bienvenido al servidor, ${member}!\n\n***Recuerda pasarte por <#1119803609773785159> para obtener roles y acceder a los diferentes canales de este servidor***. \n\nContigo somos **${count}** miembros y esperamos que disfrutes de tu estancia en **GD Venezuela**!`,
-                    files: [attachment]
-                }
-            );
+            channel.send({
+                content: `# Bienvenido al servidor, ${member}!\n\n***Recuerda pasarte por <#${channels.ROLES}> para obtener roles y acceder a los diferentes canales de este servidor***. \n\nContigo somos **${count}** miembros y esperamos que disfrutes de tu estancia en **GD Venezuela**!`,
+                files: [attachment]
+            });
         }
     } catch (e) {
         logger.ERR(e)
@@ -128,7 +113,9 @@ module.exports = {
      */
     async execute(_client, database, member) {
         try {
-            if (member.guild.id !== process.env.SERVER_GD_VENEZUELA_ID) return;
+            if (member.guild.id !== process.env.SERVER_GD_VENEZUELA_ID)
+                return;
+
             if (await checkAccounts.checkUserAccountAge(member.guild, database, member)) {
                 // Updates the cache for the member in the guild. This is necessary to ensure 
                 // that the member is properly cached after they join the guild.
