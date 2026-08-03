@@ -62,6 +62,8 @@ module.exports = {
                 }
             }
         } catch (error) {
+            if (error?.code === 10062) return;
+
             logger.ERR(error)
         }
     },
