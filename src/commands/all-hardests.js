@@ -1,7 +1,7 @@
 /**
- * Copyright (C) 2024 Zukaritasu
+ * Copyright (C) 2024 - 2026 Zukaritasu
  * 
- * his program is free software: you can redistribute it and/or modify
+ * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
@@ -15,47 +15,38 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-const { SlashCommandBuilder, ChatInputCommandInteraction, EmbedBuilder } = require('discord.js');
+const { SlashCommandBuilder, ChatInputCommandInteraction, EmbedBuilder, Client } = require('discord.js');
 const { Db } = require('mongodb');
 const logger = require('../logger');
+const utils = require('../utils');
 const { COLL_STATES, COLL_CONFIG } = require('../../.botconfig/database-info.json');
 
-//
-// +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-//
-
 /**
- * 
- * @param {Db} database 
+ * Creates an embed with the list of the country's hardest demons.
+ *
+ * @param {Db} database - The MongoDB database instance.
+ * @returns {Promise<object>} A Discord reply payload containing the embed.
  */
 async function createEmbedList(database) {
     let fields = []
 
-    try {
-        const hardests = database.collection(COLL_STATES)
-        const countryHardest = await database.collection(COLL_CONFIG).findOne({ type: 'hardest' })
+    const hardests = database.collection(COLL_STATES)
+    const countryHardest = await database.collection(COLL_CONFIG).findOne({ type: 'hardest' })
 
-        const getTrophy = (player) => {
-            if (countryHardest) {
-                if (countryHardest.username === player) {
-                    return ' <:top1_trofeo:1301284275110416404>'
-                }
-            }
-            return ''
+    const getTrophy = (player) => {
+        if (countryHardest && countryHardest.username === player) {
+            return ' <:top1_trofeo:1301284275110416404>'
         }
 
-        for await (const doc of hardests.find()) {
-            fields.push(
-                {
-                    name: doc.stateName,
-                    value: `${doc.player}${getTrophy(doc.player)} / ${doc.levelName}`,
-                    inline: true
-                })
-        }
+        return ''
+    }
 
-    } catch (e) {
-        logger.ERR(e);
-        return { content: 'An error occurred while querying the database information' };
+    for await (const doc of hardests.find()) {
+        fields.push({
+            name: doc.stateName,
+            value: `${doc.player}${getTrophy(doc.player)} / ${doc.levelName}`,
+            inline: true
+        })
     }
 
     const embed = new EmbedBuilder()
@@ -74,20 +65,23 @@ async function createEmbedList(database) {
 }
 
 /**
- * 
- * @param {*} _client 
- * @param {*} _database 
- * @param {ChatInputCommandInteraction} interaction 
+ * Handles the /hardests command by deferring the reply, building the 
+ * embed list, and editing the reply.
+ *
+ * @param {Client} _client - Discord client instance (unused).
+ * @param {Db} database - The MongoDB database instance.
+ * @param {ChatInputCommandInteraction} interaction - The command interaction.
+ * @returns {Promise<void>}
  */
 async function execute(_client, database, interaction) {
-    await interaction.deferReply();
     try {
+        await interaction.deferReply();
         await interaction.editReply(await createEmbedList(database))
     } catch (e) {
-        console.error(e)
+        logger.ERR(e)
         try {
-            await interaction.editReply('An unknown error has occurred. Please try again later')
-        } catch (err) {
+            await utils.reply(interaction, 'An unknown error has occurred. Please try again later')
+        } catch {
 
         }
     }
