@@ -1,7 +1,7 @@
 /**
  * Copyright (C) 2024 Zukaritasu
  * 
- * his program is free software: you can redistribute it and/or modify
+ * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
@@ -20,21 +20,17 @@ const { Db } = require("mongodb");
 const logger = require("../logger");
 
 /**
- * 
- * @param {Client} _client 
- * @param {Db} _database 
- * @param {ChatInputCommandInteraction} interaction 
+ * Executes the GitHub slash command by replying with the bot repository URL.
+ *
+ * @param {Client} _client - The Discord client instance.
+ * @param {Db} _database - The MongoDB database instance.
+ * @param {ChatInputCommandInteraction} interaction - The interaction that invoked the command.
  */
 async function execute(_client, _database, interaction) {
     try {
         await interaction.reply('https://github.com/Zukaritasu/gd-venezuela-bot')
-    } catch (e) {
-        logger.ERR(`Error executing /github command: ${e.message}`, e);
-        try {
-            await interaction.channel?.send(`<@${interaction.member.id}> An unknown error has occurred [GitHub Link]`)
-        } catch (error) {
-            logger.ERR(`Error sending message in /github command: ${error.message}`, error);
-        }
+    } catch (error) {
+        logger.ERR(error)
     }
 }
 
