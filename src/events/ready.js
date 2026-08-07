@@ -24,7 +24,8 @@ const services = [
 	'../services/service-levels-p.js',
 	'../services/service-xp-auto-update.js',
 	'../services/service-leaderboard-creator-point.js',
-	'../services/service-youtube-notifications.js'
+	'../services/service-youtube-notifications.js',
+	'../services/service-auto-backup.js'
 ]
 
 module.exports = {
