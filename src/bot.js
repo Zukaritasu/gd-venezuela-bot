@@ -44,7 +44,16 @@ process.chdir(__dirname);
         return
     }
 
-    const redisClient = redis.createClient()
+    const redisClient = redis.createClient({
+        socket: {
+            keepAlive: 10000,
+            reconnectStrategy: (retries) => {
+                return Math.min(retries * 100, 3000);
+            }
+        },
+        pingInterval: 10000,
+        disableOfflineQueue: true
+    })
 
     redisClient.on('error', (error) => { logger.INF('[REDIS]', error); });
     redisClient.on('connect', () => { logger.INF('[REDIS] Connecting...'); });

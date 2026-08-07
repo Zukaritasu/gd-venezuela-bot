@@ -597,8 +597,9 @@ module.exports = {
 		// sync dirty user activity data to MongoDB every 15 minutes
 		setInterval(async () => {
 			try {
-				if (!global.redisClient || !global.database) return;
-
+				if (!global.redisClient || !global.redisClient.isReady || !global.database)
+					return;
+				
 				// Get all dirty users
 				const dirtyUserIds = await global.redisClient.sMembers(KEY_DIRTY_USERS);
 				if (dirtyUserIds.length === 0) return;
