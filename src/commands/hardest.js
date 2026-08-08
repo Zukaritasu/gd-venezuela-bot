@@ -73,14 +73,17 @@ async function createEmbed(hardest, database, interaction) {
         components: [
             new ActionRowBuilder().addComponents(
                 new ButtonBuilder()
-                    .setLabel('Ver Video')
+                    .setLabel('Ver vídeo')
                     .setURL(hardest.videoUrl)
                     .setStyle(ButtonStyle.Link),
                 new ButtonBuilder()
                     .setLabel('Pointercrate')
-                    .setURL(`https://www.pointercrate.com/demonlist/${level.position}`)
                     .setStyle(ButtonStyle.Link)
-            )]
+                    .setURL(level.position <= 150 ? `https://www.pointercrate.com/demonlist/${level.position}` :
+                        `https://aredl.net/list/${level.level_id}`
+                    )
+            )
+        ]
     }
 }
 
