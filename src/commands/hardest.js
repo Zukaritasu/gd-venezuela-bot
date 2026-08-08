@@ -41,7 +41,7 @@ async function createEmbed(hardest, database, interaction) {
         return 'Ha ocurrido un error al consultar la informacion del nivel'
     }
 
-    const attemps = hardest?.toString()?.replace(/\B(?=(\d{3})+(?!\d))/g, ".") || '0'
+    const attemps = hardest.attemps.toString()?.replace(/\B(?=(\d{3})+(?!\d))/g, ".") || '0'
 
     const embed = new EmbedBuilder()
     embed.setColor(0x2b2d31)
