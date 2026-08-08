@@ -41,6 +41,12 @@ async function service(db, client) {
 		try {
 			const tenDaysAgo = new Date(Date.now() - 10 * 24 * 60 * 60 * 1000);
 
+			await db.collection(COLL_CONFIG).updateOne(
+				{ type: LAST_UPDATE_KEY },
+				{ $setOnInsert: { type: LAST_UPDATE_KEY } },
+				{ upsert: true }
+			);
+
 			const updateResult = await db.collection(COLL_CONFIG).findOneAndUpdate(
 				{
 					type: LAST_UPDATE_KEY,
@@ -50,12 +56,10 @@ async function service(db, client) {
 					]
 				},
 				{ $set: { time: new Date() } },
-				{ upsert: true, returnDocument: 'after' }
+				{ returnDocument: 'after' }
 			);
 
-			if (!(updateResult.value || updateResult.lastErrorObject?.updatedExisting === false)) {
-				return;
-			}
+			if (!updateResult.value) return
 
 			await fs.promises.mkdir(backupDir, { recursive: true });
 
