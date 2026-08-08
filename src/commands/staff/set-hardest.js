@@ -138,8 +138,9 @@ async function execute(_client, database, interaction) {
             return await interaction.editReply('No tienes privilegios suficientes para realizar esta acción');
         }
 
-        await updateHardest(database, await getCountryHardestNormalized(interaction))
-        await interaction.editReply('Se ha actualizado correctamente!');
+        const result = await updateHardest(database, await getCountryHardestNormalized(interaction))
+        await interaction.editReply(result ? 'Se ha actualizado correctamente!' : 
+            'No se ha podido actualizar el nivel');
     } catch (e) {
         logger.ERR(e);
         try {
