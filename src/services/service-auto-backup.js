@@ -18,6 +18,7 @@
 const { Client } = require("discord.js");
 const { Db } = require("mongodb");
 const logger = require("../logger");
+const utils = require("../utils");
 const fs = require('fs');
 const path = require('path');
 const { COLL_CONFIG, COLL_USERS_ACTIVITY } = require("../../.botconfig/database-info.json");
@@ -52,15 +53,13 @@ async function service(db, client) {
 				{ upsert: true, returnDocument: 'after' }
 			);
 
-			if (!(updateResult.value || !updateResult.lastErrorObject?.updatedExisting)) {
+			if (!(updateResult.value || updateResult.lastErrorObject?.updatedExisting === false)) {
 				return;
 			}
 
 			await fs.promises.mkdir(backupDir, { recursive: true });
 
-			const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-			const backupFilePath = path.join(backupDir, `users_activity_backup_${timestamp}.json`);
-
+			const backupFilePath = path.join(backupDir, `users_activity_backup_${utils.getDatetimeForFilename()}.json`);
 			const cursor = db.collection(COLL_USERS_ACTIVITY).find().stream();
 			const writeStream = fs.createWriteStream(backupFilePath, { encoding: 'utf-8' });
 

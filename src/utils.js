@@ -248,6 +248,22 @@ async function sleep(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
 }
 
+/**
+ * Convert milliseconds into a human-readable Spanish duration string.
+ *
+ * Explanation:
+ * This function receives a duration in milliseconds and converts it into
+ * days, hours, minutes, and seconds. It builds a readable Spanish string
+ * that correctly handles singular and plural forms, and joins multiple
+ * parts with commas and "y" for the final part.
+ *
+ * @param {number} ms - The duration in milliseconds.
+ * @returns {string} A formatted duration string in Spanish.
+ *
+ * Example:
+ *   formatTimeMilliseconds(90061000)
+ *   // returns "1 día, 1 hora y 1 segundo"
+ */
 function formatTimeMilliseconds(ms) {
     const totalSeconds = Math.floor(ms / 1000);
     const days = Math.floor(totalSeconds / 86400);
@@ -264,6 +280,23 @@ function formatTimeMilliseconds(ms) {
     if (parts.length === 1) return parts[0];
     if (parts.length === 2) return `${parts[0]} y ${parts[1]}`;
     return `${parts.slice(0, -1).join(', ')} y ${parts[parts.length - 1]}`;
+}
+
+/**
+ * Generate a timestamp string suitable for filenames.
+ *
+ * This function returns the current local date and time formatted as
+ * YYYY-MM-DD_HH.MM.SS. The format avoids characters that are invalid in
+ * filenames on many operating systems while preserving a sortable and
+ * readable structure.
+ *
+ * Example:
+ *   getDatetimeForFilename()
+ *   // returns "2026-08-08_14.30.05"
+ */
+function getDatetimeForFilename() {
+    const date = new Date();
+    return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}_${String(date.getHours()).padStart(2, '0')}.${String(date.getMinutes()).padStart(2, '0')}.${String(date.getSeconds()).padStart(2, '0')}`;
 }
 
 /**
@@ -323,6 +356,7 @@ module.exports = {
     formatDate,
     formatDateTime,
     formatTimeMilliseconds,
+    getDatetimeForFilename,
     getSHA256,
     getAllMembers,
     sleep,
