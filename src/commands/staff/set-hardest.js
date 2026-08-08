@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2024 Zukaritasu
+ * Copyright (C) 2024 - 2026 Zukaritasu
  * 
  * his program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -48,13 +48,13 @@ async function updateHardest(database, countryHardest) {
     try {
         const collection = database.collection(COLL_CONFIG);
         const sanitizedRecord = {
-            type: 'hardest',
-            username:   String(countryHardest.username  || ''),
-            memberId:   String(countryHardest.memberId  || ''),
-            videoUrl:   String(countryHardest.videoUrl  || ''),
-            levelId:    Number(countryHardest.levelId   || 0),
-            stateName:  String(countryHardest.stateName || ''),
-            attemps:    Number(countryHardest.attemps   || 0)
+            type:      'hardest',
+            username:  String(countryHardest.username  || ''),
+            memberId:  String(countryHardest.memberId  || ''),
+            videoUrl:  String(countryHardest.videoUrl  || ''),
+            levelId:   Number(countryHardest.levelId   || 0),
+            stateName: String(countryHardest.stateName || ''),
+            attemps:   Number(countryHardest.attemps   || 0)
         };
 
         const result = await collection.updateOne(
@@ -62,6 +62,8 @@ async function updateHardest(database, countryHardest) {
             { $set: sanitizedRecord },
             { upsert: true }
         );
+
+        logger.INFO(`Hardest country level record updated: ${JSON.stringify(sanitizedRecord)}`);
 
         return Boolean(result.acknowledged);
     } catch (e) {
