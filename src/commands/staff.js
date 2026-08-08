@@ -1,7 +1,7 @@
 /**
  * Copyright (C) 2024 Zukaritasu
  * 
- * his program is free software: you can redistribute it and/or modify
+ * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
@@ -15,17 +15,13 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-const { SlashCommandBuilder, ChatInputCommandInteraction } = require('discord.js');
-
-
-//
-// +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-//
+const { SlashCommandBuilder, ChatInputCommandInteraction, Client } = require('discord.js');
+const { Db } = require('mongodb');
 
 /**
  * 
- * @param {*} client 
- * @param {*} database 
+ * @param {Client} client 
+ * @param {Db} database 
  * @param {ChatInputCommandInteraction} interaction 
  */
 async function execute(client, database, interaction) {
@@ -108,9 +104,9 @@ module.exports = {
                     option.setName('player')
                         .setDescription('Nombre del jugador')
                         .setRequired(true))
-                .addStringOption(option =>
-                    option.setName('level')
-                        .setDescription('Enlace del nivel en Pointercrate')
+                .addIntegerOption(option =>
+                    option.setName('level_id')
+                        .setDescription('ID del nivel')
                         .setRequired(true))
                 .addStringOption(option =>
                     option.setName('ytvideo')

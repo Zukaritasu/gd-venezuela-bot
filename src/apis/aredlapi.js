@@ -183,6 +183,16 @@ module.exports = {
         return levels;
     },
     getLevelCreators: (level_id) => getResponseJSON(`v2/api/aredl/levels/${level_id}/creators`),
+
+    /**
+     * Returns the level information for a given level ID from the AREDL API.
+     * If the level is found, it returns an object containing the level's details.
+     * If the level is not found or an error occurs during the request, it returns
+     * an Error object.
+     * 
+     * @param {string | number} level_id 
+     * @returns {Promise<LevelInfo | Error>} 
+     */
     getLevel: async (level_id) => {
         const level = await getResponseJSON(`v2/api/aredl/levels/${level_id}`);
         if (!(level instanceof Error) && 'name' in level)

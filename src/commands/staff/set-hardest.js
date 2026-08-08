@@ -19,188 +19,135 @@ const { SlashCommandBuilder, ChatInputCommandInteraction, PermissionsBitField, G
 const { states } = require('../../../.botconfig/country-states.json')
 const { COLL_CONFIG } = require('../../../.botconfig/database-info.json');
 const https = require('https');
+const aredlapi = require('../../apis/aredlapi')
 const { Db } = require('mongodb');
 const utils = require('../../utils');
 const logger = require('../../logger');
 
-/////////////////////////////////////////////////
+/**
+ * @typedef {Object} CountryHardest
+ * @property {string} videoUrl - The YouTube video URL for the hardest country level attempt.
+ * @property {string} stateName - The name of the country state role assigned to the player.
+ * @property {number} levelId - The GD level ID retrieved from the ArelDAPI service.
+ * @property {string} levelName - The name of the level as returned by the API.
+ * @property {number} attemps - The number of attempts used to complete the level.
+ * @property {string} memberId - The Discord member ID of the player.
+ * @property {string} username - The player's username associated with the submission.
+ */
 
 /**
+ * Update or insert the hardest country level record in the database.
+ * The function coerces incoming values to primitives to prevent malicious payloads
+ * and uses an upsert operation to simplify insertion and update logic.
  * 
- * @param {Number} level 
- * @returns {Promise<Object|Error>} Demon information or Error if not found
+ * @param {Db} database
+ * @param {CountryHardest} countryHardest
+ * @returns {Promise<boolean>}
  */
-function getDemonInfo(level) {
-    return new Promise(function (resolve, reject) {
-        https.get(`https://www.pointercrate.com/api/v2/demons/listed?limit=1&after=${--level}`, res => {
-            let data = [];
-            res.on('data', chunk => { data.push(chunk); });
-            res.on('end', () => { 
-                /** @type {Object[]} */
-                const demons = JSON.parse(Buffer.concat(data).toString());
-                if (Array.isArray(demons) && demons.length > 0)
-                    return resolve(demons[0]);
-                resolve(new Error('Level not found'));
-            });
-            res.on('error', err => { reject(err); })
-        });
-    });
-}
-
-/**
- * 
- * @param {Db} database 
- * @param {ChatInputCommandInteraction} interaction 
- * @param {string} username 
- * @param {string} memberId Discord member ID
- * @param {string} videoUrl YouTube video link
- * @param {*} levelId Level ID in Pointercrate
- * @param {*} stateName Name of the country state
- * @param {number} attemps attemps
- */
-async function updateHardest(database, interaction, username, memberId, videoUrl, levelId, stateName, attemps) {
+async function updateHardest(database, countryHardest) {
     try {
-        let hardest = await database.collection(COLL_CONFIG).findOne({ type: 'hardest' })
-        let result = null;
-        if (hardest === null) {
-            result = await database.collection(COLL_CONFIG).insertOne(
-                hardest = {
-                    type: 'hardest',
-                    username: username,
-                    memberId: memberId,
-                    videoUrl: videoUrl,
-                    levelId: levelId,
-                    stateName: stateName,
-                    attemps: attemps
-                });
-        } else {
-            result = await database.collection(COLL_CONFIG).updateOne(
-                { _id: hardest._id },
-                {
-                    $set: {
-                        username: username,
-                        memberId: memberId,
-                        videoUrl: videoUrl,
-                        levelId: levelId,
-                        stateName: stateName,
-                        attemps: attemps
-                    }
-                }
-            )
-        }
+        const collection = database.collection(COLL_CONFIG);
+        const sanitizedRecord = {
+            type: 'hardest',
+            username:   String(countryHardest.username  || ''),
+            memberId:   String(countryHardest.memberId  || ''),
+            videoUrl:   String(countryHardest.videoUrl  || ''),
+            levelId:    Number(countryHardest.levelId   || 0),
+            stateName:  String(countryHardest.stateName || ''),
+            attemps:    Number(countryHardest.attemps   || 0)
+        };
 
-        await interaction.editReply(result.acknowledged ? 'The change was successful!' :
-            'An error occurred while inserting the information');
+        const result = await collection.updateOne(
+            { type: 'hardest' },
+            { $set: sanitizedRecord },
+            { upsert: true }
+        );
+
+        return Boolean(result.acknowledged);
     } catch (e) {
         logger.ERR(e);
-        await interaction.editReply('An unknown error occurred while changing the bot language');
     }
+
+    return false;
 }
 
 /**
- * 
- * @param {ChatInputCommandInteraction} interaction
+ * Normalize and validate interaction data for the hardest country level submission.
+ * Checks the selected user, verifies the state role, validates the YouTube URL,
+ * confirms the attempt count, and fetches level information from the API.
+ *
+ * @param {ChatInputCommandInteraction} interaction - The interaction object from Discord.js
+ * @returns {Promise<CountryHardest>} - A promise that resolves to a normalized CountryHardest object
  */
-async function validateUserInfo(interaction) {
-    const member = interaction.guild.members.cache
-        .get(interaction.options.getUser('user', false)?.id);
-    if (member === undefined) {
-        return {
-            error: true,
-            message: 'The user could not be found on the server'
-        }
+async function getCountryHardestNormalized(interaction) {
+    const member = interaction.guild.members.cache.get(interaction.options.getUser('user', false)?.id);
+    if (member == null) {
+        throw new Error('The user is not a member of this server');
     }
 
     const validRoles = states.map(state => state.roleId);
-    const stateResult = member.roles.cache.map(role => role.id)
-        .find(roleId => validRoles.includes(roleId));
-    if (!stateResult) {
-        return {
-            error: true,
-            message: 'The user does not have a country status role assigned'
-        }
+    const stateRoleId = member.roles.cache.map(role => role.id).find(roleId => validRoles.includes(roleId));
+    if (stateRoleId == null) {
+        throw new Error('The user does not have a country status role assigned');
     }
 
+    /** @type {CountryHardest} */
+    const countryHardest = {}
     const videoUrl = interaction.options.getString('ytvideo', false);
     if (!utils.isValidYouTubeUrl(videoUrl)) {
-        return {
-            error: true,
-            message: 'Invalid link (YouTube)'
-        }
+        throw new Error('Invalid YouTube URL provided');
     }
 
-    const position = utils.isValidPointercrateUrl(
-        interaction.options.getString('level', false));
-    if (position === null) {
-        return {
-            error: true,
-            message: 'Invalid link (Pointercrate)'
-        }
-    }
+    countryHardest.videoUrl = videoUrl;
 
     const attemps = interaction.options.getInteger('attemps', false)
     if (attemps <= 0) {
-        return {
-            error: true,
-            message: 'El número de intentos es inválido, debe introducir un valor mayor que 0'
-        }
+        throw new Error('The number of attempts is invalid, please enter a value greater than 0');
     }
 
-    const response = await getDemonInfo(position)
-    if (response instanceof Error) {
-        return {
-            error: true,
-            message: 'An error occurred while checking the level'
-        }
+    countryHardest.attemps = attemps;
+
+    const demonInfo = await aredlapi.getLevel(interaction.options.getInteger('level_id', false))
+    if (demonInfo instanceof Error) {
+        throw demonInfo
     }
 
-    return {
-        error: false,
-        videoUrl: videoUrl,
-        memberId: member.id,
-        stateName: states.find(state => state.roleId === stateResult).name,
-        levelId: response[0].id,
-        attemps: attemps
-    }
+    countryHardest.levelId = demonInfo.level_id;
+    countryHardest.levelName = demonInfo.name;
+    countryHardest.memberId = member.id;
+    countryHardest.username = interaction.options.getString('player', false);
+    countryHardest.stateName = states.find(state => state.roleId === stateRoleId).name;
+
+    return countryHardest
 }
 
 /**
+ * Executes the command to set the hardest country level.
  * 
- * @param {*} _client 
- * @param {*} _database 
- * @param {ChatInputCommandInteraction} interaction 
+ * @param {Client} _client - The Discord client
+ * @param {Db} database - The MongoDB database instance
+ * @param {ChatInputCommandInteraction} interaction - The interaction object from Discord.js
+ * 
+ * @returns {Promise<void>}
  */
 async function execute(_client, database, interaction) {
     try {
         await interaction.deferReply({ flags: MessageFlags.Ephemeral })
 
         if (!utils.isAdministrator(interaction.member)) {
-            await interaction.editReply('No tienes privilegios suficientes para realizar esta acción');
-        } else {
-            const userInfo = await validateUserInfo(interaction, interaction.options.getUser('user', false))
-            if (userInfo.error) {
-                await interaction.editReply(userInfo.message);
-            } else {
-                await updateHardest(database, interaction,
-                    interaction.options.getString('player', false),
-                    userInfo.memberId,
-                    userInfo.videoUrl,
-                    userInfo.levelId,
-                    userInfo.stateName,
-                    userInfo.attemps
-                )
-            }
+            return await interaction.editReply('No tienes privilegios suficientes para realizar esta acción');
         }
+
+        await updateHardest(database, await getCountryHardestNormalized(interaction))
+        await interaction.editReply('Se ha actualizado correctamente!');
     } catch (e) {
         logger.ERR(e);
         try {
-            await interaction.editReply('An unknown error has occurred');
-        } catch (err) {
-            
+            await interaction.editReply(e?.message || 'An unknown error has occurred');
+        } catch {
+            // ignore, the interaction might have already been replied to or deferred
         }
     }
 }
 
-module.exports = {
-    execute
-};
+module.exports = { execute };

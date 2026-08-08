@@ -39,9 +39,10 @@ async function getSHA256(fileUrl) {
 }
 
 /**
+ * Validates if a given URL is a valid YouTube URL.
  * 
- * @param {*} url 
- * @returns 
+ * @param {string} url - The URL to validate
+ * @returns {boolean} - True if the URL is a valid YouTube URL, false otherwise
  */
 function isValidYouTubeUrl(url) {
     const regex = /^(https?:\/\/)?(www\.)?(youtube\.com|youtu\.?be)\/.+$/;
@@ -58,9 +59,10 @@ function isValidYouTubeUrl(url) {
 }
 
 /**
+ * Validates if a given URL is a valid Pointercrate URL.
  * 
- * @param {String} url 
- * @returns {Number | null}
+ * @param {String} url - The URL to validate
+ * @returns {Number | null} - The position of the level in the demonlist, or null if invalid
  */
 function isValidPointercrateUrl(url) {
     if (!/^https:\/\/www\.pointercrate\.com\/demonlist\/\d+$/.test(url))
