@@ -1,7 +1,7 @@
 /**
- * Copyright (C) 2024 Zukaritasu
+ * Copyright (C) 2024 - 2026 Zukaritasu
  * 
- * his program is free software: you can redistribute it and/or modify
+ * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
@@ -19,47 +19,43 @@ const { SlashCommandBuilder, EmbedBuilder, ChatInputCommandInteraction, ActionRo
     ButtonBuilder, ButtonStyle,
     Client } = require('discord.js');
 const utils = require('../utils');
-const apipcrate = require('../apis/apipcrate');
+const aredlapi = require('../apis/aredlapi');
 const logger = require('../logger');
 const { Db } = require('mongodb');
 const { COLL_CONFIG } = require('../../.botconfig/database-info.json')
 
-////////////////////////////////////////
-
 /**
+ * Creates an embed displaying information about the hardest level.
  * 
- * @param {*} hardest 
- * @param {*} database 
- * @param {*} interaction 
- * @returns 
+ * @param {import('./staff/set-hardest').CountryHardest} hardest - The hardest level record 
+ * from the database.
+ * @param {Db} database - The MongoDB database instance.
+ * @param {ChatInputCommandInteraction} interaction - The interaction that triggered the command.
+ * @returns {Promise<{embeds: EmbedBuilder[], components: ActionRowBuilder[]}|string>} - A promise 
+ * resolving to the created embed or an error message.
  */
 async function createEmbed(hardest, database, interaction) {
-    const response = await apipcrate.getDemon(hardest.levelId)
-    if (response instanceof Error) {
-        console.error(response)
-        return { content: 'Ha ocurrido un error al consultar la informacion del nivel' };
+    const level = await aredlapi.getLevel(hardest.levelId)
+    if (level instanceof Error) {
+        logger.ERR(level)
+        return 'Ha ocurrido un error al consultar la informacion del nivel'
     }
 
-    const levelInfo = response.data
+    const attemps = hardest?.toString()?.replace(/\B(?=(\d{3})+(?!\d))/g, ".") || '0'
 
-    let attemps = hardest.attemps ?? null
-    if (attemps) {
-        attemps = attemps.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".")
-    }
-
-    let embed = new EmbedBuilder()
+    const embed = new EmbedBuilder()
     embed.setColor(0x2b2d31)
-    embed.setTitle(`${levelInfo.name} (Top #${levelInfo.position})`)
+    embed.setTitle(`${level.name} (Top #${level.position})`)
     embed.addFields(
         { name: 'Usuario', value: `<:cn:1295174767317618748> <@${hardest.memberId}>`, inline: true },
         { name: 'Hardest del Estado', value: `${hardest.stateName}`, inline: true },
-        { name: 'Intentos', value: `${attemps ?? 'unknown'}`, inline: true }
+        { name: 'Intentos', value: `${attemps}`, inline: true }
     )
     embed.setTimestamp()
     embed.setFooter({ text: `GD Venezuela` })
     embed.setImage(await utils.getYouTubeThumbnail(hardest.videoUrl));
 
-    const member = interaction.guild.members.cache.get(`${hardest.memberId}`)
+    const member = interaction.guild.members.cache.get(hardest.memberId)
     if (!member) {
         embed.setThumbnail('https://cdn.discordapp.com/attachments/1041060604850483404/1294740130422063189/Epic_Extreme_Demon.png')
     } else {
@@ -82,29 +78,34 @@ async function createEmbed(hardest, database, interaction) {
                     .setStyle(ButtonStyle.Link),
                 new ButtonBuilder()
                     .setLabel('Pointercrate')
-                    .setURL(`https://www.pointercrate.com/demonlist/${levelInfo.position}`)
+                    .setURL(`https://www.pointercrate.com/demonlist/${level.position}`)
                     .setStyle(ButtonStyle.Link)
-        )]
+            )]
     }
 }
 
 /**
+ * Fetches and normalizes the hardest level information for a specific
+ * country state role assigned to a user.
  * 
- * @param {Client} _client 
- * @param {Db} database 
- * @param {ChatInputCommandInteraction} interaction 
+ * @param {Client} _client - The Discord client instance.
+ * @param {Db} database - The MongoDB database instance.
+ * @param {ChatInputCommandInteraction} interaction - The interaction object from Discord.js.
  */
 async function execute(_client, database, interaction) {
     try {
         await interaction.deferReply();
         const hardest = await database.collection(COLL_CONFIG).findOne({ type: 'hardest' })
-        if (hardest === null)
-            await interaction.editReply('Aun no se ha definido un hardest');
-        else
-            await interaction.editReply(await createEmbed(hardest, database, interaction));
-    } catch (error) {
-        logger.ERR(error);
-        await interaction.editReply('Ha ocurrido un error desconocido');
+        await interaction.editReply(hardest == null
+            ? 'Aun no se ha definido un hardest' :
+            await createEmbed(hardest, database, interaction));
+    } catch (e) {
+        logger.ERR(e);
+        try {
+            await interaction.editReply('Ha ocurrido un error inesperado');
+        } catch {
+
+        }
     }
 }
 

@@ -63,8 +63,6 @@ async function updateHardest(database, countryHardest) {
             { upsert: true }
         );
 
-        logger.INF(`Hardest country level record updated: ${JSON.stringify(sanitizedRecord)}`);
-
         return Boolean(result.acknowledged);
     } catch (e) {
         logger.ERR(e);

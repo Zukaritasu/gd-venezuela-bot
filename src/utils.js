@@ -92,8 +92,10 @@ function normalizeYoutubeLink(url) {
 }
 
 /**
- * @param {*} videoUrl 
- * @returns 
+ * Fetches the thumbnail URL for a given YouTube video URL.
+ * 
+ * @param {string} videoUrl - The YouTube video URL
+ * @returns {Promise<string>} - The URL of the thumbnail image
  */
 async function getYouTubeThumbnail(videoUrl) {
     let videoId;
