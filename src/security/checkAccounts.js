@@ -132,7 +132,7 @@ async function executeModerationAction(guild, database, member, action) {
 			});
 		}
 	} catch (e) {
-		logger.ERR(`Error executing moderation action on ${member.user.tag}: ${e.message}`);
+		logger.ERR(`Error executing moderation action on ${member.user.tag}:`, e);
 	}
 
 	return false; // Return false to indicate the action was taken
@@ -185,12 +185,13 @@ async function sendAutoMessage(member, inviteUrl) {
 		];
 		await member.send(introLines.join('\n'));
 	} catch (e) {
-		logger.ERR(`Unable to send message via DM to ${member.user.tag}: ${e}`);
+		logger.ERR(`Unable to send message via DM to ${member.user.tag}:`, e);
 	}
 }
 
 /**
- * Check if the user account is older than 21 days
+ * Check if the user account is older than XX days
+ * 
  * @param {Guild} guild
  * @param {Db} database
  * @param {GuildMember} member 
@@ -207,7 +208,7 @@ async function checkUserAccountAge(guild, database, member) {
 					await member.send('Tu solicitud de verificación ya está pendiente. Por favor, espera a que el staff revise tu solicitud.');
 					await member.kick('Account pending verification');
 				} catch (e) {
-					if (e.code !== RESTJSONErrorCodes.CannotSendMessagesToThisUser) {
+					if (e?.code !== RESTJSONErrorCodes.CannotSendMessagesToThisUser) {
 						logger.ERR(e);
 					} else {
 						try {
@@ -228,8 +229,8 @@ async function checkUserAccountAge(guild, database, member) {
 				action = ModerationAction.KICK_NOT_NOTIFY
 			}
 		} catch (e) {
-			logger.ERR(`Unable to send message via DM to ${member.user.tag}: ${e}`);
-			if (e.code === RESTJSONErrorCodes.CannotSendMessagesToThisUser) {
+			logger.ERR(`Unable to send message via DM to ${member.user.tag}:`, e);
+			if (e?.code === RESTJSONErrorCodes.CannotSendMessagesToThisUser) {
 				action = ModerationAction.BAN
 			}
 		}
@@ -245,7 +246,7 @@ async function checkUserAccountAge(guild, database, member) {
  * @param {Map<string, GuildMember>} members 
  */
 async function checkAllUsersAccountAge(guild, database, members = null) {
-	const allMembers = members ? members : await utils.getAllMembers(guild)
+	const allMembers = members ?? await utils.getAllMembers(guild)
 	if (!allMembers) return
 	
 	for (const member of allMembers.values()) {
@@ -254,7 +255,7 @@ async function checkAllUsersAccountAge(guild, database, members = null) {
 				continue; // Skip bots
 			await checkUserAccountAge(guild, database, member);
 		} catch (e) {
-			logger.ERR(`Error checking account age for ${member.user.tag}: ${e.message}`);
+			logger.ERR(`Error checking account age for ${member.user.tag}:`, e);
 		}
 	}
 }
