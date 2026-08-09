@@ -64,7 +64,9 @@ function generateSHA256(filePath) {
  */
 async function executeSubprocess(command) {
     return new Promise((resolve) => {
-        const child = fork(command);
+        const child = fork(command, [], {
+            execArgv: ['--env-file=.env']
+        });
 
         child.on('exit', (code) => {
             logger.INF(`Subprocess terminated with code ${code}`);
