@@ -312,7 +312,7 @@ async function POST_youtubeWebhook(req, res) {
 
             const videoItem = await youtubeApi.fetchVideoDetails(videoInfo.videoId)
             if (videoItem) {
-                const videoType = await youtubeApi.getVideoType(videoItem)
+                let videoType = await youtubeApi.getVideoType(videoItem)
                 if (videoType) {
                     if (videoType === 'stream' && videoItem.snippet?.liveBroadcastContent !== 'live') {
                         // Avoid treating uploaded videos or premieres as live streams
