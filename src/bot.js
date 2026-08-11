@@ -53,7 +53,7 @@ process.on('unhandledRejection', (reason, promise) => {
         socket: {
             keepAlive: 10000,
             reconnectStrategy: (retries) => {
-                return Math.min(retries * 100, 3000);
+                return Math.min(retries * 500, 3000);
             }
         },
         pingInterval: 10000,
