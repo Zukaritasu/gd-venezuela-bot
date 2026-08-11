@@ -25,6 +25,13 @@ const { DATABASE_NAME } = require('../.botconfig/database-info.json');
 
 process.chdir(__dirname);
 
+process.on('uncaughtException', (err) => {
+    logger.ERR('Uncaught Exception:', err);
+});
+
+process.on('unhandledRejection', (reason, promise) => {
+    logger.ERR('Unhandled Rejection at:', promise, 'reason:', reason);
+});
 
 (async () => {
     /** @type {Db} */
