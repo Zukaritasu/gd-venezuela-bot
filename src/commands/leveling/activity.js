@@ -53,21 +53,34 @@ const COOLDOWN_TIME = 60000;
 /**
  * Returns the user activity data for a given user ID.
  * 
- * This function retrieves the user activity data from the Redis cache. If the data is
- * not found in the cache, it returns undefined. If there is an error while fetching
- * the data, it logs the error and returns null.
- * 
+ * This function first attempts to retrieve the user activity data from Redis cache.
+ * If the data is not found in cache, it loads the activity data from MongoDB, caches
+ * the result, and returns it. If the user is not found in the database, it returns
+ * null.
  * 
  * @param {string} userId - The ID of the user whose activity data is to be retrieved.
  * @returns {Promise<UserActivity|null>} - Returns the user activity data,
- * or null if not found or an error occurs.
+ * or null if the user does not exist.
  */
 async function getUserActivity(userId) {
-	if (!global.redisClient) return null;
+	if (!global.redisClient || !global.redisClient.isReady) {
+		throw new Error('Redis client is not initialized');
+	}
 
 	const response = await global.redisClient.get(PREFIX_USER_ACTIVITY + userId);
 	if (response) {
 		return JSON.parse(response)
+	}
+
+	/** @type {UserActivity} */
+	const user = await global.database.collection(COLL_USERS_ACTIVITY).findOne({ userId: userId });
+
+	if (user) {
+		if (global.redisClient && global.redisClient.isReady) {
+			await global.redisClient.set(PREFIX_USER_ACTIVITY + userId, JSON.stringify(user));
+			await global.redisClient.hSet(KEY_USERS_BOOSTERS, userId, user.isBooster.toString());
+		}
+		return user;
 	}
 
 	return null
@@ -86,7 +99,8 @@ async function getUserActivity(userId) {
  */
 async function updateUserActivity(userActivity) {
 	try {
-		if (!global.redisClient) return false;
+		if (!global.redisClient || !global.redisClient.isReady)
+			return false;
 
 		const key = PREFIX_USER_ACTIVITY + userActivity.userId;
 		let retries = 3;
@@ -119,13 +133,15 @@ async function updateUserActivity(userActivity) {
 			}
 		}
 
-		logger.ERR('Failed to update user activity after retries due to conflicts ' +
-			`for userId: ${userActivity.userId}`);
-		return false;
+		throw new Error(`Failed to update user activity for userId: ${userActivity.userId} after 3 retries`);
 	} catch (error) {
+		if (global.redisClient && global.redisClient.isReady) {
+            await global.redisClient.unwatch().catch(() => {});
+        }
 		logger.ERR(error);
-		return false;
 	}
+
+	return false;
 }
 
 /**
@@ -136,9 +152,9 @@ async function updateUserActivity(userActivity) {
  * @returns {Promise<boolean>} - Returns true if the user is a booster, false otherwise.
  */
 async function isUserBooster(guild, userActivity) {
-	try {
-		if (!global.redisClient) return false;
+	if (!global.redisClient || !global.redisClient.isReady) throw new Error('Redis client is not initialized');
 
+	try {
 		// Function to reset the booster check for a user and update the Redis
 		// cache with the new booster status.
 		// This function fetches the member object for the user, checks if they
@@ -424,7 +440,10 @@ async function log(_db, guild, message, containsAttachment, userId, userName) {
  * 
  * 
  * @param {VoiceState} oldState 
- * @param {VoiceState} newState 
+ * @param {VoiceState} newState
+ * 
+ * @throws Throws an error if the Redis client is not initialized or
+ * if there is an issue updating the user activity.	
  */
 async function voiceEvent(oldState, newState) {
 	if (oldState.channelId !== null && newState.channelId !== null)
@@ -530,6 +549,9 @@ async function removeMember(db, member) {
  *
  * @param {Db} db - The database object used to persist the updated member state.
  * @param {GuildMember} member - The guild member to add to member tracking.
+ * 
+ * @throws Throws an error if the Redis client is not initialized or
+ * if there is an issue updating the user activity.
  */
 async function addMember(db, member) {
     const userActivity = await getUserActivity(member.user.id);
@@ -586,6 +608,8 @@ module.exports = {
 	 * allowing it to interact with the Redis cache for storing and retrieving user
 	 * activity data. It also sets up a periodic backup of the user activity data every 15 minutes.
 	 * 
+	 * @throws Throws an error if the Redis client is not initialized or
+	 * if there is an issue with the backup process.
 	 */
 	initializeActivityLog: async () => {
 		const error = await loadBackupData(global.database);
