@@ -59,10 +59,11 @@ const COOLDOWN_TIME = 60000;
  * null.
  * 
  * @param {string} userId - The ID of the user whose activity data is to be retrieved.
+ * @param {boolean} [noDb=false] - If true, the function will not attempt to load data from the database if not found in cache.
  * @returns {Promise<UserActivity|null>} - Returns the user activity data,
  * or null if the user does not exist.
  */
-async function getUserActivity(userId) {
+async function getUserActivity(userId, noDb = false) {
 	if (!global.redisClient || !global.redisClient.isReady) {
 		throw new Error('Redis client is not initialized');
 	}
@@ -73,7 +74,11 @@ async function getUserActivity(userId) {
 	}
 
 	/** @type {UserActivity} */
-	const user = await global.database.collection(COLL_USERS_ACTIVITY).findOne({ userId: userId });
+	let user = null;
+
+	if (!noDb) {
+		user = await global.database.collection(COLL_USERS_ACTIVITY).findOne({ userId: userId });
+	}
 
 	if (user) {
 		if (global.redisClient && global.redisClient.isReady) {
@@ -632,7 +637,7 @@ module.exports = {
 				const usersConnectedToVoice = [];
 
 				for (const userId of dirtyUserIds) {
-					const userActivity = await getUserActivity(userId);
+					const userActivity = await getUserActivity(userId, true);
 					if (userActivity) {
 						if (userActivity.voiceStatus && userActivity.voiceStatus.isConnected) {
 							userActivity.voicePoints += Math.floor((Date.now() - userActivity.voiceStatus.joinedAt) / 60000) * 4;
