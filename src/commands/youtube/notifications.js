@@ -506,8 +506,8 @@ async function notify(interaction, isTest) {
                 throw new Error(`Guild not found: ${process.env.SERVER_GD_VENEZUELA_ID}`);
             }
 
-            const notificationChannel = await guild.channels.fetch(process.env.YOUTUBE_NOTIFICATIONS).catch(() => null);
-            if (!notificationChannel) {
+            const notificationChannel = await guild.channels.fetch(YOUTUBE_NOTIFICATIONS).catch(() => null);
+            if (notificationChannel === null) {
                 return await print({ content: 'Canal de notificaciones no encontrado.' });
             }
 
