@@ -274,7 +274,7 @@ async function printChanges(changes, guild, isPlatformer) {
     await messageSent.react('👍');
     await messageSent.react('👎');
 
-    await channel.send('<@&1376586957735465111>') // Notificaciones Lista
+    await channel.send(`<@&${channels.RECORDS_NOTIFICATIONS}>`)
 }
 
 /**
