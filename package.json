@@ -21,6 +21,7 @@
     "node-fetch": "^2.7.0",
     "npm": "^11.19.0",
     "redis": "^4.7.1",
+    "sharp": "^0.35.3",
     "socks-proxy-agent": "^10.1.0",
     "stackblur-canvas": "^2.7.0",
     "webp-wasm": "^1.0.6"
