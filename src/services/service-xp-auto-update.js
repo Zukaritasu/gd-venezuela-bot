@@ -153,6 +153,7 @@ async function processUsersStarsRole(db, guild) {
 		...currentTopUserIds.slice(0, topLimits.positions)
 	]);
 	
+	let isFirst = true;
 	// Add role to members
 	for (const userId of candidates) {
 		const member = await guild.members.fetch(userId).catch(() => null);
@@ -165,6 +166,20 @@ async function processUsersStarsRole(db, guild) {
 			await member.roles.add(process.env.ID_ROL_SUPER_ESTRELLA, `The user has entered the TOP ${topLimits.maxSuperStars} `
 				+ `with more than ${topLimits.superStarThreshold} points`
 			);
+
+			try {
+				if (isFirst) {
+					isFirst = false;
+					// Add the user to the user exception list if they do not exist
+					await db.collection(COLL_USERS_ACTIVITY_CONFIG).updateOne(
+						{ type: doc_types.SAU_TYPE_USER_EXCEPTION_LIST },
+						{ $addToSet: { users: userId } },
+						{ upsert: true }
+					);
+				}
+			} catch (error) {
+				logger.ERR(error);
+			}
 		}
 	}
 }
