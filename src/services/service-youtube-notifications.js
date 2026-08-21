@@ -282,9 +282,7 @@ function verifyHubSignature(body, signatureHeader, secret) {
 async function POST_youtubeWebhook(req, res) {
     try {
         if (!verifyHubSignature(req.body, req.headers['x-hub-signature'], YOUTUBE_WEBHOOK_SECRET)) {
-            logger.ERR('Verify Hub Signature failed', {
-                headers: req.headers
-            })
+            logger.ERR('Verify Hub Signature failed', JSON.stringify(req.headers));
             return res.status(403).end();
         }
 
