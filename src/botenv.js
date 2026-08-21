@@ -33,7 +33,7 @@ const commandFileList = [
     'user-response.js',
     'perfil.js',
     'packs.js',
-    'games.js',
+    //'games.js',
     'youtube.js'
 ]
 
