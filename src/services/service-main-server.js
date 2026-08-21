@@ -15,14 +15,10 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-const { Client, TextChannel, Guild } = require("discord.js");
+const { Client } = require("discord.js");
 const { Db } = require("mongodb");
 const express = require('express');
-const axios = require('axios')
-const crypto = require('crypto')
 const logger = require('../logger.js');
-const utils = require('../utils.js');
-const { XMLParser } = require('fast-xml-parser');
 const { MAIN_SERVER_PORT } = require('../../.botconfig/token.json');
 const youtubeNotifications = require('./service-youtube-notifications.js');
 const screenshot = require('./endpoints/screenshot.js');
