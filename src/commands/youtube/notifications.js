@@ -26,7 +26,7 @@ const { PUBLIC_IP } = require('../../../.botconfig/token.json');
 const utils = require("../../utils");
 const { EmbedBuilder } = require("discord.js");
 
-const WEBHOOK_URL = `https://${PUBLIC_API_URL}/youtube-webhook`;
+const WEBHOOK_URL = `${PUBLIC_API_URL}/youtube-webhook`;
 
 /**
  * @typedef {Object} YouTubeChannel

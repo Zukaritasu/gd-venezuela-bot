@@ -65,7 +65,7 @@ const globalRef = global;
  * @returns {Promise<void>} Resolves when all subscription requests are sent.
  */
 async function autoUpdateSubscription() {
-    const webhookUrl = `https://${PUBLIC_API_URL}/youtube-webhook`
+    const webhookUrl = `${PUBLIC_API_URL}/youtube-webhook`
 
     /** @type {YouTubeChannel[]} */
     const youtubeChannels = await globalRef.database.collection(COLL_YOUTUBE_CHANNELS).find().toArray()
