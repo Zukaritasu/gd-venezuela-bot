@@ -26,6 +26,10 @@ const { COLL_YOUTUBE_CHANNELS, COLL_YOUTUBE_VIDEOS } = require('../../.botconfig
 const { YOUTUBE_WEBHOOK_SECRET, PUBLIC_API_URL } = require('../../.botconfig/token.json')
 const notifications = require('../commands/youtube/notifications.js')
 
+const { XMLParser } = require('fast-xml-parser');
+
+const parser = new XMLParser();
+
 /**
  * @type {globalThis & { database: Db, guild: Guild }}
  */
