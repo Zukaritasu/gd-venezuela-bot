@@ -25,7 +25,8 @@ const services = [
 	'../services/service-xp-auto-update.js',
 	'../services/service-leaderboard-creator-point.js',
 	'../services/service-youtube-notifications.js',
-	'../services/service-auto-backup.js'
+	'../services/service-auto-backup.js',
+	'../services/service-main-server.js'
 ]
 
 module.exports = {
@@ -35,19 +36,21 @@ module.exports = {
 	async execute(client, database) {
 		await require('./voiceStateUpdate').scanVoiceChannelsActivity(client)
 		await require('../commands/records/submit').checkNewSubmitRecords(client, database)
-		
+
 		// Load server members into the cache
 		const guild = client.guilds.cache.get(process.env.SERVER_GD_VENEZUELA_ID)
-		if (guild) {
-			try {
-				const allMembers = await utils.getAllMembers(guild)
-				if (allMembers) {
-					await require('../security/checkAccounts').checkAllUsersAccountAge(guild, database, allMembers);
-					await require('../commands/leveling/activity').verifyGuildMembers(allMembers);
-				}
-			} catch (e) {
-				logger.ERR(e)
+		if (!guild) throw new Error('Guild not found');
+
+		global.guild = guild
+
+		try {
+			const allMembers = await utils.getAllMembers(guild)
+			if (allMembers) {
+				await require('../security/checkAccounts').checkAllUsersAccountAge(guild, database, allMembers);
+				await require('../commands/leveling/activity').verifyGuildMembers(allMembers);
 			}
+		} catch (e) {
+			logger.ERR(e)
 		}
 
 		// Load services

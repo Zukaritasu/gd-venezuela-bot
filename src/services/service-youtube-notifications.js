@@ -17,20 +17,14 @@
 
 const { Client, TextChannel, Guild } = require("discord.js");
 const { Db } = require("mongodb");
-const express = require('express');
-const axios = require('axios')
 const crypto = require('crypto')
 const logger = require('../logger.js');
 const utils = require('../utils.js');
 const youtubeApi = require('../apis/youtubeapi.js');
 const { YOUTUBE_NOTIFICATIONS, BOT_TESTING } = require('../../.botconfig/channels.json')
 const { COLL_YOUTUBE_CHANNELS, COLL_YOUTUBE_VIDEOS } = require('../../.botconfig/database-info.json')
-const { PUBLIC_IP, YOUTUBE_NOTIFICATIONS_PORT, YOUTUBE_API_KEY, YOUTUBE_WEBHOOK_SECRET } = require('../../.botconfig/token.json')
+const { YOUTUBE_WEBHOOK_SECRET, PUBLIC_API_URL } = require('../../.botconfig/token.json')
 const notifications = require('../commands/youtube/notifications.js')
-const { XMLParser } = require('fast-xml-parser');
-
-const parser = new XMLParser();
-const app = express();
 
 /**
  * @type {globalThis & { database: Db, guild: Guild }}
@@ -71,7 +65,7 @@ const globalRef = global;
  * @returns {Promise<void>} Resolves when all subscription requests are sent.
  */
 async function autoUpdateSubscription() {
-    const webhookUrl = `http://${PUBLIC_IP}:${YOUTUBE_NOTIFICATIONS_PORT}/youtube-webhook`
+    const webhookUrl = `https://${PUBLIC_API_URL}/youtube-webhook`
 
     /** @type {YouTubeChannel[]} */
     const youtubeChannels = await globalRef.database.collection(COLL_YOUTUBE_CHANNELS).find().toArray()
@@ -355,39 +349,21 @@ async function service(_db, client) {
 
     globalRef.guild = guild
 
-    app.use(express.text({
-        type: [
-            'text/xml',
-            'application/xml',
-            'application/atom+xml',
-            'text/plain'
-        ]
-    }));
-
-    app.get('/youtube-webhook', GET_verifyWebhook);
-    app.post('/youtube-webhook', POST_youtubeWebhook);
-
-    const serverInstance = app.listen(YOUTUBE_NOTIFICATIONS_PORT, '0.0.0.0', () => {
-        logger.INF(`YouTube notifications service listening on port ${YOUTUBE_NOTIFICATIONS_PORT}`);
-    });
-
     const timeout = setInterval(autoUpdateSubscription, 1000 * 60 * 60); // 1 hour
 
     return {
         stop: () => {
-            if (serverInstance) {
-                serverInstance.close((err) => {
-                    if (err) logger.ERR(err);
-                });
-            }
-
             clearInterval(timeout)
         },
 
-        description: 'Service YouTube notifications for new videos from subscribed channels',
+        description: 'Service to handle YouTube notifications via PubSubHubbub webhook and send them to Discord.',
         name: 'service-youtube-notifications',
         fullname: 'YouTube Notifications Service'
     }
 }
 
-module.exports = { start: service }
+module.exports = {
+    GET_verifyWebhook,
+    POST_youtubeWebhook,
+    start: service
+}

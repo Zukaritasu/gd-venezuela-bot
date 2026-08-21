@@ -17,7 +17,7 @@
 
 const { ChatInputCommandInteraction, GuildMember, MessageFlags, ModalSubmitInteraction, ActionRowBuilder, TextInputBuilder, ModalBuilder, TextInputStyle, ButtonBuilder, ButtonStyle, LabelBuilder, ComponentType } = require("discord.js");
 const { COLL_YOUTUBE_CHANNELS } = require('../../../.botconfig/database-info.json')
-const { YOUTUBE_WEBHOOK_SECRET, YOUTUBE_NOTIFICATIONS_PORT } = require('../../../.botconfig/token.json')
+const { YOUTUBE_WEBHOOK_SECRET, PUBLIC_API_URL } = require('../../../.botconfig/token.json')
 const { YOUTUBE_NOTIFICATIONS } = require('../../../.botconfig/channels.json')
 const { Db } = require("mongodb");
 const axios = require('axios')
@@ -26,7 +26,7 @@ const { PUBLIC_IP } = require('../../../.botconfig/token.json');
 const utils = require("../../utils");
 const { EmbedBuilder } = require("discord.js");
 
-const WEBHOOK_URL = `http://${PUBLIC_IP}:${YOUTUBE_NOTIFICATIONS_PORT}/youtube-webhook`;
+const WEBHOOK_URL = `https://${PUBLIC_API_URL}/youtube-webhook`;
 
 /**
  * @typedef {Object} YouTubeChannel
