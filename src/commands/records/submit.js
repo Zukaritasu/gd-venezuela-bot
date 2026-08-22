@@ -159,6 +159,9 @@ async function getLevelName(message, level) {
         aredlapi.getLevels(),
         aredlapi.getLevelsPlatformer()
     ]);
+
+    if (levels instanceof Error) throw levels
+    if (levelsPlat instanceof Error) throw levelsPlat
     
     levels.push(...levelsPlat);
 
