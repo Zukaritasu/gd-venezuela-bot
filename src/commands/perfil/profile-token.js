@@ -50,15 +50,14 @@ async function generateToken(database, interaction) {
 		}
 
 		const userId = interaction.member.id;
-		const secretKey = process.env.MOD_SCREENSHOT_SECRET
-
+		
 		let profile = await database.collection(COLL_PROFILES).findOne({ userId });
 		let currentToken = profile?.token;
 		let isInvalid = !currentToken;
 
 		if (currentToken) {
 			try {
-				jwt.verify(currentToken, secretKey);
+				jwt.verify(currentToken, MOD_SCREENSHOT_SECRET);
 			} catch (error) {
 				const expectedErrors = ['TokenExpiredError', 'JsonWebTokenError'];
 				if (!expectedErrors.includes(error?.name)) {
@@ -69,7 +68,7 @@ async function generateToken(database, interaction) {
 		}
 
 		if (isInvalid) {
-			currentToken = jwt.sign({ userId }, secretKey, { expiresIn: '90d' });
+			currentToken = jwt.sign({ userId }, MOD_SCREENSHOT_SECRET, { expiresIn: '90d' });
 
 			await database.collection(COLL_PROFILES).updateOne(
 				{ userId },
