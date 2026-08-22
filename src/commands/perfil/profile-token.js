@@ -68,7 +68,7 @@ async function generateToken(database, interaction) {
 		}
 
 		if (isInvalid) {
-			currentToken = jwt.sign({ userId }, MOD_SCREENSHOT_SECRET, { expiresIn: '90d' });
+			currentToken = jwt.sign({ u: userId }, MOD_SCREENSHOT_SECRET, { expiresIn: '90d' });
 
 			await database.collection(COLL_PROFILES).updateOne(
 				{ userId },
