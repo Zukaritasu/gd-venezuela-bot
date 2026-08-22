@@ -42,7 +42,7 @@ async function configure(client, database, interaction) {
 			}
 		}
 
-		if (!member.roles.cache.has('1119804850620866600')) {
+		if (!member.roles.cache.has(process.env.ID_ROL_VENEZOLANO)) {
 			return await interaction.editReply({
 				content: 'Comando disponible solo para Venezolanos.'
 			});

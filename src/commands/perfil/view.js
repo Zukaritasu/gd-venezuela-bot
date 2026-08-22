@@ -69,7 +69,7 @@ async function view(client, database, interaction) {
 
 		if (user.bot)
 			return await interaction.editReply({ content: 'Los bots no tienen perfil.' });
-		if (!member.roles.cache.has('1119804850620866600')) {
+		if (!member.roles.cache.has(process.env.ID_ROL_VENEZOLANO)) {
 			return await interaction.editReply({
 				content: 'El perfil solo está disponible para Venezolanos.'
 			});
