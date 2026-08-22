@@ -20,7 +20,7 @@ const utils = require('../../utils.js');
 const express = require('express');
 const sharp = require('sharp');
 const crypto = require('crypto')
-const { MOD_SCREENSHOT_SECRECT } = require('../../../.botconfig/token.json');
+const { MOD_SCREENSHOT_SECRET } = require('../../../.botconfig/token.json');
 const { Client } = require('discord.js');
 const jwt = require('jsonwebtoken');
 
@@ -39,7 +39,7 @@ function verifyToken(req, res, next) {
 	}
 
 	try {
-		const decoded = jwt.verify(token, MOD_SCREENSHOT_SECRECT);
+		const decoded = jwt.verify(token, MOD_SCREENSHOT_SECRET);
 		req.user = decoded;
 		next();
 	} catch (error) {
