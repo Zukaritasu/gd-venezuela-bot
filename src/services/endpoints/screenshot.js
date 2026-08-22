@@ -57,9 +57,9 @@ function verifyToken(req, res, next) {
 async function POST_screenshot(req, res) {
 	const rawWidth = req.headers['x-image-width']
 	const rawHeight = req.headers['x-image-height'];
-	const username = req.headers['username'];
-	const accountId = req.headers['accountid'];
-	const percentage = req.headers['percentage'];
+	const username = req.headers['x-username'];
+	const accountId = req.headers['x-account-id'];
+	const percentage = req.headers['x-percentage'];
 
 	if ([rawWidth, rawHeight, username, accountId, percentage].some(h => !h || String(h).trim() === '')) {
 		return res.status(400).json({ error: 'Missing required headers' });
