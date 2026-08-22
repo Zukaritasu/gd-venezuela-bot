@@ -88,9 +88,8 @@ async function POST_screenshot(req, res) {
 		res.json({ success: true });
 	} catch (error) {
 		logger.ERR(error);
+		res.status(500).json({ error: 'Failed to process the screenshot' });
 	}
-
-	res.status(500).json({ error: 'Failed to process the screenshot' });
 }
 
 module.exports = { verifyToken, POST_screenshot }
