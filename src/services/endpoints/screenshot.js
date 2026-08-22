@@ -21,6 +21,7 @@ const express = require('express');
 const sharp = require('sharp');
 const crypto = require('crypto')
 const { MOD_SCREENSHOT_SECRET } = require('../../../.botconfig/token.json');
+const { BOT_TESTING } = require('../../../.botconfig/channels.json');
 const { Client } = require('discord.js');
 const jwt = require('jsonwebtoken');
 
