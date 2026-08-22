@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2025 Zukaritasu
+ * Copyright (C) 2026 Zukaritasu
  * 
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -29,6 +29,8 @@ async function execute(client, database, interaction) {
 		await require('./perfil/view').view(client, database, interaction);
 	} else if (subcommand === 'configurar') {
 		await require('./perfil/configure').configure(client, database, interaction);
+	} else if (subcommand === 'token') {
+		await require('./perfil/profile-token').generateToken(database, interaction);
 	}
 }
 
@@ -45,6 +47,10 @@ module.exports = {
 						.setName('usuario')
 						.setDescription('El usuario cuyo perfil deseas ver')
 						.setRequired(false)))
+		.addSubcommand(subcommand =>
+			subcommand
+				.setName('token')
+				.setDescription('Muestra o genera un token de sesión (uso exclusivo)'))
 		.addSubcommand(subcommand =>
 			subcommand
 				.setName('configurar')
