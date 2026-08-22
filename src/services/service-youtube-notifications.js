@@ -28,7 +28,11 @@ const notifications = require('../commands/youtube/notifications.js')
 
 const { XMLParser } = require('fast-xml-parser');
 
-const parser = new XMLParser();
+const parser = new XMLParser({
+    ignoreAttributes: false,
+    processEntities: false,
+    allowBooleanAttributes: false
+});
 
 /**
  * @type {globalThis & { database: Db, guild: Guild }}
