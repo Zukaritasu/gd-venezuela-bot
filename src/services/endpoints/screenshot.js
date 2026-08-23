@@ -62,18 +62,19 @@ async function verifyToken(req, res, next) {
 }
 
 /**
- * Checks whether a value represents a non-negative integer.
+ * Checks whether a value represents a non-negative integer / float.
  *
  * @param {string|number} val - The value to validate.
- * @returns {boolean} Whether the value is a valid non-negative integer.
+ * @param {'INTEGER' | 'FLOAT'} type 
+ * @returns {boolean} Whether the value is a valid non-negative integer / float.
  */
-function isValidInteger(val) {
+function isValidNumber(val, type = 'INTEGER') {
     if (typeof val !== 'string' && typeof val !== 'number') return false;
     const str = String(val).trim();
     if (str === '') return false;
     
     const num = Number(str);
-    return Number.isInteger(num) && num >= 0;
+    return (type === 'INTEGER' ?  Number.isInteger(num) : Number.isFinite(num)) && num >= 0;
 }
 
 /**
@@ -98,20 +99,21 @@ async function POST_screenshot(req, res) {
 		return res.status(400).json({ error: 'Missing required headers' });
 	}
 
-	if (!isValidInteger(accountId) || !isValidInteger(levelId) || !isValidInteger(percent)) {
+	if (!isValidNumber(accountId) || !isValidNumber(levelId) || !isValidNumber(percent, 'FLOAT')) {
         return res.status(400).json({ error: 'accountId, levelId, and percent must be valid integers' });
     }
 
-	const parsedAccountId = parseInt(accountId, 10);
+	//const parsedAccountId = parseInt(accountId, 10);
     const parsedLevelId = parseInt(levelId, 10);
-	const parsedPercent = parseInt(percent, 10);
+	const parsedPercent = parseFloat(percent);
 
 	try {
 		const safeLevelName = String(levelName).replace(/@/g, '');
+		const truncatedPercent = (Math.floor(parsedPercent * 100) / 100).toFixed(2);
 		
 		// async function to send the screenshot to the testing channel
 		await global.guild.channels.cache.get(BOT_TESTING)?.send({
-			content: `<@${req.userId}> | Percent: ${parsedPercent} | Level name: ${safeLevelName} | Level ID: ${parsedLevelId}`,
+			content: `<@${req.userId}> | Percent: ${truncatedPercent}% | Level name: ${safeLevelName} | Level ID: ${parsedLevelId}`,
 			files: [{
 				attachment: req.body,
 				name: 'screenshot.png'
