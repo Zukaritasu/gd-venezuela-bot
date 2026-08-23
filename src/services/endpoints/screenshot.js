@@ -22,6 +22,7 @@ const sharp = require('sharp');
 const crypto = require('crypto')
 const { MOD_SCREENSHOT_SECRET } = require('../../../.botconfig/token.json');
 const { BOT_TESTING } = require('../../../.botconfig/channels.json');
+const { COLL_PROFILES } = require('../../../.botconfig/database-info.json');
 const { Client } = require('discord.js');
 const jwt = require('jsonwebtoken');
 
@@ -32,7 +33,7 @@ const jwt = require('jsonwebtoken');
  * @param {import('express').Response} res - The outgoing HTTP response
  * @param {import('express').NextFunction} next - The next middleware function
  */
-function verifyToken(req, res, next) {
+async function verifyToken(req, res, next) {
 	const token = req.headers['authorization']?.split(' ')[1];
 
 	if (!token) {
@@ -40,13 +41,39 @@ function verifyToken(req, res, next) {
 	}
 
 	try {
-		const decoded = jwt.verify(token, MOD_SCREENSHOT_SECRET);
-		req.user = decoded;
+		const payload = jwt.verify(token, MOD_SCREENSHOT_SECRET);
+		if (!('u' in payload)) {
+			throw new Error('Payload not found');
+		}
+
+		const userId = payload.u.toString()
+		const exists = await global.database.collection(COLL_PROFILES).findOne({ userId })
+
+		if (!exists) {
+			throw new Error('Invalid token');
+		}
+
+		req.userId = userId;
 		next();
 	} catch (error) {
-		logger.ERR('Invalid token');
+		logger.ERR(error);
 		res.status(401).json({ error: 'Invalid token' });
 	}
+}
+
+/**
+ * Checks whether a value represents a non-negative integer.
+ *
+ * @param {string|number} val - The value to validate.
+ * @returns {boolean} Whether the value is a valid non-negative integer.
+ */
+function isValidInteger(val) {
+    if (typeof val !== 'string' && typeof val !== 'number') return false;
+    const str = String(val).trim();
+    if (str === '') return false;
+    
+    const num = Number(str);
+    return Number.isInteger(num) && num >= 0;
 }
 
 /**
@@ -56,34 +83,40 @@ function verifyToken(req, res, next) {
  * @param {import('express').Response} res - The outgoing HTTP response
  */
 async function POST_screenshot(req, res) {
-	const rawWidth = req.headers['x-image-width']
-	const rawHeight = req.headers['x-image-height'];
+	if (!Buffer.isBuffer(req.body) || req.body.length === 0) {
+        return res.status(400).json({ error: 'Invalid or empty binary buffer' });
+    }
+
 	const username = req.headers['x-username'];
 	const accountId = req.headers['x-account-id'];
-	const percentage = req.headers['x-percentage'];
+	const levelName = req.headers['x-level-name'];
+	const levelId = req.headers['x-level-id'];
+	const percent = req.headers['x-percent'];
 
-	if ([rawWidth, rawHeight, username, accountId, percentage].some(h => !h || String(h).trim() === '')) {
+	if ([username, accountId, levelName, levelId, percent]
+		.some(h => !h || String(h).trim() === '')) {
 		return res.status(400).json({ error: 'Missing required headers' });
 	}
 
-	const width = parseInt(rawWidth);
-	const height = parseInt(rawHeight);
+	if (!isValidInteger(accountId) || !isValidInteger(levelId) || !isValidInteger(percent)) {
+        return res.status(400).json({ error: 'accountId, levelId, and percent must be valid integers' });
+    }
 
-	const pngBuffer = await sharp(req.body, {
-		raw: {
-			width,
-			height,
-			channels: 4
-		}
-	}).png().toBuffer();
+	const parsedAccountId = parseInt(accountId, 10);
+    const parsedLevelId = parseInt(levelId, 10);
+	const parsedPercent = parseInt(percent, 10);
 
 	try {
+		const safeLevelName = String(levelName).replace(/@/g, '');
+		
 		// async function to send the screenshot to the testing channel
-		global.guild.channels.cache.get(BOT_TESTING)?.send({
+		await global.guild.channels.cache.get(BOT_TESTING)?.send({
+			content: `<@${req.userId}> | Percent: ${parsedPercent} | Level name: ${safeLevelName} | Level ID: ${parsedLevelId}`,
 			files: [{
-				attachment: pngBuffer,
+				attachment: req.body,
 				name: 'screenshot.png'
-			}]
+			}],
+			allowedMentions: { users: [req.userId] }
 		});
 		res.json({ success: true });
 	} catch (error) {
