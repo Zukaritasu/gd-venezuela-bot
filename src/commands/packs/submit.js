@@ -190,7 +190,14 @@ async function execute(client, database, interaction) {
 						content: 'La URL no terminó en un ID de mensaje válido',
 					}) 
 				
-				const message = await dmChannel.messages.fetch(messageIdFormated)
+				let message = null
+
+				try {
+					message = await dmChannel.messages.fetch(messageIdFormated)
+				} catch (error) {
+					logger.ERR(error)
+				}
+
 				if (!message) {
 					return await interaction.editReply({
 						content: 'No se ha podido encontrar el mensaje con el ID proporcionado.',
