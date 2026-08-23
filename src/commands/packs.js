@@ -15,7 +15,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-const { SlashCommandBuilder, ChatInputCommandInteraction, Client } = require('discord.js');
+const { SlashCommandBuilder, ChatInputCommandInteraction, Client, MessageFlags } = require('discord.js');
 const { Db } = require('mongodb');
 const gdvzlalistapi = require('../apis/gdvzlalistapi')
 const logger = require('../logger')
@@ -31,6 +31,11 @@ async function execute(cliente, database, interaction) {
 	const subcommand = interaction.options.getSubcommand();
 	if (subcommand === 'enviar') {
 		await require('./packs/submit').execute(cliente, database, interaction)
+	} else if (subcommand === 'ayuda') {
+		await interaction.reply({
+			content: 'https://youtu.be/Hehk-oTjrj0',
+			flags: MessageFlags.Ephemeral
+		})
 	}
 }
 
@@ -38,6 +43,11 @@ module.exports = {
 	data: new SlashCommandBuilder()
 		.setName('packs')
 		.setDescription('Tus packs de niveles completados')
+		.addSubcommand(option => 
+			option
+				.setDescription('Ayuda de como enviar el pack')
+				.setName('ayuda')
+		)
 		.addSubcommand(input =>
 			input
 				.setName('enviar')
