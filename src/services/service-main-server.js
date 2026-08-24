@@ -44,7 +44,7 @@ async function service(_db, client) {
 
 	const rawParser = express.raw({
 		type: 'application/octet-stream',
-		limit: '20mb'
+		limit: '8mb'
 	});
 
 	// YouTube notifications service
@@ -52,7 +52,7 @@ async function service(_db, client) {
 	app.post('/youtube-webhook', xmlParser, youtubeNotifications.POST_youtubeWebhook);
 
 	// Geometry Dash Mod Screenshot Service
-	app.post('/screenshot', rawParser, screenshot.verifyToken, screenshot.POST_screenshot);
+	app.post('/screenshot', screenshot.verifyToken, rawParser, screenshot.POST_screenshot);
 
 	const serverInstance = app.listen(MAIN_SERVER_PORT, '127.0.0.1', () => {
 		logger.INF(`Main server listening on port ${MAIN_SERVER_PORT}`);
