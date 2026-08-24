@@ -15,6 +15,7 @@
 	"COLL_SERVER_CONFIG": "server_config",
 	"COLL_GDVZLA_LIST_CONFIG": "gdvzla_list_config",
 	"COLL_PROFILES": "profiles",
+	"COLL_PROFILES_SESSIONS": "profiles_sessions",
 	"COLL_USER_KICKS": "user_kicks",
 	"COLL_USERS_ACTIVITY": "users_activity_v2",
 	"COLL_USERS_ACTIVITY_CONFIG": "users_activity_config",

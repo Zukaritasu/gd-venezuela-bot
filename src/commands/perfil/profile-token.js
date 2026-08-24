@@ -18,7 +18,7 @@
 const { ChatInputCommandInteraction, MessageFlags } = require("discord.js");
 const { Db } = require("mongodb");
 const logger = require('../../logger')
-const { COLL_PROFILES } = require('../../../.botconfig/database-info.json')
+const { COLL_PROFILES_SESSIONS } = require('../../../.botconfig/database-info.json')
 const { MOD_SCREENSHOT_SECRET } = require('../../../.botconfig/token.json')
 const jwt = require('jsonwebtoken');
 
@@ -51,7 +51,7 @@ async function generateToken(database, interaction) {
 
 		const userId = interaction.member.id;
 		
-		let profile = await database.collection(COLL_PROFILES).findOne({ userId });
+		let profile = await database.collection(COLL_PROFILES_SESSIONS).findOne({ userId });
 		let currentToken = profile?.token;
 		let isInvalid = !currentToken;
 
@@ -70,9 +70,23 @@ async function generateToken(database, interaction) {
 		if (isInvalid) {
 			currentToken = jwt.sign({ u: userId }, MOD_SCREENSHOT_SECRET, { expiresIn: '90d' });
 
-			await database.collection(COLL_PROFILES).updateOne(
+			const decoded = jwt.decode(currentToken);
+    		const expiresAt = new Date(decoded.exp * 1000);
+			const now = new Date();
+
+			await database.collection(COLL_PROFILES_SESSIONS).updateOne(
 				{ userId },
-				{ $set: { userId, token: currentToken } },
+				{
+					$set: {
+						token: currentToken,
+						expiresAt,
+						updatedAt: now
+					},
+					$setOnInsert: {
+						userId,
+						createdAt: now
+					}
+				},
 				{ upsert: true }
 			);
 		}

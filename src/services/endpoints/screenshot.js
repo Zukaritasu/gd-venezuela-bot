@@ -16,15 +16,19 @@
  */
 
 const logger = require('../../logger.js');
-const utils = require('../../utils.js');
-const express = require('express');
-const sharp = require('sharp');
-const crypto = require('crypto')
 const { MOD_SCREENSHOT_SECRET } = require('../../../.botconfig/token.json');
 const { BOT_TESTING } = require('../../../.botconfig/channels.json');
-const { COLL_PROFILES } = require('../../../.botconfig/database-info.json');
-const { Client } = require('discord.js');
+const { COLL_PROFILES_SESSIONS } = require('../../../.botconfig/database-info.json');
 const jwt = require('jsonwebtoken');
+
+// Minimum allowed length for a Geometry Dash level name
+const GD_LEVEL_NAME_MIN_LENGTH = 1;
+// Maximum allowed length for a Geometry Dash level name
+const GD_LEVEL_NAME_MAX_LENGTH = 20;
+// Minimum allowed length for a Geometry Dash username
+const GD_USERNAME_MIN_LENGTH = 3;
+// Maximum allowed length for a Geometry Dash username
+const GD_USERNAME_MAX_LENGTH = 15;
 
 /**
  * Middleware to verify the JWT token in the request headers.
@@ -47,18 +51,29 @@ async function verifyToken(req, res, next) {
 		}
 
 		const userId = payload.u.toString()
-		const exists = await global.database.collection(COLL_PROFILES).findOne({ userId })
+		const exists = await global.database.collection(COLL_PROFILES_SESSIONS).findOne({ userId, token })
 
 		if (!exists) {
-			throw new Error('Invalid token');
+			throw new Error('Session invalidated or expired');
 		}
 
 		req.userId = userId;
 		next();
 	} catch (error) {
-		logger.ERR(error);
+		logger.DBG(error);
 		res.status(401).json({ error: 'Invalid token' });
 	}
+}
+
+/**
+ * Checks whether a buffer starts with the PNG file signature.
+ *
+ * @param {Buffer} buffer - The binary data to inspect.
+ * @returns {boolean} Whether the buffer has a valid PNG signature.
+ */
+function isPNG(buffer) {
+    if (buffer.length < 4) return false;
+    return buffer[0] === 0x89 && buffer[1] === 0x50 && buffer[2] === 0x4E && buffer[3] === 0x47;
 }
 
 /**
@@ -88,15 +103,31 @@ async function POST_screenshot(req, res) {
         return res.status(400).json({ error: 'Invalid or empty binary buffer' });
     }
 
-	const username = req.headers['x-username'];
+	if (req.body.length > 8 * 1024 * 1024) {
+    	return res.status(400).json({ error: 'File size exceeds 8MB limit' });
+	}
+
+	const username 	= req.headers['x-username'];
 	const accountId = req.headers['x-account-id'];
 	const levelName = req.headers['x-level-name'];
-	const levelId = req.headers['x-level-id'];
-	const percent = req.headers['x-percent'];
+	const levelId 	= req.headers['x-level-id'];
+	const percent 	= req.headers['x-percent'];
 
 	if ([username, accountId, levelName, levelId, percent]
 		.some(h => !h || String(h).trim() === '')) {
 		return res.status(400).json({ error: 'Missing required headers' });
+	}
+
+	if (!isPNG(req.body)) {
+    	return res.status(400).json({ error: 'File must be a valid PNG image' });
+	}
+
+	if (username.length < GD_USERNAME_MIN_LENGTH || username.length > GD_USERNAME_MAX_LENGTH) {
+		return res.status(400).json({ error: 'Invalid username' });
+	}
+
+	if (levelName.length < GD_LEVEL_NAME_MIN_LENGTH || levelName.length > GD_LEVEL_NAME_MAX_LENGTH) {
+		return res.status(400).json({ error: 'Invalid levelName' });
 	}
 
 	if (!isValidNumber(accountId) || !isValidNumber(levelId) || !isValidNumber(percent, 'FLOAT')) {
