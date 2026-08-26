@@ -20,6 +20,7 @@ const { MOD_SCREENSHOT_SECRET } = require('../../../.botconfig/token.json');
 const { BOT_TESTING } = require('../../../.botconfig/channels.json');
 const { COLL_PROFILES_SESSIONS } = require('../../../.botconfig/database-info.json');
 const jwt = require('jsonwebtoken');
+const { ChannelType } = require('discord.js');
 
 // Minimum allowed length for a Geometry Dash level name
 const GD_LEVEL_NAME_MIN_LENGTH = 1;
@@ -112,8 +113,9 @@ async function POST_screenshot(req, res) {
 	const levelName = req.headers['x-level-name'];
 	const levelId 	= req.headers['x-level-id'];
 	const percent 	= req.headers['x-percent'];
+	const channelId = req.headers['x-channel-id'];
 
-	if ([username, accountId, levelName, levelId, percent]
+	if ([username, accountId, levelName, levelId, percent, channelId]
 		.some(h => !h || String(h).trim() === '')) {
 		return res.status(400).json({ error: 'Missing required headers' });
 	}
@@ -130,8 +132,9 @@ async function POST_screenshot(req, res) {
 		return res.status(400).json({ error: 'Invalid levelName' });
 	}
 
-	if (!isValidNumber(accountId) || !isValidNumber(levelId) || !isValidNumber(percent, 'FLOAT')) {
-        return res.status(400).json({ error: 'accountId, levelId, and percent must be valid integers' });
+	if (!isValidNumber(accountId) || !isValidNumber(levelId) || 
+		!isValidNumber(channelId) || !isValidNumber(percent, 'FLOAT')) {
+        return res.status(400).json({ error: 'accountId, levelId, channelId, and percent must be valid integers' });
     }
 
 	//const parsedAccountId = parseInt(accountId, 10);
@@ -141,9 +144,14 @@ async function POST_screenshot(req, res) {
 	try {
 		const safeLevelName = String(levelName).replace(/@/g, '');
 		const truncatedPercent = (Math.floor(parsedPercent * 100) / 100).toFixed(2);
+
+		const channel = global.guild.channels.cache.get(channelId)
+		if (!channel || channel.type !== ChannelType.GuildText) {
+			return res.status(400).json({ error: 'Invalid channel' });
+		}
 		
 		// async function to send the screenshot to the testing channel
-		await global.guild.channels.cache.get(BOT_TESTING)?.send({
+		await channel.send({
 			content: `<@${req.userId}> | Percent: ${truncatedPercent}% | Level name: ${safeLevelName} | Level ID: ${parsedLevelId}`,
 			files: [{
 				attachment: req.body,
