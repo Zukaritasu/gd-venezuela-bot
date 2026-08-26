@@ -19,18 +19,55 @@ const { Client } = require("discord.js");
 const { Db } = require("mongodb");
 const express = require('express');
 const logger = require('../logger.js');
-const { MAIN_SERVER_PORT } = require('../../.botconfig/token.json');
+const { MAIN_SERVER_PORT, MOD_SCREENSHOT_SECRET } = require('../../.botconfig/token.json');
+const { COLL_PROFILES_SESSIONS } = require('../../.botconfig/database-info.json');
 const youtubeNotifications = require('./service-youtube-notifications.js');
 const screenshot = require('./endpoints/screenshot.js');
+const jwt = require('jsonwebtoken');
+
+/**
+ * Middleware to verify the JWT token in the request headers.
+ * 
+ * @param {import('express').Request} req - The incoming HTTP request
+ * @param {import('express').Response} res - The outgoing HTTP response
+ * @param {import('express').NextFunction} next - The next middleware function
+ */
+async function verifyToken(req, res, next) {
+	const token = req.headers['authorization']?.split(' ')[1];
+
+	if (!token) {
+		return res.status(401).json({ error: 'No token provided' });
+	}
+
+	try {
+		const payload = jwt.verify(token, MOD_SCREENSHOT_SECRET);
+		if (!('u' in payload)) {
+			throw new Error('Payload not found');
+		}
+
+		const userId = payload.u.toString()
+		const exists = await global.database.collection(COLL_PROFILES_SESSIONS).findOne({ userId, token })
+
+		if (!exists) {
+			throw new Error('Session invalidated or expired');
+		}
+
+		req.userId = userId;
+		next();
+	} catch (error) {
+		logger.DBG(error);
+		res.status(401).json({ error: 'Invalid token' });
+	}
+}
 
 /**
  * Starts the main HTTP server and registers the application's API endpoints.
  *
  * @param {Db} _db - The MongoDB database instance.
- * @param {Client} client - The Discord.js client instance.
+ * @param {Client} _client - The Discord.js client instance.
  * @returns {Promise<Object>} Service metadata and a function for stopping the server.
  */
-async function service(_db, client) {
+async function service(_db, _client) {
 	const app = express();
 
 	const xmlParser = express.text({
@@ -52,7 +89,7 @@ async function service(_db, client) {
 	app.post('/youtube-webhook', xmlParser, youtubeNotifications.POST_youtubeWebhook);
 
 	// Geometry Dash Mod Screenshot Service
-	app.post('/screenshot', screenshot.verifyToken, rawParser, screenshot.POST_screenshot);
+	app.post('/screenshot', verifyToken, rawParser, screenshot.POST_screenshot);
 
 	const serverInstance = app.listen(MAIN_SERVER_PORT, '127.0.0.1', () => {
 		logger.INF(`Main server listening on port ${MAIN_SERVER_PORT}`);

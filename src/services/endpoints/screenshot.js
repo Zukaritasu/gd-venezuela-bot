@@ -16,10 +16,6 @@
  */
 
 const logger = require('../../logger.js');
-const { MOD_SCREENSHOT_SECRET } = require('../../../.botconfig/token.json');
-const { BOT_TESTING } = require('../../../.botconfig/channels.json');
-const { COLL_PROFILES_SESSIONS } = require('../../../.botconfig/database-info.json');
-const jwt = require('jsonwebtoken');
 const { ChannelType } = require('discord.js');
 
 // Minimum allowed length for a Geometry Dash level name
@@ -30,41 +26,6 @@ const GD_LEVEL_NAME_MAX_LENGTH = 20;
 const GD_USERNAME_MIN_LENGTH = 3;
 // Maximum allowed length for a Geometry Dash username
 const GD_USERNAME_MAX_LENGTH = 15;
-
-/**
- * Middleware to verify the JWT token in the request headers.
- * 
- * @param {import('express').Request} req - The incoming HTTP request
- * @param {import('express').Response} res - The outgoing HTTP response
- * @param {import('express').NextFunction} next - The next middleware function
- */
-async function verifyToken(req, res, next) {
-	const token = req.headers['authorization']?.split(' ')[1];
-
-	if (!token) {
-		return res.status(401).json({ error: 'No token provided' });
-	}
-
-	try {
-		const payload = jwt.verify(token, MOD_SCREENSHOT_SECRET);
-		if (!('u' in payload)) {
-			throw new Error('Payload not found');
-		}
-
-		const userId = payload.u.toString()
-		const exists = await global.database.collection(COLL_PROFILES_SESSIONS).findOne({ userId, token })
-
-		if (!exists) {
-			throw new Error('Session invalidated or expired');
-		}
-
-		req.userId = userId;
-		next();
-	} catch (error) {
-		logger.DBG(error);
-		res.status(401).json({ error: 'Invalid token' });
-	}
-}
 
 /**
  * Checks whether a buffer starts with the PNG file signature.
@@ -166,4 +127,4 @@ async function POST_screenshot(req, res) {
 	}
 }
 
-module.exports = { verifyToken, POST_screenshot }
+module.exports = { POST_screenshot }
