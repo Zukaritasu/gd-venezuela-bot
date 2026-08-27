@@ -95,7 +95,7 @@ async function POST_screenshot(req, res) {
 
 	if (!isValidNumber(accountId) || !isValidNumber(levelId) ||
 		!isValidNumber(percent, 'FLOAT')) {
-		return res.status(400).json({ error: 'accountId, levelId, channelId, and percent must be valid integers' });
+		return res.status(400).json({ error: 'accountId, levelId, and percent must be valid integers' });
 	}
 
 	const profile = await global.database.collection(COLL_PROFILES).findOne({ userId: req.userId })
