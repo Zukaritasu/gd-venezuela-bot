@@ -98,18 +98,18 @@ async function POST_screenshot(req, res) {
 		return res.status(400).json({ error: 'accountId, levelId, and percent must be valid integers' });
 	}
 
-	const profile = await global.database.collection(COLL_PROFILES).findOne({ userId: req.userId })
-	if (!profile?.channelId) {
-		return res.status(400).json({
-			error: 'Destination channel not found. Run the command /perfil mod destino in Discord server'
-		});
-	}
-
-	const channelId = profile.channelId
 	const parsedLevelId = parseInt(levelId, 10);
 	const parsedPercent = parseFloat(percent);
 
 	try {
+		const profile = await global.database.collection(COLL_PROFILES).findOne({ userId: req.userId })
+		if (!profile?.channelId) {
+			return res.status(400).json({
+				error: 'Destination channel not found. Run the command /perfil mod destino in Discord server'
+			});
+		}
+
+		const channelId = profile.channelId
 		const safeLevelName = String(levelName).replace(/@/g, '');
 		const truncatedPercent = (Math.floor(parsedPercent * 100) / 100).toFixed(2);
 
