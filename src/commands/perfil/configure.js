@@ -48,19 +48,19 @@ async function configure(client, database, interaction) {
 			});
 		}
 
-		const description    = interaction.options.getString('descripcion');
-		const day            = interaction.options.getInteger('dia');
-		const month          = interaction.options.getInteger('mes');
-		const hardestVideo   = interaction.options.getString('hardest-video');
-		const hardestName    = interaction.options.getString('hardest-nombre');
-		const color          = interaction.options.getString('color');
+		const description = interaction.options.getString('descripcion');
+		const day = interaction.options.getInteger('dia');
+		const month = interaction.options.getInteger('mes');
+		const hardestVideo = interaction.options.getString('hardest-video');
+		const hardestName = interaction.options.getString('hardest-nombre');
+		const color = interaction.options.getString('color');
 		const youtubeChannel = interaction.options.getString('youtube-channel');
-		const twitchChannel  = interaction.options.getString('twitch-channel');
+		const twitchChannel = interaction.options.getString('twitch-channel');
 		const twitterProfile = interaction.options.getString('twitter-profile');
-		const tikTokProfile  = interaction.options.getString('tiktok-profile');
+		const tikTokProfile = interaction.options.getString('tiktok-profile');
 
-		if (description === null && day === null && month === null && hardestVideo === null && hardestName === null 
-			&& color === null && youtubeChannel === null && twitchChannel === null 
+		if (description === null && day === null && month === null && hardestVideo === null && hardestName === null
+			&& color === null && youtubeChannel === null && twitchChannel === null
 			&& twitterProfile === null && tikTokProfile === null) {
 			return await interaction.editReply('Debes proporcionar al menos una opción para configurar tu perfil.');
 		}
@@ -150,7 +150,50 @@ async function configure(client, database, interaction) {
 	}
 }
 
+/**
+ * Updates the authenticated user's destination channel in their profile.
+ *
+ * @param {Db} database MongoDB database instance.
+ * @param {ChatInputCommandInteraction} interaction Discord command interaction.
+ */
+async function setDestinationChannel(database, interaction) {
+	try {
+		await interaction.deferReply({ flags: MessageFlags.Ephemeral });
+
+		const requiredRoleId = process.env.ID_ROL_NOTABLE;
+		if (!interaction.member.roles.cache.has(requiredRoleId)) {
+			return await interaction.editReply('Usuario no autorizado');
+		}
+
+		const userId = interaction.member.id
+		const channelId = interaction.options.getChannel('canal').id
+		
+		await database.collection(COLL_PROFILES).updateOne(
+			{ userId },
+			{
+				$set: {
+					channelId
+				},
+				$setOnInsert: {
+					userId
+				}
+			},
+			{ upsert: true }
+		);
+
+		await interaction.editReply('Canal de destino actualizado correctamente!');
+	} catch (error) {
+		logger.ERR(error)
+		try {
+			await interaction.editReply('Ha ocurrido un error inesperado. Por favor, intenta nuevamente más tarde.');
+		} catch {
+			// ignore
+		}
+	}
+}
+
 module.exports = {
 	// Configuration settings for the perfil command can be added here in the future
-	configure
+	configure,
+	setDestinationChannel
 };

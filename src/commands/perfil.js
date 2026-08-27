@@ -23,14 +23,24 @@ const { SlashCommandBuilder, ChatInputCommandInteraction } = require('discord.js
  * @param {ChatInputCommandInteraction} interaction 
  */
 async function execute(client, database, interaction) {
+	const subcommandGroup = interaction.options.getSubcommandGroup()
 	const subcommand = interaction.options.getSubcommand();
+
+	if (subcommandGroup) {
+		if (subcommandGroup === 'mod') {
+			if (subcommand === 'destino') {
+				await require('./perfil/configure').setDestinationChannel(database, interaction);
+			} else if (subcommand === 'token') {
+				await require('./perfil/profile-token').generateToken(database, interaction);
+			}
+		}
+		return
+	}
 
 	if (subcommand === 'ver') {
 		await require('./perfil/view').view(client, database, interaction);
 	} else if (subcommand === 'configurar') {
 		await require('./perfil/configure').configure(client, database, interaction);
-	} else if (subcommand === 'token') {
-		await require('./perfil/profile-token').generateToken(database, interaction);
 	}
 }
 
@@ -47,10 +57,6 @@ module.exports = {
 						.setName('usuario')
 						.setDescription('El usuario cuyo perfil deseas ver')
 						.setRequired(false)))
-		.addSubcommand(subcommand =>
-			subcommand
-				.setName('token')
-				.setDescription('Muestra o genera un token de sesión (uso exclusivo)'))
 		.addSubcommand(subcommand =>
 			subcommand
 				.setName('configurar')
@@ -109,6 +115,27 @@ module.exports = {
 					option
 						.setName('tiktok-profile')
 						.setDescription('El link de tu perfil de TikTok')
-						.setRequired(false))),
-			execute
+						.setRequired(false)))
+		.addSubcommandGroup(
+			group =>
+				group
+					.setDescription('Mods')
+					.setName('mod')
+					.addSubcommand(command =>
+						command
+							.setDescription('Define el canal de destino de la screenshot')
+							.setName('destino')
+							.addChannelOption(option =>
+								option
+									.setDescription('Canal')
+									.setName('canal')
+									.setRequired(true)
+							)
+					)
+					.addSubcommand(subcommand =>
+						subcommand
+							.setName('token')
+							.setDescription('Muestra o genera un token de sesión (uso exclusivo)'))
+		),
+	execute
 }
