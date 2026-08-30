@@ -402,6 +402,8 @@ async function log(_db, guild, message, containsAttachment, userId, userName) {
 		} else if ((Date.now() - userActivity.lastActivity) < COOLDOWN_TIME) {
 			// User is on cooldown, do not log activity
 			return;
+		} else if (userActivity.userName !== userName) {
+			userActivity.userName = userName
 		}
 
 		userActivity.lastActivity = Date.now();
