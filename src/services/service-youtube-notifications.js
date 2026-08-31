@@ -81,7 +81,7 @@ async function autoUpdateSubscription() {
     for (const channel of youtubeChannels) {
         if (!channel.isEnabled) continue;
 
-        const threeDaysMs = 259200000;
+        const threeDaysMs = 172800000; // 2 days
         const timeElapsed = Date.now() - channel.datetimeSub;
 
         if (timeElapsed >= threeDaysMs) {
