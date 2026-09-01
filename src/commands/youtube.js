@@ -77,11 +77,13 @@ module.exports = {
 							{ name: 'Video', value: 'video' },
 							{ name: 'Stream', value: 'stream' }
 						)
+						.setRequired(true)
 				)
 				.addStringOption(option =>
 					option
 						.setName('video_id')
 						.setDescription('Id del video de YouTube')
+						.setRequired(true)
 				)
 		)
 		.addSubcommand(subcommand =>
@@ -96,6 +98,7 @@ module.exports = {
 							{ name: 'Video', value: 'video' },
 							{ name: 'Stream', value: 'stream' }
 						)
+						.setRequired(true)
 				)
 		),
 	execute
