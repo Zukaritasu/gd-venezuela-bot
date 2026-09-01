@@ -16,7 +16,7 @@
  */
 
 const { ChatInputCommandInteraction, GuildMember, MessageFlags, ModalSubmitInteraction, ActionRowBuilder, TextInputBuilder, ModalBuilder, TextInputStyle, ButtonBuilder, ButtonStyle, LabelBuilder, ComponentType } = require("discord.js");
-const { COLL_YOUTUBE_CHANNELS } = require('../../../.botconfig/database-info.json')
+const { COLL_YOUTUBE_CHANNELS, COLL_YOUTUBE_VIDEOS } = require('../../../.botconfig/database-info.json')
 const { YOUTUBE_WEBHOOK_SECRET, PUBLIC_API_URL } = require('../../../.botconfig/token.json')
 const { YOUTUBE_NOTIFICATIONS } = require('../../../.botconfig/channels.json')
 const { Db } = require("mongodb");
@@ -471,62 +471,60 @@ async function notify(interaction, isTest) {
     };
 
     try {
-        await interaction.deferReply({ 
-            flags: isTest ? MessageFlags.Ephemeral : undefined 
+        await interaction.deferReply({
+            flags: isTest ? MessageFlags.Ephemeral : undefined
         });
 
         let channel = await globalRef.database.collection(COLL_YOUTUBE_CHANNELS).findOne({
             userId: interaction.user.id
         });
 
-        if (!channel && isTest) {
-            return await print({
-                content: 'No tienes configurado un canal de YouTube en el bot.'
-            });
+        if (!channel) {
+            return await print('No tienes configurado un canal de YouTube en el bot.');
         }
 
         const typeNotif = interaction.options.getString('type');
+        const comment = typeNotif === 'video' ? channel.commentNewVideo : channel.commentNewStream;
 
         if (isTest) {
-            const comment = typeNotif === 'video' ? channel.commentNewVideo : channel.commentNewStream;
-            
             return await print({
                 content: `<@&${process.env.ID_ROL_YOUTUBE_NOTIFICACIONES}>\n${comment} https://youtu.be/E_xqy5GjjzI`
             });
-        } else {
-            const videoId = interaction.options.getString('video_id');
-            if (!videoId || !/^[a-zA-Z0-9_-]{11}$/.test(videoId)) {
-                return await print({ 
-                    content: 'El ID del vídeo de YouTube no es válido. Debe tener exactamente 11 caracteres.' 
-                });
-            }
-
-            const guild = await interaction.client.guilds.fetch(process.env.SERVER_GD_VENEZUELA_ID);
-            if (!guild) {
-                throw new Error(`Guild not found: ${process.env.SERVER_GD_VENEZUELA_ID}`);
-            }
-
-            const notificationChannel = await guild.channels.fetch(YOUTUBE_NOTIFICATIONS).catch(() => null);
-            if (notificationChannel === null) {
-                return await print({ content: 'Canal de notificaciones no encontrado.' });
-            }
-
-            if (!channel) {
-                const username = interaction.member?.user?.username || interaction.user.username;
-                channel = {
-                    commentNewVideo: `**${username}** ¡ha subido un nuevo video!`,
-                    commentNewStream: `**${username}** ¡ha iniciado un nuevo directo!`
-                };
-            }
-
-            const comment = typeNotif === 'video' ? channel.commentNewVideo : channel.commentNewStream;
-
-            await notificationChannel.send({
-                content: `<@&${process.env.ID_ROL_YOUTUBE_NOTIFICACIONES}>\n${comment} https://youtu.be/${videoId}`
-            });
-
-            return await print({ content: '¡Notificación enviada con éxito!' });
         }
+
+        const videoId = interaction.options.getString('video_id');
+        if (!videoId || !/^[a-zA-Z0-9_-]{11}$/.test(videoId)) {
+            return await print({
+                content: 'El ID del vídeo de YouTube no es válido. Debe tener exactamente 11 caracteres.'
+            });
+        }
+
+        const guild = await interaction.client.guilds.fetch(process.env.SERVER_GD_VENEZUELA_ID);
+        if (!guild) {
+            throw new Error(`Guild not found: ${process.env.SERVER_GD_VENEZUELA_ID}`);
+        }
+
+        const notificationChannel = await guild.channels.fetch(YOUTUBE_NOTIFICATIONS).catch(() => null);
+        if (!notificationChannel) {
+            return await print({ content: 'Canal de notificaciones no encontrado.' });
+        }
+
+        await notificationChannel.send({
+            content: `<@&${process.env.ID_ROL_YOUTUBE_NOTIFICACIONES}>\n${comment} https://youtu.be/${videoId}`
+        });
+
+        try {
+            await global.database.collection(COLL_YOUTUBE_VIDEOS).insertOne(
+                {
+                    channelId: channel.channelId,
+                    videoId
+                }
+            )
+        } catch (error) {
+            logger.ERR(error);
+        }
+
+        return await print({ content: '¡Notificación enviada con éxito!' });
     } catch (error) {
         logger.ERR(error);
         try {
