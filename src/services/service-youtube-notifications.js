@@ -21,7 +21,7 @@ const crypto = require('crypto')
 const logger = require('../logger.js');
 const utils = require('../utils.js');
 const youtubeApi = require('../apis/youtubeapi.js');
-const { YOUTUBE_NOTIFICATIONS, BOT_TESTING } = require('../../.botconfig/channels.json')
+const { YOUTUBE_NOTIFICATIONS } = require('../../.botconfig/channels.json')
 const { COLL_YOUTUBE_CHANNELS, COLL_YOUTUBE_VIDEOS } = require('../../.botconfig/database-info.json')
 const { YOUTUBE_WEBHOOK_SECRET, PUBLIC_API_URL } = require('../../.botconfig/token.json')
 const notifications = require('../commands/youtube/notifications.js')
@@ -92,6 +92,8 @@ async function autoUpdateSubscription() {
                     { $set: { datetimeSub: Date.now() } }
                 )
             }
+
+            logger.DBG(`Subscription updated for channel ${channel.channelId}, success: ${success}`)
 
             await utils.sleep(500)
         }
@@ -355,7 +357,7 @@ async function service(_db, client) {
 
     globalRef.guild = guild
 
-    const timeout = setInterval(autoUpdateSubscription, 1000 * 60 * 60); // 1 hour
+    const timeout = setInterval(autoUpdateSubscription, 1000 * 60 * 15); // 15 minutes
 
     return {
         stop: () => {
