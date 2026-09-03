@@ -95,7 +95,7 @@ async function autoUpdateSubscription() {
 
             logger.DBG(`Subscription updated for channel ${channel.channelId}, success: ${success}`)
 
-            await utils.sleep(500)
+            await utils.sleep(1000) // Wait 1 second between requests to avoid rate limiting
         }
     }
 }
@@ -116,6 +116,7 @@ async function autoUpdateSubscription() {
 async function GET_verifyWebhook(req, res) {
     const challenge = req.query['hub.challenge'];
     if (challenge) {
+        logger.DBG(`Webhook verification challenge received: ${challenge}`);
         return res.status(200).send(challenge);
     }
     res.status(400).send('No challenge found');

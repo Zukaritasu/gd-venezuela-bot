@@ -73,6 +73,10 @@ async function subscribeUnsubscribe(webhookUrl, channelId, isSubscribe) {
             }
         });
 
+        if (response.status !== 202) {
+            logger.ERR(`Failed to ${isSubscribe ? 'subscribe' : 'unsubscribe'} channel ${channelId}. Status: ${response.status}. Message: ${response.data}`);
+        }
+
         return response.status === 202
     } catch (e) {
         logger.ERR(e)
@@ -471,9 +475,7 @@ async function notify(interaction, isTest) {
     };
 
     try {
-        await interaction.deferReply({
-            flags: isTest ? MessageFlags.Ephemeral : undefined
-        });
+        await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
         let channel = await globalRef.database.collection(COLL_YOUTUBE_CHANNELS).findOne({
             userId: interaction.user.id
