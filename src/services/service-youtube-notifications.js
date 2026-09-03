@@ -358,7 +358,7 @@ async function service(_db, client) {
 
     globalRef.guild = guild
 
-    const timeout = setInterval(autoUpdateSubscription, 1000 * 60 * 15); // 15 minutes
+    const timeout = setInterval(autoUpdateSubscription, 1000 * 60 * 60); // 1 hour
 
     return {
         stop: () => {

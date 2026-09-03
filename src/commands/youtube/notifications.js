@@ -73,10 +73,6 @@ async function subscribeUnsubscribe(webhookUrl, channelId, isSubscribe) {
             }
         });
 
-        if (response.status !== 202) {
-            logger.ERR(`Failed to ${isSubscribe ? 'subscribe' : 'unsubscribe'} channel ${channelId}. Status: ${response.status}. Message: ${response.data}`);
-        }
-
         return response.status === 202
     } catch (e) {
         logger.ERR(e)
