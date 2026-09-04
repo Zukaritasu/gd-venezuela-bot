@@ -81,10 +81,10 @@ async function autoUpdateSubscription() {
     for (const channel of youtubeChannels) {
         if (!channel.isEnabled) continue;
 
-        const threeDaysMs = 172800000; // 2 days
+        const fourDaysMs = 345600000; // 4 days
         const timeElapsed = Date.now() - channel.datetimeSub;
 
-        if (timeElapsed >= threeDaysMs) {
+        if (timeElapsed >= fourDaysMs) {
             const success = await notifications.subscribeUnsubscribe(webhookUrl, channel.channelId, true)
             if (success) {
                 await globalRef.database.collection(COLL_YOUTUBE_CHANNELS).updateOne(
@@ -95,7 +95,7 @@ async function autoUpdateSubscription() {
 
             logger.DBG(`Subscription updated for channel ${channel.channelId}, success: ${success}`)
 
-            await utils.sleep(1000) // Wait 1 second between requests to avoid rate limiting
+            await utils.sleep(5000) // Wait 5 seconds between requests to avoid rate limiting
         }
     }
 }
