@@ -75,7 +75,10 @@ async function subscribeUnsubscribe(webhookUrl, channelId, isSubscribe) {
 
         return response.status === 202
     } catch (e) {
-        logger.ERR(e)
+        // ignore code 503
+        if (e.response && e.response.status !== 503) {
+            logger.ERR(e)
+        }
     }
 
     return false
