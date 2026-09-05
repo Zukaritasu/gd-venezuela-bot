@@ -22,6 +22,7 @@ const utils = require('../utils');
 const activity = require('../commands/leveling/activity');
 const channels = require('../../.botconfig/channels.json');
 const submit = require('../commands/records/submit');
+const robtopapi = require('../apis/robtopapi');
 
 /**
  * List of user IDs that are whitelisted to use certain commands.
@@ -193,6 +194,11 @@ module.exports = {
 
                 else if (isCommand(message, '--test-welcome') && message.member.id === '591640548490870805') {
                     await require('./guildMemberAdd').welcomeMessageMember(message.member, true)
+                }
+
+                else if (isCommand(message, '--tws') && message.member.id === '591640548490870805') {
+                    const response = await robtopapi.getUserInfo(message.content.split(' ')[1])
+                    await message.reply(`User info: ${JSON.stringify(response)}`)
                 }
             }
         } catch (e) {

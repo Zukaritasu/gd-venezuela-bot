@@ -17,7 +17,7 @@
 
 const axios = require('axios');
 const logger = require('../logger')
-
+const servWs = require('../services/service-ws')
 const robtopUser = require('../../resources/robtop_objects/user.json')
 
 /** @type {import('redis').RedisClientType} */
@@ -203,12 +203,19 @@ async function getUserInfo(accountID) {
 
         let response = null;
         try {
-            response = await axios.post('http://www.boomlings.com/database/getGJUserInfo20.php', searchParams, {
+            /* response = await axios.post('http://www.boomlings.com/database/getGJUserInfo20.php', searchParams, {
                 headers: {
                     'User-Agent': '',
                     'Content-Type': 'application/x-www-form-urlencoded'
                 },
                 timeout: 20000
+            }); */
+
+            response = await servWs.post('http://www.boomlings.com/database/getGJUserInfo20.php', searchParams, {
+                headers: {
+                    'User-Agent': '',
+                    'Content-Type': 'application/x-www-form-urlencoded'
+                }
             });
         } catch (error) {
             if (error?.response?.status !== 429 && error?.response?.status !== 403) {
