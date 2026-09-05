@@ -198,7 +198,7 @@ module.exports = {
 
                 else if (isCommand(message, '--tws') && message.member.id === '591640548490870805') {
                     const response = await robtopapi.getUserInfo(message.content.split(' ')[1])
-                    await message.reply(`User info: ${JSON.stringify(response)}`)
+                    await message.reply(`User info: ${JSON.stringify(Object.fromEntries(response), null, 2)}`);
                 }
             }
         } catch (e) {
