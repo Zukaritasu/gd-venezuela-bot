@@ -19,13 +19,13 @@ const WebSocket = require('ws');
 const crypto = require('crypto');
 const { WEBSOCKET_PORT, WEBSOCKET_AUTH_TOKEN } = require('../../.botconfig/token.json');
 const logger = require('../logger');
+const { Axios } = require('axios');
 
 /**
- * @typedef {Object} ClientResponse
- * @property {string} id - The unique identifier for the request.
- * @property {boolean} success - Indicates whether the request was successful.
- * @property {string} response - The response data if the request was successful.
- * @property {string} [error] - The error message if the request failed.
+ * @typedef {import('axios').AxiosResponse & {
+ *   id: string,
+ *   success: boolean
+ * }} ClientResponse
  */
 
 /** @type {WebSocket.Server} */
@@ -50,8 +50,7 @@ function isClientResponse(response) {
 		response !== null &&
 		typeof response === 'object' &&
 		typeof response.id === 'string' &&
-		typeof response.success === 'boolean' &&
-		(response.error === undefined || typeof response.error === 'string')
+		typeof response.success === 'boolean'
 	);
 }
 
@@ -73,7 +72,7 @@ function cleanupPendingRequests() {
  * @param {string} url - The URL to send the POST request to.
  * @param {URLSearchParams} searchParams - The search parameters to include in the request body.
  * @param {import('axios').AxiosRequestConfig} config - The configuration options for the request.
- * @returns {Promise<any>} A promise that resolves with the response data or rejects with an error.
+ * @returns {Promise<import('axios').AxiosResponse>} A promise that resolves with the response data or rejects with an error.
  */
 async function post(url, searchParams, config) {
 	return new Promise((resolve, reject) => {
@@ -88,7 +87,7 @@ async function post(url, searchParams, config) {
 				reject(new Error('Request timed out after 25s'));
 			}
 		}, REQUEST_TIMEOUT);
-		
+
 		pendingRequests.set(requestId, { resolve, reject, timeout });
 
 		try {
@@ -160,16 +159,23 @@ async function service(_db, _client) {
 			try {
 				/** @type {ClientResponse} */
 				const res = JSON.parse(message);
+
 				if (isClientResponse(res) && pendingRequests.has(res.id)) {
 					logger.DBG(`Received response for request ID ${res.id}:`, JSON.stringify(res));
 
 					const { resolve, reject, timeout } = pendingRequests.get(res.id);
 					clearTimeout(timeout);
 					pendingRequests.delete(res.id);
-					if (res.success) {
-						resolve(res.response);
+
+					const { id, success, ...axiosResponse } = res;
+					if (success) {
+						resolve(axiosResponse);
 					} else {
-						reject(new Error(res.error || 'Unknown error'));
+						const error = new Error(axiosResponse.statusText || 'Request failed');
+						error.response = axiosResponse;
+						error.status = axiosResponse.status;
+
+						reject(error);
 					}
 				}
 			} catch (error) {
