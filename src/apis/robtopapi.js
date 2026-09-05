@@ -249,7 +249,16 @@ async function getGJFriendRequests20(accountID, gjp2) {
         });
 
         try {
-            const response = await axios.post('http://www.boomlings.com/database/getGJFriendRequests20.php', searchParams, {
+            /* const response = await axios.post('http://www.boomlings.com/database/getGJFriendRequests20.php', searchParams, {
+                headers: {
+                    'User-Agent': '',
+                    'Content-Type': 'application/x-www-form-urlencoded'
+                }
+            }); 
+
+            return response.data.toString();*/
+            
+            const response = await servWs.post('http://www.boomlings.com/database/getGJFriendRequests20.php', searchParams, {
                 headers: {
                     'User-Agent': '',
                     'Content-Type': 'application/x-www-form-urlencoded'
@@ -259,7 +268,7 @@ async function getGJFriendRequests20(accountID, gjp2) {
             return response.data.toString();
         } catch (error) {
             if (error?.response?.status !== 429 && error?.response?.status !== 403) {
-                logger.ERR('Error fetching user info:', error);
+                logger.ERR('Error fetching friend requests:', error);
             }
         }
 
