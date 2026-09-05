@@ -26,7 +26,8 @@ const services = [
 	'../services/service-leaderboard-creator-point.js',
 	'../services/service-youtube-notifications.js',
 	'../services/service-auto-backup.js',
-	'../services/service-main-server.js'
+	'../services/service-main-server.js',
+	'../services/service-ws.js'
 ]
 
 module.exports = {

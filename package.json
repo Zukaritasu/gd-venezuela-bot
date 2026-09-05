@@ -25,6 +25,7 @@
     "sharp": "^0.35.3",
     "socks-proxy-agent": "^10.1.0",
     "stackblur-canvas": "^2.7.0",
-    "webp-wasm": "^1.0.6"
+    "webp-wasm": "^1.0.6",
+    "ws": "^8.21.3"
   }
 }
