@@ -136,7 +136,7 @@ async function service(_db, _client) {
 	wss.on('connection', (ws, req) => {
 		const authHeader = req.headers['authorization'] || req.headers['x-auth-token'];
 		if (authHeader !== WEBSOCKET_AUTH_TOKEN) {
-			logger.WRN(`Unauthorized WebSocket connection rejected from ${req.socket.remoteAddress}`);
+			logger.ERR(`Unauthorized WebSocket connection rejected from ${req.socket.remoteAddress}`);
 			return ws.close(4001, 'Unauthorized');
 		}
 
