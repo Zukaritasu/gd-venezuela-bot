@@ -17,7 +17,7 @@
 
 const axios = require('axios');
 const logger = require('../logger')
-const servWs = require('../services/service-ws')
+const proxy = require('../services/service-ws')
 const robtopUser = require('../../resources/robtop_objects/user.json')
 
 /** @type {import('redis').RedisClientType} */
@@ -92,7 +92,7 @@ async function getGJUserInfo20(accountID) {
             "targetAccountID": accountID
         });
 
-        return axios.post('http://www.boomlings.com/database/getGJUserInfo20.php', data, {
+        return proxy.post('http://www.boomlings.com/database/getGJUserInfo20.php', data, {
             headers: {
                 'User-Agent': '',
                 'Content-Type': 'application/x-www-form-urlencoded'
@@ -114,7 +114,7 @@ async function getGJUsers20(username) {
             "str": username
         });
 
-        return axios.post('http://www.boomlings.com/database/getGJUsers20.php', data, {
+        return proxy.post('http://www.boomlings.com/database/getGJUsers20.php', data, {
             headers: {
                 'User-Agent': '',
                 'Content-Type': 'application/x-www-form-urlencoded'
@@ -211,7 +211,7 @@ async function getUserInfo(accountID) {
                 timeout: 20000
             }); */
 
-            response = await servWs.post('http://www.boomlings.com/database/getGJUserInfo20.php', searchParams, {
+            response = await proxy.post('http://www.boomlings.com/database/getGJUserInfo20.php', searchParams, {
                 headers: {
                     'User-Agent': '',
                     'Content-Type': 'application/x-www-form-urlencoded'
@@ -258,7 +258,7 @@ async function getGJFriendRequests20(accountID, gjp2) {
 
             return response.data.toString();*/
             
-            const response = await servWs.post('http://www.boomlings.com/database/getGJFriendRequests20.php', searchParams, {
+            const response = await proxy.post('http://www.boomlings.com/database/getGJFriendRequests20.php', searchParams, {
                 headers: {
                     'User-Agent': '',
                     'Content-Type': 'application/x-www-form-urlencoded'
