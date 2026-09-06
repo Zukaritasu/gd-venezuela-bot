@@ -52,8 +52,8 @@ const globalRef = global;
  * @param {string} webhookUrl - The callback URL where YouTube will send notifications.
  * @param {string} channelId - The unique ID of the YouTube channel.
  * @param {boolean} isSubscribe - True to subscribe and renew lease, false to unsubscribe.
- * @returns {Promise<boolean>} Resolves to true if the request was successful (status 204),
- * otherwise false.
+ * @returns {Promise<{ ok: boolean, status: number }>} Resolves to an object with `ok` indicating
+ * success and `status` indicating the HTTP status code.
  */
 async function subscribeUnsubscribe(webhookUrl, channelId, isSubscribe) {
     const params = new URLSearchParams();
@@ -66,6 +66,8 @@ async function subscribeUnsubscribe(webhookUrl, channelId, isSubscribe) {
         params.append('hub.secret', YOUTUBE_WEBHOOK_SECRET);
     }
 
+    const apiStatus = { ok: false, status: 503 };
+
     try {
         const response = await axios.post('https://pubsubhubbub.appspot.com/subscribe', params, {
             headers: {
@@ -73,15 +75,17 @@ async function subscribeUnsubscribe(webhookUrl, channelId, isSubscribe) {
             }
         });
 
-        return response.status === 202
+        apiStatus.ok = response.status === 202;
+        apiStatus.status = response.status;
     } catch (e) {
         // ignore code 503
         if (e.response && e.response.status !== 503) {
+            apiStatus.status = e.response.status
             logger.ERR(e)
         }
     }
 
-    return false
+    return apiStatus
 }
 
 /**
@@ -111,16 +115,16 @@ async function setEnabled(interaction, isEnabled) {
         }
 
         if (channel.isEnabled !== isEnabled) {
-            const isSubscribeSuccessful = await subscribeUnsubscribe(
+            const apiStatus = await subscribeUnsubscribe(
                 WEBHOOK_URL,
                 channel.channelId,
                 isEnabled
             )
 
-            if (!isSubscribeSuccessful) {
+            if (!apiStatus.ok) {
                 await interaction.editReply({
                     content: 'No se ha podido ' + (isEnabled ? 'suscribir' : 'desuscribir')
-                        + ' tu canal de YouTube. Revisa que el link de tu canal sea válido'
+                        + ` tu canal de YouTube. ${apiStatus.status === 503 ? 'El servicio de YouTube está temporalmente fuera de servicio. Intenta más tarde' : 'Revisa que el link de tu canal sea válido'}`
                 })
             } else {
                 await globalRef.database.collection(COLL_YOUTUBE_CHANNELS).updateOne(
@@ -287,33 +291,33 @@ async function configure(interaction) {
             channel.videoFilter = videoFilterNormalized
         }
 
-        let isSubscribeSuccessful = true
+        let apiStatus = { ok: true, status: 202 }
 
         if (channel.isEnabled && channelId && oldChannelId !== channelId) {
             if (oldChannelId) {
-                const ok = await subscribeUnsubscribe(
+                const unsubscribeStatus = await subscribeUnsubscribe(
                     WEBHOOK_URL,
                     oldChannelId,
                     false
                 )
 
-                if (!ok) {
+                if (!unsubscribeStatus.ok) {
                     return await interaction.editReply({
-                        content: 'No se logró desuscribir del canal anterior'
+                        content: 'No se logró desuscribir del canal anterior' + (unsubscribeStatus.status === 503 ? '. El servicio de YouTube está temporalmente fuera de servicio. Intenta más tarde' : '')
                     })
                 }
             }
 
-            isSubscribeSuccessful = await subscribeUnsubscribe(
+            apiStatus = await subscribeUnsubscribe(
                 WEBHOOK_URL,
                 channelId,
                 true
             )
         }
 
-        if (channel.isEnabled && !isSubscribeSuccessful) {
+        if (channel.isEnabled && !apiStatus.ok) {
             return await interaction.editReply({
-                content: 'No se ha podido suscribir tu canal de YouTube. Revisa que el link de tu canal sea válido'
+                content: `No se ha podido suscribir tu canal de YouTube. ${apiStatus.status === 503 ? 'El servicio de YouTube está temporalmente fuera de servicio. Intenta más tarde' : 'Revisa que el link de tu canal sea válido'}`
             })
         }
 

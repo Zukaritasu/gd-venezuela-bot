@@ -85,15 +85,17 @@ async function autoUpdateSubscription() {
         const timeElapsed = Date.now() - channel.datetimeSub;
 
         if (timeElapsed >= fourDaysMs) {
-            const success = await notifications.subscribeUnsubscribe(webhookUrl, channel.channelId, true)
-            if (success) {
+            const apiStatus = await notifications.subscribeUnsubscribe(webhookUrl, channel.channelId, true)
+            if (apiStatus.ok) {
                 await globalRef.database.collection(COLL_YOUTUBE_CHANNELS).updateOne(
                     { userId: channel.userId },
                     { $set: { datetimeSub: Date.now() } }
                 )
-            }
 
-            logger.DBG(`Subscription updated for channel ${channel.channelId}, success: ${success}`)
+                logger.DBG(`Subscription updated for channel ${channel.channelId}`)
+            } else {
+                logger.ERR(`Failed to update subscription for channel ${channel.channelId}, status: ${apiStatus.status}`)
+            }
 
             await utils.sleep(5000) // Wait 5 seconds between requests to avoid rate limiting
         }
@@ -116,7 +118,7 @@ async function autoUpdateSubscription() {
 async function GET_verifyWebhook(req, res) {
     const challenge = req.query['hub.challenge'];
     if (challenge) {
-        logger.DBG(`Webhook verification challenge received: ${challenge}`);
+        //logger.DBG(`Webhook verification challenge received: ${challenge}`);
         return res.status(200).send(challenge);
     }
     res.status(400).send('No challenge found');
