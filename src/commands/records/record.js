@@ -230,7 +230,7 @@ async function createRecordFile(message, fileName, levelName, levelId, jsonInfo,
 
     await addPlayerToStateList(message, jsonInfo);
 
-    return {changes, isPlatformer};
+    return { changes, isPlatformer };
 }
 
 /**
@@ -413,11 +413,11 @@ async function handleProgress(message, isAccept) {
                     await message.reply(`Ha ocurrido un error al procesar el record: ${e.message}`)
                 await message.react('❌');
             } catch {
-                
+
             }
             return
         }
-        
+
         if (userId === message.member.user.id) {
             return await message.reply('No puedes aceptar tus propios récords. Otro miembro debe hacerlo.')
         }
@@ -429,7 +429,7 @@ async function handleProgress(message, isAccept) {
             let file = await getGitHubFile(fileName);
             if (!file) { // File doesn't exist, create it
                 const report = await createRecordFile(message, fileName, levelName, levelId, jsonInfo, userId);
-                await message.reply(`El archivo **${fileName}.json** correspondiente al nivel ${levelName} no existe, por lo que se ha creado uno nuevo.`);
+                await message.reply(`El archivo **${fileName}.json** correspondiente al nivel **${levelName}** no existe, por lo que se ha creado uno nuevo.`);
                 await printChanges(report.changes, message.guild, report.isPlatformer);
             } else if (file.content.verifier === jsonInfo.user ||
                 file.content.records.some(oldRecord => oldRecord.user === jsonInfo.user && !('time' in jsonInfo) && oldRecord.percent >= jsonInfo.percent)) {
@@ -453,7 +453,7 @@ async function handleProgress(message, isAccept) {
             await botRecord.react('✅');
             if (isUpdate) {
                 // update emoji
-                 await message.react('🔄');
+                await message.react('🔄');
             }
         } else {
             await sendMessageToUser(message, user, `Tu progreso en el nivel **${levelName}** ha sido rechazado :x:\n**Razón:** ${message.content.substring(11).trim()}`);
