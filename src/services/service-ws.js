@@ -19,7 +19,6 @@ const WebSocket = require('ws');
 const crypto = require('crypto');
 const { WEBSOCKET_PORT, WEBSOCKET_AUTH_TOKEN } = require('../../.botconfig/token.json');
 const logger = require('../logger');
-const { Axios } = require('axios');
 
 /**
  * @typedef {import('axios').AxiosResponse & {
