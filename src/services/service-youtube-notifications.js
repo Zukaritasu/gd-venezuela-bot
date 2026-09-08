@@ -122,6 +122,8 @@ async function GET_verifyWebhook(req, res) {
         const verifyToken = req.query['hub.verify_token'];
         const topic = req.query['hub.topic'];
 
+        logger.DBG(JSON.stringify(req.query, null, 2))
+
         if ((mode === 'subscribe' || mode === 'unsubscribe') && challenge && verifyToken && topic) {
             const urlParams = new URLSearchParams(topic.split('?')[1]);
             const channelId = urlParams.get('channel_id');
