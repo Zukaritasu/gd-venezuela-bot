@@ -116,12 +116,34 @@ async function autoUpdateSubscription() {
  * challenge token or an error status.
  */
 async function GET_verifyWebhook(req, res) {
-    const challenge = req.query['hub.challenge'];
-    if (challenge) {
-        //logger.DBG(`Webhook verification challenge received: ${challenge}`);
-        return res.status(200).send(challenge);
+    try {
+        const challenge = req.query['hub.challenge'];
+        const mode = req.query['hub.mode'];
+        const verifyToken = req.query['hub.verify_token'];
+        const topic = req.query['hub.topic'];
+
+        if ((mode === 'subscribe' || mode === 'unsubscribe') && challenge && verifyToken && topic) {
+            const urlParams = new URLSearchParams(topic.split('?')[1]);
+            const channelId = urlParams.get('channel_id');
+
+            if (!channelId) {
+                return res.status(400).send('Invalid topic');
+            }
+
+            const expectedToken = crypto.createHmac('sha256', YOUTUBE_WEBHOOK_SECRET).update(channelId).digest('hex');
+            const verifyBuffer = Buffer.from(verifyToken);
+            const expectedBuffer = Buffer.from(expectedToken);
+
+            if (verifyBuffer.length !== expectedBuffer.length || !crypto.timingSafeEqual(verifyBuffer, expectedBuffer))
+                return res.status(403).send('Invalid verify token');
+            return res.status(200).send(challenge);
+        }
+
+        res.status(400).send('Invalid request');
+    } catch (error) {
+        logger.ERR('Error occurred while verifying webhook:', error);
+        res.status(500).send('Internal Server Error');
     }
-    res.status(400).send('No challenge found');
 }
 
 /**

@@ -21,6 +21,7 @@ const { YOUTUBE_WEBHOOK_SECRET, PUBLIC_API_URL } = require('../../../.botconfig/
 const { YOUTUBE_NOTIFICATIONS } = require('../../../.botconfig/channels.json')
 const { Db } = require("mongodb");
 const axios = require('axios')
+const crypto = require('crypto')
 const logger = require('../../logger')
 const { PUBLIC_IP } = require('../../../.botconfig/token.json');
 const utils = require("../../utils");
@@ -64,6 +65,8 @@ async function subscribeUnsubscribe(webhookUrl, channelId, isSubscribe) {
     if (isSubscribe) {
         params.append('hub.lease_seconds', '345600'); // 4 days
         params.append('hub.secret', YOUTUBE_WEBHOOK_SECRET);
+        params.append('hub.verify', 'sync');
+        params.append('hub.verify_token', crypto.createHmac('sha256', YOUTUBE_WEBHOOK_SECRET).update(channelId).digest('hex'));
     }
 
     const apiStatus = { ok: false, status: 503 };
