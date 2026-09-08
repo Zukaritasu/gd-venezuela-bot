@@ -203,14 +203,6 @@ async function getUserInfo(accountID) {
 
         let response = null;
         try {
-            /* response = await axios.post('http://www.boomlings.com/database/getGJUserInfo20.php', searchParams, {
-                headers: {
-                    'User-Agent': '',
-                    'Content-Type': 'application/x-www-form-urlencoded'
-                },
-                timeout: 20000
-            }); */
-
             response = await proxy.post('http://www.boomlings.com/database/getGJUserInfo20.php', searchParams, {
                 headers: {
                     'User-Agent': '',
@@ -249,15 +241,6 @@ async function getGJFriendRequests20(accountID, gjp2) {
         });
 
         try {
-            /* const response = await axios.post('http://www.boomlings.com/database/getGJFriendRequests20.php', searchParams, {
-                headers: {
-                    'User-Agent': '',
-                    'Content-Type': 'application/x-www-form-urlencoded'
-                }
-            }); 
-
-            return response.data.toString();*/
-            
             const response = await proxy.post('http://www.boomlings.com/database/getGJFriendRequests20.php', searchParams, {
                 headers: {
                     'User-Agent': '',
