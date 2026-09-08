@@ -129,7 +129,7 @@ async function GET_verifyWebhook(req, res) {
             const channelId = urlParams.get('channel_id');
 
             if (!channelId) {
-                return res.status(400).send('Invalid topic');
+                return res.status(410).send('Invalid topic');
             }
 
             const expectedToken = crypto.createHmac('sha256', YOUTUBE_WEBHOOK_SECRET).update(channelId).digest('hex');
@@ -141,7 +141,7 @@ async function GET_verifyWebhook(req, res) {
             return res.status(200).send(challenge);
         }
 
-        res.status(400).send('Invalid request');
+        res.status(410).send('Invalid request');
     } catch (error) {
         logger.ERR('Error occurred while verifying webhook:', error);
         res.status(500).send('Internal Server Error');
