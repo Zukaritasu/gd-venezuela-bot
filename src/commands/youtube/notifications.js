@@ -17,7 +17,7 @@
 
 const { ChatInputCommandInteraction, GuildMember, MessageFlags, ModalSubmitInteraction, ActionRowBuilder, TextInputBuilder, ModalBuilder, TextInputStyle, ButtonBuilder, ButtonStyle, LabelBuilder, ComponentType } = require("discord.js");
 const { COLL_YOUTUBE_CHANNELS, COLL_YOUTUBE_VIDEOS } = require('../../../.botconfig/database-info.json')
-const { YOUTUBE_WEBHOOK_SECRET, PUBLIC_API_URL } = require('../../../.botconfig/token.json')
+const { YOUTUBE_WEBHOOK_SECRET, YOUTUBE_API_KEY, PUBLIC_API_URL } = require('../../../.botconfig/token.json')
 const { YOUTUBE_NOTIFICATIONS } = require('../../../.botconfig/channels.json')
 const { Db } = require("mongodb");
 const axios = require('axios')
@@ -48,6 +48,30 @@ const WEBHOOK_URL = `${PUBLIC_API_URL}/youtube-webhook`;
 const globalRef = global;
 
 /**
+ * Validates if a YouTube channel exists by querying the YouTube Data API.
+ * 
+ * @param {string} channelId - The unique ID of the YouTube channel to validate.
+ * @returns {Promise<boolean>} Resolves to true if the channel exists, false otherwise.
+ * @throws {Error} Throws an error if the API request fails.
+ */
+async function validateChannelExists(channelId) {
+    try {
+        const response = await axios.get(`https://www.googleapis.com/youtube/v3/channels`, {
+            params: {
+                part: 'id',
+                id: channelId,
+                key: YOUTUBE_API_KEY
+            }
+        });
+
+        return response.data.items && response.data.items.length > 0;
+    } catch (error) {
+        logger.ERR(error);
+        throw new Error('Error validating YouTube channel existence');
+    }
+}
+
+/**
  * Subscribes or unsubscribes a YouTube channel to/from a Webhook using the PubSubHubbub protocol.
  * 
  * @param {string} webhookUrl - The callback URL where YouTube will send notifications.
@@ -74,7 +98,8 @@ async function subscribeUnsubscribe(webhookUrl, channelId, isSubscribe) {
     try {
         const response = await axios.post('https://pubsubhubbub.appspot.com/subscribe', params, {
             headers: {
-                'Content-Type': 'application/x-www-form-urlencoded'
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'User-Agent': 'GDVenezuelaBot/1.0'
             }
         });
 
@@ -82,9 +107,16 @@ async function subscribeUnsubscribe(webhookUrl, channelId, isSubscribe) {
         apiStatus.status = response.status;
     } catch (e) {
         // ignore code 503
-        if (e.response && e.response.status !== 503) {
-            apiStatus.status = e.response.status
-            logger.ERR(e)
+        if (e.response) {
+            if (e.response.status !== 503) {
+                apiStatus.status = e.response.status
+                logger.ERR(e)
+            } else if (await validateChannelExists(channelId)) {
+                apiStatus.ok = true
+                apiStatus.status = 202
+            } else {
+                apiStatus.status = 404
+            }
         }
     }
 
@@ -127,7 +159,7 @@ async function setEnabled(interaction, isEnabled) {
             if (!apiStatus.ok) {
                 await interaction.editReply({
                     content: 'No se ha podido ' + (isEnabled ? 'suscribir' : 'desuscribir')
-                        + ` tu canal de YouTube. ${apiStatus.status === 503 ? 'El servicio de YouTube está temporalmente fuera de servicio. Intenta más tarde' : 'Revisa que el link de tu canal sea válido'}`
+                        + ` tu canal de YouTube. ${apiStatus.status === 503 ? 'El servicio de YouTube está temporalmente fuera de servicio. Intenta más tarde' : 'Canal no válido'}`
                 })
             } else {
                 await globalRef.database.collection(COLL_YOUTUBE_CHANNELS).updateOne(
@@ -306,7 +338,7 @@ async function configure(interaction) {
 
                 if (!unsubscribeStatus.ok) {
                     return await interaction.editReply({
-                        content: 'No se logró desuscribir del canal anterior' + (unsubscribeStatus.status === 503 ? '. El servicio de YouTube está temporalmente fuera de servicio. Intenta más tarde' : '')
+                        content: 'No se logró desuscribir del canal anterior' + (unsubscribeStatus.status === 503 ? '. El servicio de YouTube está temporalmente fuera de servicio. Intenta más tarde' : 'Canal no válido')
                     })
                 }
             }
@@ -320,7 +352,7 @@ async function configure(interaction) {
 
         if (channel.isEnabled && !apiStatus.ok) {
             return await interaction.editReply({
-                content: `No se ha podido suscribir tu canal de YouTube. ${apiStatus.status === 503 ? 'El servicio de YouTube está temporalmente fuera de servicio. Intenta más tarde' : 'Revisa que el link de tu canal sea válido'}`
+                content: `No se ha podido suscribir tu canal de YouTube. ${apiStatus.status === 503 ? 'El servicio de YouTube está temporalmente fuera de servicio. Intenta más tarde' : 'Canal no válido'}`
             })
         }
 
