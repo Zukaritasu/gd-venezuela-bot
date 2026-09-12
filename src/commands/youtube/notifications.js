@@ -103,7 +103,7 @@ async function subscribeUnsubscribe(webhookUrl, channelId, isSubscribe) {
             }
         });
 
-        apiStatus.ok = response.status === 202;
+        apiStatus.ok = response.status === 202 || response.status === 204;
         apiStatus.status = response.status;
     } catch (e) {
         // ignore code 503

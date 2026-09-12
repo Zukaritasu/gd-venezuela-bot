@@ -36,7 +36,7 @@ const pendingRequests = new Map();
 /** @type {NodeJS.Timeout} */
 let heartbeatInterval = null;
 
-const PING_INTERVAL = 30000; // 30 seconds
+const PING_INTERVAL = 60000; // 60 seconds
 const REQUEST_TIMEOUT = 25000; // 25 seconds
 
 /**
@@ -83,7 +83,7 @@ async function post(url, searchParams, config) {
 		const timeout = setTimeout(() => {
 			if (pendingRequests.has(requestId)) {
 				pendingRequests.delete(requestId);
-				reject(new Error('Request timed out after 25s'));
+				reject(new Error(`Request timed out after ${REQUEST_TIMEOUT} ms`));
 			}
 		}, REQUEST_TIMEOUT);
 
