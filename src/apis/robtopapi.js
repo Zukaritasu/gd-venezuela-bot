@@ -211,7 +211,7 @@ async function getUserInfo(accountID) {
             });
         } catch (error) {
             if (error?.response?.status !== 429 && error?.response?.status !== 403) {
-                logger.ERR('Error fetching user info:', error);
+                logger.ERR(error);
             }
         }
 
@@ -251,7 +251,7 @@ async function getGJFriendRequests20(accountID, gjp2) {
             return response.data.toString();
         } catch (error) {
             if (error?.response?.status !== 429 && error?.response?.status !== 403) {
-                logger.ERR('Error fetching friend requests:', error);
+                logger.ERR(error);
             }
         }
 

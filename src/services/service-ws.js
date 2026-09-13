@@ -76,7 +76,7 @@ function cleanupPendingRequests() {
 async function post(url, searchParams, config) {
 	return new Promise((resolve, reject) => {
 		if (!localClient || localClient.readyState !== WebSocket.OPEN) {
-			return reject(new Error('WebSocket client is not connected.'));
+			return reject(new Error('WebSocket client is not connected'));
 		}
 
 		const requestId = crypto.randomUUID();
