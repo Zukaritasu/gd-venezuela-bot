@@ -15,7 +15,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-const { PermissionsBitField, GuildMember, Guild, DiscordjsErrorCodes, ChatInputCommandInteraction, MessagePayload } = require("discord.js");
+const { PermissionsBitField, GuildMember, Guild, DiscordjsErrorCodes, ChatInputCommandInteraction, RESTJSONErrorCodes } = require("discord.js");
 const { YOUTUBE_API_KEY } = require('../.botconfig/token.json')
 const logger = require('./logger')
 const { states } = require('../.botconfig/country-states.json');
@@ -160,8 +160,10 @@ function getUserFlagState(member) {
 }
 
 /**
- * @param {GuildMember} member 
- * @returns {boolean}
+ * Checks if a user has the necessary permissions to perform an action.
+ * 
+ * @param {GuildMember} member - The member to check.
+ * @returns {boolean} True if the user has the necessary permissions, false otherwise.
  */
 function hasUserPermissions(member) {
     const superUserId = '591640548490870805'; // ID of the superuser (bot developer)
@@ -178,18 +180,20 @@ function hasUserPermissions(member) {
 
 
 /**
+ * Checks if a user is an administrator.
  * 
- * @param {GuildMember} member 
- * @returns {boolean}
+ * @param {GuildMember} member - The member to check.
+ * @returns {boolean} True if the user is an administrator, false otherwise.
  */
 function isAdministrator(member) {
     return member.permissions.has(PermissionsBitField.Flags.Administrator)
 }
 
 /**
+ * Checks if a user is a staff member (has ban permissions).
  * 
- * @param {GuildMember} member 
- * @returns {boolean}
+ * @param {GuildMember} member - The member to check.
+ * @returns {boolean} True if the user is a staff member, false otherwise.
  */
 function isStaff(member) {
     return member.permissions.has(PermissionsBitField.Flags.BanMembers)
@@ -347,6 +351,30 @@ async function reply(interaction, message) {
     return null;
 }
 
+/**
+ * Checks if a user is a member of the guild.
+ * 
+ * @param {Guild} guild - The guild to check in.
+ * @param {string} userId - The ID of the user to check.
+ * @param {{member: GuildMember}} refMember - An object to store the fetched member if found.
+ * @returns {Promise<boolean>} - True if the user is a member, false otherwise.
+ * 
+ * @throws {Error} - Throws an error if the fetch operation fails for reasons
+ * other than the user not being found.
+ */
+async function isMember(guild, userId, refMember = null) {
+    try {
+        const member = await guild.members.fetch(userId);
+        refMember.member = member;
+        return !!member;
+    } catch (err) {
+        if (err.code === RESTJSONErrorCodes.UnknownMember) {
+            return false;
+        }
+        throw err;
+    }
+}
+
 module.exports = {
     isValidYouTubeUrl,
     getYouTubeThumbnail,
@@ -364,5 +392,6 @@ module.exports = {
     getSHA256,
     getAllMembers,
     sleep,
-    reply
+    reply,
+    isMember
 }
