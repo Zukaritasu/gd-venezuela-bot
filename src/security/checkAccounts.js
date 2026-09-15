@@ -30,6 +30,11 @@ const { RESTJSONErrorCodes } = require('discord-api-types/v10')
 //////////////////////////////////////////////////
 
 /**
+ * @typedef PendingAccounts
+ * @property {string[]} accounts - An array of user IDs
+ */
+
+/**
  * Enum for moderation actions
  * @readonly
  * @enum {string}
@@ -91,7 +96,7 @@ function createEmbedReport(member, actionText) {
 		},
 		{
 			name: 'Joined Discord',
-			value: utils.formatDateTime(member.user.createdAt),
+			value: `<t:${Math.floor(member.user.createdTimestamp / 1000)}:F>`,
 			inline: true
 		}
 	)
@@ -194,7 +199,7 @@ async function sendAutoMessage(member, inviteUrl) {
  * 
  * @param {Guild} guild
  * @param {Db} database
- * @param {GuildMember} member 
+ * @param {GuildMember} member
  * @returns {Promise<boolean>} true if the account is older than XX days, false otherwise
  */
 async function checkUserAccountAge(guild, database, member) {
@@ -202,8 +207,11 @@ async function checkUserAccountAge(guild, database, member) {
 	if (accountAgeMs < ACCOUNT_MINIMUM_AGE && !(await verifyAccountInWhiteList(database, member))) {
 		let action = ModerationAction.KICK;
 		try {
-			const viewPending = await database.collection(COLL_SERVER_NEW_ACCOUNTS).findOne({ type: 'pending' });
-			if (viewPending && Array.isArray(viewPending.accounts) && viewPending.accounts.includes(member.user.id)) {
+			const viewPending = await database.collection(COLL_SERVER_NEW_ACCOUNTS)
+				.findOne({ type: 'pending' });
+
+			if (viewPending && Array.isArray(viewPending.accounts) && 
+				viewPending.accounts.includes(member.user.id)) {
 				try {
 					await member.send('Tu solicitud de verificación ya está pendiente. Por favor, espera a que el staff revise tu solicitud.');
 					await member.kick('Account pending verification');
@@ -229,7 +237,7 @@ async function checkUserAccountAge(guild, database, member) {
 				action = ModerationAction.KICK_NOT_NOTIFY
 			}
 		} catch (e) {
-			logger.ERR(`Unable to send message via DM to ${member.user.tag}:`, e);
+			logger.ERR(e);
 			if (e?.code === RESTJSONErrorCodes.CannotSendMessagesToThisUser) {
 				action = ModerationAction.BAN
 			}
