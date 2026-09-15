@@ -87,9 +87,11 @@ async function trackUserExpulsion(db, user) {
 }
 
 /**
- * @param {Db} db 
- * @param {User} user 
- * @returns {boolean}
+ * Check if a user has a kick history in the database
+ * 
+ * @param {Db} db - The MongoDB database instance
+ * @param {User} user - The Discord user to check
+ * @returns {Promise<boolean>} true if the user has a kick history, false otherwise
  */
 async function trackExistsUser(db, user) {
     if (!db || !user?.id) {
