@@ -19,6 +19,8 @@ const { Message, Guild } = require("discord.js");
 const logger = require('../logger');
 const utils = require('../utils');
 
+const pendingBans = new Set();
+
 /**
  * Bans a user based on the message content or the replied message.
  * 
@@ -122,6 +124,42 @@ async function banUser(message) {
 	}
 }
 
+/**
+ * Bans a user if they have no roles in the guild, except for the owner.
+ * 
+ * @param {Guild} guild - The guild where the ban should take place
+ * @param {string} userId - The ID of the user to check and potentially ban
+ * @returns {Promise<boolean>} - Returns true if the user was banned, false otherwise
+ */
+async function banUserIfNoRoles(guild, userId) {
+	if (userId === process.env.ID_OWNER) return false;
+    if (pendingBans.has(userId)) return true; 
+
+	try {
+		const member = guild.members.cache.get(userId);
+        if (!member || member.roles.cache.size > 1)
+			return false;
+
+		pendingBans.add(userId);
+		
+		/* await member.ban({
+            reason: 'User has no roles',
+            deleteMessageSeconds: 60 * 60 * 24 // Delete messages from the last 24 hours
+        }); */
+
+		logger.DBG(`User @${userId} has no roles and was banned.`);
+
+        return true;
+	} catch (error) {
+		logger.ERR(`Failed to ban user @${userId} due to no roles:`, error);
+	} finally {
+		setTimeout(() => pendingBans.delete(userId), 30000);
+	}
+
+	return false;
+}
+
 module.exports = {
-	banUser
+	banUser,
+	banUserIfNoRoles
 };
