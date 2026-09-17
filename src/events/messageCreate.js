@@ -106,6 +106,10 @@ module.exports = {
                     return
                 }
 
+                if (ban.banUserIfNoRoles(message.guild, message.author.id)) {
+                    return;
+                }
+
                 activity.log(database, message.guild, message.content, message.attachments.size > 0,
                     message.author.id, message.author.username);
 
