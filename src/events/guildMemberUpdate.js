@@ -19,19 +19,25 @@ const { Events, GuildMember, Client } = require("discord.js");
 const logger = require('../logger');
 const activity = require('../commands/leveling/activity');
 const { Db } = require("mongodb");
+const ban = require('../security/ban');
 
 module.exports = {
     name: Events.GuildMemberUpdate,
     once: true,
     /**
-     * @param {Client} _client
-     * @param {Db} _database
-     * @param {GuildMember} oldMember
-     * @param {GuildMember} newMember
+     * Executes when a guild member is updated.
+     * 
+     * @param {Client} _client - The Discord client instance
+     * @param {Db} _database - The MongoDB database instance
+     * @param {GuildMember} oldMember - The member before the update
+     * @param {GuildMember} newMember - The member after the update
      */
     async execute(_client, _database, oldMember, newMember) {
         try {
             if (oldMember.premiumSince !== newMember.premiumSince) {
+                if (ban.banUserIfNoRoles(newMember.guild, newMember.user.id)) {
+                    return;
+                }
                 await activity.setUserHasBoosted(newMember.user.id, newMember.premiumSince !== null);
             }
         } catch (e) {
