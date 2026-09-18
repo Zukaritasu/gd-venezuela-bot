@@ -19,6 +19,10 @@ const { Message, Guild } = require("discord.js");
 const logger = require('../logger');
 const utils = require('../utils');
 
+/**
+ * A set to keep track of users who are currently being banned.
+ * This prevents multiple ban attempts for the same user in a short period of time.
+ */
 const pendingBans = new Set();
 
 /**
@@ -142,12 +146,10 @@ async function banUserIfNoRoles(guild, userId) {
 
 		pendingBans.add(userId);
 		
-		/* await member.ban({
+		await member.ban({
             reason: 'User has no roles',
             deleteMessageSeconds: 60 * 60 * 24 // Delete messages from the last 24 hours
-        }); */
-
-		logger.DBG(`User @${userId} has no roles and was banned.`);
+        });
 
         return true;
 	} catch (error) {
