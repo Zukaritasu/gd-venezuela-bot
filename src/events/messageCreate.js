@@ -106,7 +106,7 @@ module.exports = {
                     return
                 }
 
-                if (ban.banUserIfNoRoles(message.guild, message.author.id)) {
+                if (await ban.banUserIfNoRoles(message.guild, message.author.id)) {
                     return;
                 }
 

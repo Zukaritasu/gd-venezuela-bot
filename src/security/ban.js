@@ -94,9 +94,6 @@ async function banUser(message) {
 	// get replied message
 	const guild = message.guild;
 	const { userId, reason } = getReasonFromContent(message.content);
-
-	logger.DBG(`Attempting to ban user with ID: ${userId}, Reason: ${reason}`);
-
 	const repliedMessage = message.reference ? await message.channel.messages.fetch(message.reference.messageId) : null;
 
 	if (repliedMessage) {
