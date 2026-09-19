@@ -162,7 +162,9 @@ async function banUserIfNoRoles(guild, userId) {
 	} catch (error) {
 		logger.ERR(`Failed to process user @${userId} due to no roles:`, error);
 	} finally {
-		setTimeout(() => pendingBans.delete(userId), 30000);
+		if (pendingBans.has(userId)) {
+			setTimeout(() => pendingBans.delete(userId), 30000);
+		}
 	}
 
 	return false;
