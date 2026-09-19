@@ -38,6 +38,8 @@ async function execute(_client, _db, interaction) {
 		await require('./youtube/notifications').listYouTubeChannels(interaction);
 	} else if (subcommand === 'notificar') {
 		await require('./youtube/notifications').notify(interaction, false);
+	} else if (subcommand === 'status') {
+		await require('./youtube/notifications').subscriptionStatus(interaction);
 	}
 }
 
@@ -59,6 +61,11 @@ module.exports = {
 			subcommand
 				.setName('activar')
 				.setDescription('Activa las notificaciones cuando subes un video')
+		)
+		.addSubcommand(subcommand =>
+			subcommand
+				.setName('estado')
+				.setDescription('Estado de tu suscripción')
 		)
 		.addSubcommand(subcommand =>
 			subcommand

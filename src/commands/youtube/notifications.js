@@ -43,6 +43,23 @@ const WEBHOOK_URL = `${PUBLIC_API_URL}/youtube-webhook`;
  */
 
 /**
+ * @typedef {Object} SuscriptionState
+ * @property {string} callbackUrl - URL that receives webhook notifications.
+ * @property {string} state - Current subscription state, such as subscribed or unsubscribed.
+ * @property {string | null} lastSuccessfulVerification - Timestamp of the last successful subscription verification.
+ * @property {string | null} expirationTime - Timestamp when the subscription expires, if applicable.
+ * @property {string | null} lastSubscribeRequest - Timestamp of the most recent subscribe request.
+ * @property {string | null} lastUnsubscribeRequest - Timestamp of the most recent unsubscribe request.
+ * @property {string | null} lastVerificationError - Error reported during the last verification attempt.
+ * @property {string | null} lastDeliveryError - Error reported during the last webhook delivery attempt.
+ * @property {string | null} aggregateStatistics - Aggregate webhook delivery statistics.
+ * @property {string | null} contentReceived - Content received from the subscription, if any.
+ * @property {string | null} contentDelivered - Content successfully delivered through the webhook, if any.
+ * @property {boolean} ok - If the value is true, it means that the object is valid, but that does not mean
+ * that its properties are valid
+ */
+
+/**
  * @type {globalThis & { database: Db }}
  */
 const globalRef = global;
@@ -712,11 +729,112 @@ async function listYouTubeChannels(interaction) {
     }
 }
 
+/**
+ * Retrieves the current PubSubHubbub subscription status for a YouTube channel.
+ *
+ * The response is parsed from the hub's HTML definition list and converted into
+ * a camel-cased object. Values reported as `n/a` are returned as `null`.
+ *
+ * @param {string} channelId YouTube channel ID to check.
+ * @returns {Promise<SuscriptionState | null>} The subscription status
+ */
+async function getSubscriptionStatus(channelId) {
+    try {
+        const response = await axios.get('https://pubsubhubbub.appspot.com/subscription-details', {
+            params: {
+                'hub.callback': WEBHOOK_URL,
+                'hub.topic': `https://www.youtube.com/xml/feeds/videos.xml?channel_id=${channelId}`,
+                'hub.secret': YOUTUBE_WEBHOOK_SECRET
+            },
+            headers: { 'User-Agent': 'GDVenezuelaBot/1.0' }
+        });
+
+        const regex = /<dt>(.*?)<\/dt>\s*<dd>(.*?)<\/dd>/gs;
+        const result = {};
+
+        let match;
+        while ((match = regex.exec(response.data)) !== null) {
+            let rawKey = match[1].replace(/<[^>]+>/g, '').replace(/:$/, '').trim();
+            let rawValue = match[2].replace(/<[^>]+>/g, '').trim();
+
+            // max size key and value
+            if (rawValue.length > 1024) rawValue = rawValue.substring(0, 1021) + '...'
+            if (rawKey.length > 32) rawKey = rawKey.substring(0, 32)
+
+            const key = rawKey
+                .toLowerCase()
+                .replace(/[^a-zA-Z0-9]+(.)/g, (_, chr) => chr.toUpperCase());
+
+            result[key] = rawValue === 'n/a' ? null : rawValue;
+        }
+
+        return Object.keys(result).length > 0 ? { ...result, ok: true } : { ok: false };
+    } catch (error) {
+        logger.ERR('Error fetching subscription status:', error.message);
+        return null;
+    }
+}
+
+/**
+ * Displays the current YouTube PubSubHubbub subscription status for the
+ * channel configured by the user. The response is sent as an ephemeral
+ * message so that only the requesting user can see it.
+ *
+ * The function retrieves the user's configured channel, requests its
+ * subscription status, and presents the relevant status fields in a Discord
+ * embed. User-friendly error messages are returned when no channel is
+ * configured or when the status cannot be retrieved or parsed.
+ *
+ * @param {ChatInputCommandInteraction} interaction 
+ */
+async function subscriptionStatus(interaction) {
+    try {
+        await interaction.deferReply({ flags: MessageFlags.Ephemeral })
+
+        /** @type {YouTubeChannel} */
+        const channel = await globalRef.database.collection(COLL_YOUTUBE_CHANNELS)
+            .findOne({ userId: interaction.user.id })
+
+        if (!channel) {
+            return await interaction.editReply('No tienes configurado un canal de YouTube en el bot')
+        }
+
+        const subStatus = await getSubscriptionStatus(channel.channelId)
+        if (!subStatus) {
+            return await interaction.editReply('Ha ocurrido un error desconocido. Inténtalo más tarde')
+        } else if (!subStatus.ok) {
+            return await interaction.editReply('PubSubHubbub respondió con un formato desconocido')
+        }
+
+        const embed = new EmbedBuilder()
+        embed.setTitle('Subcription State')
+        embed.addFields(
+            { inline: true, name: 'State', value: subStatus.state || '<?>'},
+            { inline: true, name: 'Last successful verification', value: subStatus.lastSuccessfulVerification || '<?>'},
+            { inline: true, name: 'Expiration time', value: subStatus.expirationTime || '<?>'},
+            { inline: true, name: 'Last subscribe request', value: subStatus.lastSubscribeRequest || '<?>'},
+            { inline: true, name: 'Last unsubscribe request', value: subStatus.lastUnsubscribeRequest || '<?>'},
+            { inline: true, name: 'Last verification error', value: subStatus.lastVerificationError || '<?>'}
+        )
+
+        await interaction.editReply({ embeds: [embed]})
+    } catch (error) {
+        try {
+            logger.ERR(error)
+            await interaction.editReply('Ha ocurrido un error desconocido. Inténtalo más tarde')
+        } catch {
+
+        }
+    }
+}
+
 module.exports = {
     setEnabled,
     notify,
     subscribeUnsubscribe,
     configureYoutubeNotifications,
     handleModalSubmit,
-    listYouTubeChannels
+    listYouTubeChannels,
+    getSubscriptionStatus,
+    subscriptionStatus
 }
