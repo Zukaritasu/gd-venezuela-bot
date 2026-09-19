@@ -140,12 +140,19 @@ async function banUserIfNoRoles(guild, userId) {
     if (pendingBans.has(userId)) return true; 
 
 	try {
-		const member = guild.members.cache.get(userId);
+		let member = guild.members.cache.get(userId);
         if (!member || member.roles.cache.size > 1)
 			return false;
 
+		// Register before fetching to prevent simultaneous bans
+		// while obtaining the updated member.
 		pendingBans.add(userId);
-		
+		member = await guild.members.fetch({ user: userId, force: true }).catch(() => null);
+		if (!member || member.roles.cache.size > 1) {
+			pendingBans.delete(userId)
+			return false
+		}
+
 		await member.ban({
             reason: 'User has no roles',
             deleteMessageSeconds: 60 * 60 * 24 // Delete messages from the last 24 hours
@@ -153,7 +160,7 @@ async function banUserIfNoRoles(guild, userId) {
 
         return true;
 	} catch (error) {
-		logger.ERR(`Failed to ban user @${userId} due to no roles:`, error);
+		logger.ERR(`Failed to process user @${userId} due to no roles:`, error);
 	} finally {
 		setTimeout(() => pendingBans.delete(userId), 30000);
 	}
