@@ -141,7 +141,7 @@ async function banUserIfNoRoles(guild, userId) {
 
 	try {
 		let member = guild.members.cache.get(userId);
-        if (!member || member.roles.cache.size > 1)
+        if (member && member.roles.cache.size > 1)
 			return false;
 
 		// Register before fetching to prevent simultaneous bans
