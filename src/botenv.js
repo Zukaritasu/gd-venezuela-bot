@@ -34,7 +34,8 @@ const commandFileList = [
     'perfil.js',
     'packs.js',
     //'games.js',
-    'youtube.js'
+    'youtube.js',
+    'tiktok.js'
 ]
 
 function getCommandsCollection() {

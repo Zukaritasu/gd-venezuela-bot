@@ -15,7 +15,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-const { ChatInputCommandInteraction } = require("discord.js");
+const { ChatInputCommandInteraction, MessageFlags } = require("discord.js");
 const channels = require('../../../.botconfig/channels.json')
 const logger = require('../../logger')
 
@@ -51,10 +51,15 @@ async function notify(interaction) {
 		await channel.send(`<@&${process.env.ID_ROL_YOUTUBE_NOTIFICACIONES}>\n`
 			+ `He subido un nuevo vídeo a TikTok, vayan a verlo! ${URL_PREFIX_TIKTOK_VIDEO + videoId}`
 		)
+
+		await interaction.reply('¡Notificación enviada con éxito!')
 	} catch (error) {
 		logger.ERR(error)
 		try {
-			await interaction.reply(error.message)
+			await interaction.reply({
+				content: error.message,
+				flags: MessageFlags.Ephemeral
+			})
 		} catch {
 			
 		}
