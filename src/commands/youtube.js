@@ -38,7 +38,7 @@ async function execute(_client, _db, interaction) {
 		await require('./youtube/notifications').listYouTubeChannels(interaction);
 	} else if (subcommand === 'notificar') {
 		await require('./youtube/notifications').notify(interaction, false);
-	} else if (subcommand === 'status') {
+	} else if (subcommand === 'estado') {
 		await require('./youtube/notifications').subscriptionStatus(interaction);
 	}
 }
