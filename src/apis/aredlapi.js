@@ -109,6 +109,29 @@ const https = require('https');
 let redisObject = null
 
 /**
+ * Represents an error with an associated application-specific error code.
+ * 
+ * @extends Error
+ */
+class ErrorCode extends Error {
+    /**
+     * Creates an ErrorCode instance.
+     * 
+     * @param {string} message - A description of the error.
+     * @param {number|string} code - The application-specific error code.
+     */
+    constructor(message, code) {
+        super(message);
+
+        this.name = this.constructor.name;
+        this.message
+        this.code = code
+
+        Error.captureStackTrace(this, this.constructor);
+    }
+}
+
+/**
  * Fetches JSON data from the specified URL, with optional Redis caching.
  * @param {string} url - URL path to fetch (without the domain)
  * @param {boolean} useRedis - Whether to use Redis caching or not
@@ -146,7 +169,7 @@ async function getResponseJSON(url, useRedis = true) {
                     try {
                         const jsonResponseData = JSON.parse(Buffer.concat(data).toString())
                         if (res?.statusCode === 404) {
-                            resolve(new Error(jsonResponseData?.message || 'Unknown error'));
+                            resolve(new ErrorCode(jsonResponseData?.message || 'Unknown error', res?.statusCode));
                         } else {
                             if (useRedis)
                                 await redisObject.set(key, JSON.stringify(jsonResponseData), { EX: 21600 })
@@ -260,7 +283,6 @@ module.exports = {
     },
 
     getLevelPlatformerInfo: async (level_id) => {
-        // json and creatorsArray never tend to be null because the function always returns a non-null value.
         let [json, creatorsArray] = await Promise.all(
             [
                 getResponseJSON(`v2/api/arepl/levels/${level_id}`),
@@ -268,15 +290,25 @@ module.exports = {
             ]
         );
 
-        const hasInvalidArray = (arr) => arr instanceof Error || !Array.isArray(arr)
-        if (json instanceof Error)
-            throw json;
-        if (hasInvalidArray(creatorsArray)) {
-            creatorsArray = await getResponseJSON(`v2/api/arepl/levels/${level_id}_2p/creators`)
-            if (hasInvalidArray(creatorsArray)) {
-                throw new Error(creatorsArray instanceof Error ? creatorsArray.message : 'Unexpected Response')
-            }
+        if (json instanceof Error) {
+            if (!(json instanceof ErrorCode) || json.code !== 404)
+                throw json
+
+            [json, creatorsArray] = await Promise.all(
+                [
+                    getResponseJSON(`v2/api/arepl/levels/${level_id}_2p`),
+                    getResponseJSON(`v2/api/arepl/levels/${level_id}_2p/creators`)
+                ]
+            );
+
+            if (json instanceof Error)
+                throw json;
         }
+
+        if (creatorsArray instanceof Error)
+            throw creatorsArray;
+        if (!Array.isArray(creatorsArray))
+            throw new Error('Unexpected Response');
 
         if ('name' in json)
             json.name = json.name.trim();
