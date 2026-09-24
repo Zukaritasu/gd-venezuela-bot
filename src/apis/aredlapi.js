@@ -145,9 +145,13 @@ async function getResponseJSON(url, useRedis = true) {
                 res.on('end', async () => {
                     try {
                         const jsonResponseData = JSON.parse(Buffer.concat(data).toString())
-                        if (useRedis)
-                            await redisObject.set(key, JSON.stringify(jsonResponseData), { EX: 21600 })
-                        resolve(jsonResponseData)
+                        if (res?.statusCode === 404) {
+                            resolve(new Error(jsonResponseData?.message || 'Unknown error'));
+                        } else {
+                            if (useRedis)
+                                await redisObject.set(key, JSON.stringify(jsonResponseData), { EX: 21600 })
+                            resolve(jsonResponseData)
+                        }
                     } catch (error) {
                         resolve(error);
                     }
@@ -257,19 +261,22 @@ module.exports = {
 
     getLevelPlatformerInfo: async (level_id) => {
         // json and creatorsArray never tend to be null because the function always returns a non-null value.
-        const [json, creatorsArray] = await Promise.all(
+        let [json, creatorsArray] = await Promise.all(
             [
                 getResponseJSON(`v2/api/arepl/levels/${level_id}`),
                 getResponseJSON(`v2/api/arepl/levels/${level_id}/creators`)
             ]
         );
 
+        const hasInvalidArray = (arr) => arr instanceof Error || !Array.isArray(arr)
         if (json instanceof Error)
             throw json;
-        if (creatorsArray instanceof Error)
-            throw creatorsArray;
-        if (!Array.isArray(creatorsArray))
-            throw new Error('Error fetching creators');
+        if (hasInvalidArray(creatorsArray)) {
+            creatorsArray = await getResponseJSON(`v2/api/arepl/levels/${level_id}_2p/creators`)
+            if (hasInvalidArray(creatorsArray)) {
+                throw new Error(creatorsArray instanceof Error ? creatorsArray.message : 'Unexpected Response')
+            }
+        }
 
         if ('name' in json)
             json.name = json.name.trim();
