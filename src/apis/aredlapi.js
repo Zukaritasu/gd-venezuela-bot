@@ -118,13 +118,12 @@ class ErrorCode extends Error {
      * Creates an ErrorCode instance.
      * 
      * @param {string} message - A description of the error.
-     * @param {number|string} code - The application-specific error code.
+     * @param {number} code - The application-specific error code.
      */
     constructor(message, code) {
         super(message);
 
         this.name = this.constructor.name;
-        this.message
         this.code = code
 
         Error.captureStackTrace(this, this.constructor);
@@ -169,7 +168,7 @@ async function getResponseJSON(url, useRedis = true) {
                     try {
                         const jsonResponseData = JSON.parse(Buffer.concat(data).toString())
                         if (res?.statusCode === 404) {
-                            resolve(new ErrorCode(jsonResponseData?.message || 'Unknown error', res?.statusCode));
+                            resolve(new ErrorCode(jsonResponseData?.message || 'Unknown error', res?.statusCode || 404));
                         } else {
                             if (useRedis)
                                 await redisObject.set(key, JSON.stringify(jsonResponseData), { EX: 21600 })
@@ -291,8 +290,9 @@ module.exports = {
         );
 
         if (json instanceof Error) {
-            if (!(json instanceof ErrorCode) || json.code !== 404)
+            if (!(json instanceof ErrorCode) || json.code !== 404) {
                 throw json
+            }
 
             [json, creatorsArray] = await Promise.all(
                 [
@@ -301,8 +301,9 @@ module.exports = {
                 ]
             );
 
-            if (json instanceof Error)
+            if (json instanceof Error) {
                 throw json;
+            }
         }
 
         if (creatorsArray instanceof Error)
