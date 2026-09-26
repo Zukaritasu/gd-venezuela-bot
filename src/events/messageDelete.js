@@ -36,13 +36,13 @@ module.exports = {
 				return;
 			//logger.DBG(`Message deleted in [${message.channel.name}] by ${message.author.tag}: ${message.content}`);
 
-			if (message.channelId === channels.CREACIONES) {
+			//if (message.channelId === channels.CREACIONES) {
 				logger.DBG(require('util').inspect(message, { depth: null, colors: true, compact: false }))
-				if (message.hasThread) {
+				/* if (message.hasThread) {
 					const thread = message.thread ?? await message.channel.threads.fetch(message.id);
 					await thread.delete();
-				}
-			}
+				} */
+			//}
 		} catch (error) {
 			logger.ERR(error);
 		}
