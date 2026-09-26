@@ -32,8 +32,9 @@ module.exports = {
 	 */
 	async execute(_client, _database, message) {
 		try {
-			if (message.author.bot || message.channel.id !== '1272033491390828574')
-				return;
+			/* if (message.author.bot || message.channel.id !== '1272033491390828574')
+				return; */
+			
 			//logger.DBG(`Message deleted in [${message.channel.name}] by ${message.author.tag}: ${message.content}`);
 
 			//if (message.channelId === channels.CREACIONES) {
