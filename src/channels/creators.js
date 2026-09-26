@@ -15,7 +15,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-const { Message } = require("discord.js");
+const { Message, ThreadAutoArchiveDuration } = require("discord.js");
 const logger = require('../logger')
 
 /**
@@ -52,7 +52,7 @@ async function processMessage(message) {
 
 		await message.startThread({
 			name: `Hilo de ${message.author.username}`,
-			autoArchiveDuration: 20160 // 2 weeks
+			autoArchiveDuration: ThreadAutoArchiveDuration.OneWeek
 		})
 
 		await message.react('👍')
