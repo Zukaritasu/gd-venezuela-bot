@@ -24,6 +24,7 @@ const channels = require('../../.botconfig/channels.json');
 const submit = require('../commands/records/submit');
 const robtopapi = require('../apis/robtopapi');
 const ban = require('../security/ban');
+const creators = require('../channels/creators')
 
 /**
  * List of user IDs that are whitelisted to use certain commands.
@@ -112,6 +113,10 @@ module.exports = {
 
                 activity.log(database, message.guild, message.content, message.attachments.size > 0,
                     message.author.id, message.author.username);
+
+                if (message.channel.id === channels.CREACIONES && !message.channel.isThread()) {
+                    return await creators.processMessage(message);
+                }
 
                 if (isCommand(message, '--update')) {
                     if (utils.hasUserPermissions(message.member))
