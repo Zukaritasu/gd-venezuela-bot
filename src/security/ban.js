@@ -153,10 +153,10 @@ async function banUserIfNoRoles(guild, userId) {
 			return false
 		}
 
-		await member.ban({
+		/* await member.ban({
             reason: 'User has no roles',
             deleteMessageSeconds: 60 * 60 * 24 // Delete messages from the last 24 hours
-        });
+        }); */
 
         return true;
 	} catch (error) {
