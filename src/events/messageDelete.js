@@ -19,6 +19,7 @@ const { Events, Client, ChatInputCommandInteraction, Message,
 	GuildMember, AttachmentBuilder, ChannelType } = require('discord.js');
 const { Db } = require('mongodb');
 const logger = require('../logger');
+const channels = require('../../.botconfig/channels.json')
 
 module.exports = {
 	name: Events.MessageDelete,
@@ -34,6 +35,10 @@ module.exports = {
 			if (message.author.bot || message.channel.id !== '1272033491390828574')
 				return;
 			//logger.DBG(`Message deleted in [${message.channel.name}] by ${message.author.tag}: ${message.content}`);
+
+			if (message.channelId === channels.CREACIONES && message.thread) {
+				await message.thread.delete()
+			}
 		} catch (error) {
 			logger.ERR(error);
 		}
