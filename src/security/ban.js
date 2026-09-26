@@ -141,18 +141,19 @@ async function banUserIfNoRoles(guild, userId) {
 
 	try {
 		let member = guild.members.cache.get(userId);
-        if (member && member.roles.cache.size > 1)
+        if (member && member._roles.length > 0)
 			return false;
 
 		// Register before fetching to prevent simultaneous bans
 		// while obtaining the updated member.
 		pendingBans.add(userId);
 		member = await guild.members.fetch({ user: userId, force: true }).catch(() => null);
-		if (!member || member.roles.cache.size > 1) {
+		if (!member || member._roles.length > 0) {
 			pendingBans.delete(userId)
 			return false
 		}
 
+		logger.INF(`Attempt to ban user <@${userId}>`)
 		/* await member.ban({
             reason: 'User has no roles',
             deleteMessageSeconds: 60 * 60 * 24 // Delete messages from the last 24 hours
