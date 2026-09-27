@@ -46,7 +46,8 @@ async function processMessage(message) {
 				!mediaExtensions.includes(extension);
 		});
 
-		if (hasNonMediaAttachment) {
+		if (hasNonMediaAttachment && 
+			!/(?:https?:\/\/)?(?:www\.|m\.)?(?:youtube\.com\/(?:watch\?v=|shorts\/|embed\/)|youtu\.be\/)[^\s]+/i.test(message.content)) {
 			return await message.delete();
 		}
 
