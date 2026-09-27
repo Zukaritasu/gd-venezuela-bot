@@ -36,7 +36,7 @@ async function getVideoId(id) {
 		return id;
 	}
 
-	const directMatch = id.match(/\/video\/(\d+)/);
+	const directMatch = id.match(/\/(?:video|photo)\/(\d+)/);
 	if (directMatch) {
 		return directMatch[1];
 	}
@@ -57,10 +57,17 @@ async function getVideoId(id) {
 		});
 
 		const finalUrl = response.request?.res?.responseUrl || response.config?.url;
-		const redirectMatch = finalUrl?.match(/\/video\/(\d+)/);
+		const redirectMatch = finalUrl?.match(/\/(?:video|photo)\/(\d+)/);
 
 		if (redirectMatch) {
 			return redirectMatch[1];
+		}
+
+		const pageMatch = typeof response.data === 'string'
+			? response.data.match(/\/(?:video|photo)\/(\d+)/)
+			: null;
+		if (pageMatch) {
+			return pageMatch[1];
 		}
 	} catch (error) {
 		if (error.response?.headers?.location) {
