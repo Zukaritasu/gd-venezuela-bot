@@ -20,7 +20,7 @@ const channels = require('../../../.botconfig/channels.json')
 const logger = require('../../logger')
 const axios = require('axios')
 
-const URL_PREFIX_TIKTOK_VIDEO = 'https://www.tiktok.com/@gd_venezuela/'
+const URL_PREFIX_TIKTOK_VIDEO = 'https://www.tiktok.com/@gd_venezuela'
 
 /**
  * Resolves a TikTok video identifier from a numeric ID, a video URL, or a
