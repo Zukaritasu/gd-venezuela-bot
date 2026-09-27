@@ -20,7 +20,7 @@ const channels = require('../../../.botconfig/channels.json')
 const logger = require('../../logger')
 const axios = require('axios')
 
-const URL_PREFIX_TIKTOK_VIDEO = 'https://www.tiktok.com/@gd_venezuela/photo/'
+const URL_PREFIX_TIKTOK_VIDEO = 'https://www.tiktok.com/@gd_venezuela/'
 
 /**
  * Resolves a TikTok video identifier from a numeric ID, a video URL, or a
@@ -28,17 +28,22 @@ const URL_PREFIX_TIKTOK_VIDEO = 'https://www.tiktok.com/@gd_venezuela/photo/'
  * be inspected for the canonical video ID.
  *
  * @param {string} id Numeric video ID, TikTok video URL, or shortened link.
- * @returns {Promise<string|null>} The video ID, or null when it cannot be found.
+ * @returns {Promise<{id: string, type: string}|null>} The video ID, or null when it cannot be found.
  * @throws {Error} If the TikTok link cannot be requested or resolved.
  */
-async function getVideoId(id) {
-	if (/^\d+$/.test(id)) {
-		return id;
+async function getVideoInfo(id) {
+	/** @param {String} videoId */
+	const getType = (videoId) => {
+		if (videoId.includes('/video/'))
+			return 'video'
+		else if (videoId.includes('/photo/'))
+			return 'photo'
+		return null
 	}
 
 	const directMatch = id.match(/\/(?:video|photo)\/(\d+)/);
 	if (directMatch) {
-		return directMatch[1];
+		return { id: directMatch[1], type: getType(id) };
 	}
 
 	let targetUrl = id;
@@ -60,14 +65,14 @@ async function getVideoId(id) {
 		const redirectMatch = finalUrl?.match(/\/(?:video|photo)\/(\d+)/);
 
 		if (redirectMatch) {
-			return redirectMatch[1];
+			return { id: redirectMatch[1], type: getType(finalUrl) };
 		}
 
 		const pageMatch = typeof response.data === 'string'
 			? response.data.match(/\/(?:video|photo)\/(\d+)/)
 			: null;
 		if (pageMatch) {
-			return pageMatch[1];
+			return { id: pageMatch[1], type: getType(response.data) };
 		}
 	} catch (error) {
 		if (error.response?.headers?.location) {
@@ -97,8 +102,8 @@ async function getVideoId(id) {
  */
 async function notify(interaction) {
 	try {
-		const videoId = await getVideoId(interaction.options.getString('video')?.trim())
-		if (!videoId) {
+		const video = await getVideoInfo(interaction.options.getString('video')?.trim())
+		if (!video || !video.type) {
 			throw new Error('El valor debe ser un ID válido o un enlace válido de un video de TikTok')
 		}
 
@@ -107,8 +112,8 @@ async function notify(interaction) {
 			throw new Error('Channel not found');
 		}
 
-		await channel.send(`<@&${process.env.ID_ROL_YOUTUBE_NOTIFICACIONES}>\n`
-			+ `He subido un nuevo vídeo a TikTok, vayan a verlo! ${URL_PREFIX_TIKTOK_VIDEO + videoId}`
+		await channel.send(`<@&${process.env.ID_ROL_TIKTOK_NOTIFICACIONES}>\n`
+			+ `He subido un nuevo vídeo a TikTok, vayan a verlo! ${URL_PREFIX_TIKTOK_VIDEO}/${video.type}/${video.id}`
 		)
 
 		await interaction.reply('¡Notificación enviada con éxito!')
