@@ -17,7 +17,7 @@
 	"COLL_PROFILES": "profiles",
 	"COLL_PROFILES_SESSIONS": "profiles_sessions",
 	"COLL_USER_KICKS": "user_kicks",
-	"COLL_USERS_ACTIVITY": "users_activity_v2",
+	"COLL_USERS_ACTIVITY": "users_activity_v3",
 	"COLL_USERS_ACTIVITY_CONFIG": "users_activity_config",
 	"doc_types": {
 		"SAU_TYPE_USERS_BLACKLIST": "usersBlacklist",
