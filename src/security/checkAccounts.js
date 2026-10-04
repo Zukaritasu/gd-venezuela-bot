@@ -43,7 +43,8 @@ const { RESTJSONErrorCodes } = require('discord-api-types/v10')
 const ModerationAction = {
     KICK: 'active',
     BAN: 'banned',
-	KICK_NOT_NOTIFY: 'kick_not_notify'
+	KICK_NOT_NOTIFY: 'kick_not_notify',
+	NOTIFY_USER_PENDING: 'notify_user_pending'
 };
 
 /**
@@ -82,11 +83,19 @@ async function verifyAccountInWhiteList(database, member) {
  * @param {string} actionText
  * @returns {EmbedBuilder} The embed report
  */
-function createEmbedReport(member, actionText) {
+function createEmbedReport(member, actionText, isPendingUser = false) {
 	const embed = new EmbedBuilder()
 	embed.setColor(0x2b2d31)
 	embed.setTitle(member.user.tag)
-	embed.setDescription(`Ha sido **${actionText}** automáticamente por tener una cuenta nueva.`)
+	
+	if (isPendingUser) {
+		embed.setDescription('El usuario ha ignorado el mensaje automático de verificación.' + 
+			'Ahora se encuentra dentro del servidor ya que su cuenta cumplio con la antigüedad mínima requerida,' + 
+			' pero su solicitud de verificación aún está pendiente.')
+	} else {
+		embed.setDescription(`Ha sido **${actionText}** automáticamente por tener una cuenta ${isPendingUser ? 'pendiente' : 'nueva'}.`)
+	}
+
 	embed.setThumbnail(member.user.displayAvatarURL({ size: 128, extension: 'png' }))
 	embed.setFields(
 		{
@@ -127,12 +136,14 @@ async function executeModerationAction(guild, database, member, action) {
 		} else if (action === ModerationAction.BAN) {
 			await member.ban({ reason: 'Account too new' });
 			actionText = 'baneado';
+		} else if (action === ModerationAction.NOTIFY_USER_PENDING) {
+			actionText = 'notificado';
 		}
 		
 		if (reportChannel && actionText) {
 			await reportChannel.send({
 				embeds: [
-					createEmbedReport(member, actionText)
+					createEmbedReport(member, actionText, action === ModerationAction.NOTIFY_USER_PENDING)
 				]
 			});
 		}
@@ -200,18 +211,22 @@ async function sendAutoMessage(member, inviteUrl) {
  * @param {Guild} guild
  * @param {Db} database
  * @param {GuildMember} member
+ * @param {boolean} kickPendingUser - Whether to kick the user if their account is pending verification
  * @returns {Promise<boolean>} true if the account is older than XX days, false otherwise
  */
-async function checkUserAccountAge(guild, database, member) {
+async function checkUserAccountAge(guild, database, member, kickPendingUser = false) {
 	const accountAgeMs = Date.now() - member.user.createdAt.getTime();
+
+	const isUserPending = async (id) => {
+		const viewPending = await database.collection(COLL_SERVER_NEW_ACCOUNTS)
+				.findOne({ type: 'pending' });
+		return viewPending && Array.isArray(viewPending.accounts) && viewPending.accounts.includes(id);
+	}
+
 	if (accountAgeMs < ACCOUNT_MINIMUM_AGE && !(await verifyAccountInWhiteList(database, member))) {
 		let action = ModerationAction.KICK;
 		try {
-			const viewPending = await database.collection(COLL_SERVER_NEW_ACCOUNTS)
-				.findOne({ type: 'pending' });
-
-			if (viewPending && Array.isArray(viewPending.accounts) && 
-				viewPending.accounts.includes(member.user.id)) {
+			if (await isUserPending(member.user.id)) {
 				try {
 					await member.send('Tu solicitud de verificación ya está pendiente. Por favor, espera a que el staff revise tu solicitud.');
 					await member.kick('Account pending verification');
@@ -243,6 +258,15 @@ async function checkUserAccountAge(guild, database, member) {
 			}
 		}
 		return await executeModerationAction(guild, database, member, action);
+	} else if (kickPendingUser) {
+		try {
+			if (await isUserPending(member.user.id)) {
+				await executeModerationAction(guild, database, member, 
+					ModerationAction.NOTIFY_USER_PENDING);
+			}
+		} catch (e) {
+			logger.ERR(e);
+		}
 	}
 	return true;
 }
