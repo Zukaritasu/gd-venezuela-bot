@@ -25,6 +25,7 @@ const submit = require('../commands/records/submit');
 const robtopapi = require('../apis/robtopapi');
 const ban = require('../security/ban');
 const creators = require('../channels/creators')
+const attachment = require('../security/attachment')
 
 /**
  * List of user IDs that are whitelisted to use certain commands.
@@ -109,6 +110,10 @@ module.exports = {
 
                 if (await ban.banUserIfNoRoles(message.guild, message.author.id)) {
                     return;
+                }
+
+                if (message.attachments.size === 4) {
+                    attachment.processAttachment(message)
                 }
 
                 activity.log(database, message.guild, message.content, message.attachments.size > 0,
