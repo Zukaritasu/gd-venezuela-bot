@@ -160,7 +160,7 @@ async function service(_db, _client) {
 				const res = JSON.parse(message);
 
 				if (isClientResponse(res) && pendingRequests.has(res.id)) {
-					logger.DBG(`Received response for request ID ${res.id}:`, JSON.stringify(res));
+					//logger.DBG(`Received response for request ID ${res.id}:`, JSON.stringify(res));
 
 					const { resolve, reject, timeout } = pendingRequests.get(res.id);
 					clearTimeout(timeout);
