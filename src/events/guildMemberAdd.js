@@ -116,7 +116,7 @@ module.exports = {
             if (member.guild.id !== process.env.SERVER_GD_VENEZUELA_ID)
                 return;
 
-            if (await checkAccounts.checkUserAccountAge(member.guild, database, member)) {
+            if (await checkAccounts.checkUserAccountAge(member.guild, database, member, true)) {
                 // Updates the cache for the member in the guild. This is necessary to ensure 
                 // that the member is properly cached after they join the guild.
                 await member.guild.members.fetch(member.id);
