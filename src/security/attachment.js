@@ -23,26 +23,73 @@ const fs = require('node:fs')
 const { exec } = require('child_process');
 const path = require("node:path");
 
+const SUSPICIOUS_COUNT_ATTACHMENTS = 4
+
 /**
+ * @typedef {Object} AttachmentInfo
+ * @property {string} url - The URL of the attachment
+ * @property {string} name - The name of the attachment
+ * @property {string} extension - The file extension of the attachment
+ */
+
+/**
+ * A set of user IDs who have uploaded suspicious attachments
+ * 
  * @type {Set<string>}
  */
 const users = new Set()
 
 /**
+ * Downloads an attachment from a URL to a local directory
  * 
- * @param {Message} message
+ * @param {AttachmentInfo} attachment - The attachment info
+ * @param {string} directory - The directory to download the attachment to
+ * @returns {Promise<void>}
+ */
+async function downloadAttachment(attachment, directory) {
+	return new Promise((resolve, reject) => {
+		const randomName = crypto.randomBytes(16).toString('hex') + '.' + attachment.extension
+		const filePath = path.join(directory, randomName)
+
+		exec(`curl -s -o "${filePath}" "${attachment.url}"`, (error, stdout, stderr) => {
+			if (error) {
+				reject(error)
+			} else {
+				resolve()
+			}
+		})
+	})
+}
+
+/**
+ * Processes an attachment in a message
+ * 
+ * @param {Message} message - The message containing the attachment
  */
 async function processAttachment(message) {
 	const userId = message.author.id
-	if (users.has(userId) || message.attachments.size !== 4)
+	if (users.has(userId)
+		|| message.attachments.size !== SUSPICIOUS_COUNT_ATTACHMENTS
+		|| !process.env.DIRECTORY_ATTACHMENTS)
 		return
 
 	users.add(userId)
 
 	try {
-		for (const attachment of message.attachments.values()) {
-			// Printt all the attachment details to the console
-			logger.DBG(`Attachment details: ${JSON.stringify(attachment)}`);
+		const attachments = message.attachments.map(att => {
+			if (att.contentType && att.contentType.startsWith('image/') && /(png|jpe?g)$/i.test(att.name)) {
+				return {
+					url: att.url,
+					name: att.name,
+					extension: att.name.split('.').pop().toLowerCase()
+				}
+			}
+
+			return null
+		}).filter(Boolean)
+
+		if (attachments.length === SUSPICIOUS_COUNT_ATTACHMENTS) {
+			await Promise.all(attachments.map(att => downloadAttachment(att, process.env.DIRECTORY_ATTACHMENTS)))
 		}
 	} catch (error) {
 		logger.ERR(error)
@@ -52,5 +99,6 @@ async function processAttachment(message) {
 }
 
 module.exports = {
-	processAttachment
+	processAttachment,
+	SUSPICIOUS_COUNT_ATTACHMENTS
 }
