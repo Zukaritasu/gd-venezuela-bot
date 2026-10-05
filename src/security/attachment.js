@@ -15,11 +15,9 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-const { Message, Collection, Attachment } = require("discord.js");
+const { Message } = require("discord.js");
 const logger = require('../logger')
-const token = require('../../.botconfig/token.json')
 const crypto = require('crypto');
-const fs = require('node:fs')
 const { exec } = require('child_process');
 const path = require("node:path");
 
