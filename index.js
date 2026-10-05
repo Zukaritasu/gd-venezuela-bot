@@ -65,7 +65,10 @@ function generateSHA256(filePath) {
 async function executeSubprocess(command) {
     return new Promise((resolve) => {
         const child = fork(command, [], {
-            execArgv: ['--env-file=.env']
+            execArgv: [
+                '--env-file=.env',
+                '--env-file-if-exists=.env.production.local'
+            ]
         });
 
         child.on('exit', (code) => {
