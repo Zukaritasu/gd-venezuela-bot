@@ -32,7 +32,7 @@ int main(int argc, char* argv[]) {
     // arg[5] = image4
 
     if (argc < 3 || argc > 6) {
-        std::cerr << "Uso: gscan <api_key> <imagen1>... <imagen4>\nv1.3.0\n";
+        std::cerr << "Uso: gscan <api_key> <imagen1>... <imagen4>\nv1.4.0\n";
         return 1;
     }
 
