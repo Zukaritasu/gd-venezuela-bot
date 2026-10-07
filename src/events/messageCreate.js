@@ -112,7 +112,7 @@ module.exports = {
                     return;
                 }
 
-                if (message.attachments.size === attachment.SUSPICIOUS_COUNT_ATTACHMENTS) {
+                if (attachment.hasSuspiciousRange(message.attachments.size)) {
                     attachment.processAttachment(message)
                 }
 
