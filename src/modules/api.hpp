@@ -21,7 +21,7 @@
 
 #include "image.hpp"
 
-#include <array>
+#include <vector>
 #include <string>
 
 struct ApiResult {
@@ -30,4 +30,4 @@ struct ApiResult {
     std::string error;
 };
 
-ApiResult analyzeImages(const std::string& apiKey, const std::array<ImagePayload, 4>& images);
+ApiResult analyzeImages(const std::string& apiKey, const std::vector<ImagePayload>& images);

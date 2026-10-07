@@ -20,30 +20,40 @@
 #include "api.hpp"
 #include "image.hpp"
 
-#include <array>
+#include <vector>
 #include <iostream>
 
 int main(int argc, char* argv[]) {
-    if (argc != 6) {
-        std::cerr << "Uso: gscan <api_key> <imagen1> <imagen2> <imagen3> <imagen4>\n";
+    // arg[0] = gscan
+    // arg[1] = api_key
+    // arg[2] = image1
+    // arg[3] = image2
+    // arg[4] = image3
+    // arg[5] = image4
+
+    if (argc < 3 || argc > 6) {
+        std::cerr << "Uso: gscan <api_key> <imagen1>... <imagen4>\nv1.3.0\n";
         return 1;
     }
 
     const std::string apiKey = argv[1];
 
-    std::array<ImagePayload, 4> images;
-    for (std::size_t index = 0; index < images.size(); ++index) {
-        const std::string path = argv[index + 2];
-
+    std::vector<ImagePayload> images;
+    for (int i = 2, j = 0; i < argc; ++i) {
+        const std::string path = argv[i];
+        
+        images.emplace_back();
         if (mimeTypeFromPath(path).empty()) {
             std::cerr << "Formato de imagen no soportado: " << path << '\n';
             return 1;
         }
 
-        if (!loadImage(path, images[index])) {
+        if (!loadImage(path, images[j])) {
             std::cerr << "No se pudo leer la imagen: " << path << '\n';
             return 1;
         }
+
+        ++j;
     }
 
     const ApiResult result = analyzeImages(apiKey, images);

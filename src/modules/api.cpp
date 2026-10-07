@@ -23,13 +23,14 @@
 #include <nlohmann/json.hpp>
 
 #include <algorithm>
+#include <iostream>
 #include <cctype>
 #include <chrono>
 #include <thread>
 
 namespace {
 
-constexpr const char* kEndpoint = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent";
+constexpr const char* kEndpoint = "https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent";
 constexpr const char* kUserAgent = "gscan/1.0";
 constexpr int kMaxAttempts = 3;
 
@@ -42,7 +43,7 @@ std::size_t writeCallback(char* data, std::size_t size, std::size_t count, void*
     return size * count;
 }
 
-std::string buildRequestBody(const std::array<ImagePayload, 4>& images) {
+std::string buildRequestBody(const std::vector<ImagePayload>& images) {
     nlohmann::json parts = nlohmann::json::array();
     parts.push_back({{"text", kPrompt}});
 
@@ -55,7 +56,15 @@ std::string buildRequestBody(const std::array<ImagePayload, 4>& images) {
     }
 
     const nlohmann::json content = {{"parts", std::move(parts)}};
-    const nlohmann::json body = {{"contents", nlohmann::json::array({content})}};
+    
+    const nlohmann::json body = {
+        {"contents", nlohmann::json::array({content})},
+        {"generationConfig", {
+            {"thinkingConfig", {
+                {"thinkingBudget", 0}
+            }}
+        }}
+    };
 
     return body.dump();
 }
@@ -189,7 +198,7 @@ ApiResult scoreFromBody(const std::string& body) {
 
 }
 
-ApiResult analyzeImages(const std::string& apiKey, const std::array<ImagePayload, 4>& images) {
+ApiResult analyzeImages(const std::string& apiKey, const std::vector<ImagePayload>& images) {
     if (apiKey.empty())
         return {false, 0, "La clave de API esta vacia."};
 
