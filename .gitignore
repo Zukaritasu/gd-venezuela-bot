@@ -141,3 +141,7 @@ build
 
 backups
 mods
+
+# Ignore scripts shell
+
+*.sh
