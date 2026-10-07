@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2025 Zukaritasu
+ * Copyright (C) 2025 - 2026 Zukaritasu
  * 
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -309,8 +309,8 @@ ${JSON.stringify(recordObject, null, 4)}
         logger.ERR('Error in submit command:', e);
         try {
             await interaction.editReply('An unknown error has occurred');
-        } catch (error) {
-            
+        } catch {
+            // ignore
         }
     }
 }
@@ -342,6 +342,17 @@ async function sendErrorDM(message, errorMessage) {
             }
         }
         await message.react('❌');
+
+        // garbage message after 10 seconds
+        if (message instanceof Message) {
+            setTimeout(async () => {
+                try {
+                    await message.delete();
+                } catch (error) {
+                    logger.ERR('Error deleting message after sending error DM:', error);
+                }
+            }, 10000);
+        }
     } catch (e) {
         logger.ERR('Error sending DM to user:', e);
     }
@@ -416,9 +427,9 @@ ${JSON.stringify(recordObject, null, 4)}
 \`\`\``;
 
         await channel.send(stringJson);
-        const existingReaction = message.reactions.cache.get('❌');
+        /* const existingReaction = message.reactions.cache.get('❌');
         if (existingReaction)
-            await existingReaction.users.remove(message.client.user.id);
+            await existingReaction.users.remove(message.client.user.id); */
         await message.react('✅');
     } catch (e) {
         logger.ERR('Error in processSubmitRecord:', e);
