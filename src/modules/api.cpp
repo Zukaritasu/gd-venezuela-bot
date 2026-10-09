@@ -148,7 +148,7 @@ struct HttpResponse {
 HttpResponse post(const std::string& apiKey, const std::string& requestBody) {
     CURL* handle = curl_easy_init();
     if (handle == nullptr)
-        return {false, 0, "No se pudo iniciar el cliente HTTP."};
+        return {false, 0, "Failed to initialize HTTP client."};
 
     curl_slist* headers = nullptr;
     headers = curl_slist_append(headers, "Content-Type: application/json");
@@ -176,7 +176,7 @@ HttpResponse post(const std::string& apiKey, const std::string& requestBody) {
     curl_easy_cleanup(handle);
 
     if (code != CURLE_OK)
-        return {false, status, std::string("No se pudo conectar con el servicio: ") + curl_easy_strerror(code)};
+        return {false, status, std::string("Failed to connect to the service: ") + curl_easy_strerror(code)};
 
     return {true, status, std::move(responseBody)};
 }
@@ -186,13 +186,13 @@ bool isRetryable(long status) {
 }
 
 std::string httpErrorMessage(const HttpResponse& response) {
-    return "El servicio respondio con error " + std::to_string(response.status) + ": " + describeError(response.body);
+    return "The service responded with error " + std::to_string(response.status) + ": " + describeError(response.body);
 }
 
 ApiResult scoreFromBody(const std::string& body) {
     int score = 0;
     if (!parseScore(extractText(body), score))
-        return {false, 0, "El servicio no devolvio una puntuacion valida."};
+        return {false, 0, "The service did not return a valid score."};
     return {true, score, {}};
 }
 
@@ -200,7 +200,7 @@ ApiResult scoreFromBody(const std::string& body) {
 
 ApiResult analyzeImages(const std::string& apiKey, const std::vector<ImagePayload>& images) {
     if (apiKey.empty())
-        return {false, 0, "La clave de API esta vacia."};
+        return {false, 0, "The API key is empty."};
 
     curl_global_init(CURL_GLOBAL_DEFAULT);
 

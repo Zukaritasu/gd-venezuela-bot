@@ -32,7 +32,7 @@ int main(int argc, char* argv[]) {
     // arg[5] = image4
 
     if (argc < 3 || argc > 6) {
-        std::cerr << "Uso: gscan <api_key> <imagen1>... <imagen4>\nv1.4.0\n";
+        std::cerr << "Usage: gscan <api_key> <image1>... <image4>\nv1.4.1\n";
         return 1;
     }
 
@@ -44,12 +44,12 @@ int main(int argc, char* argv[]) {
         
         images.emplace_back();
         if (mimeTypeFromPath(path).empty()) {
-            std::cerr << "Formato de imagen no soportado: " << path << '\n';
+            std::cerr << "Unsupported image format: " << path << '\n';
             return 1;
         }
 
         if (!loadImage(path, images[j])) {
-            std::cerr << "No se pudo leer la imagen: " << path << '\n';
+            std::cerr << "Failed to read image: " << path << '\n';
             return 1;
         }
 
