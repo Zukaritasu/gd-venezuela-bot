@@ -77,7 +77,27 @@ bool readFileBinary(const std::string& path, std::string& out) {
     out.resize(static_cast<std::size_t>(size));
     file.read(out.data(), size);
 
-    return file.gcount() == size;
+    const bool isReadComplete = file.gcount() == size;
+
+    // png
+    if (out.size() >= 8 && static_cast<unsigned char>(out[0]) == 0x89 &&
+        static_cast<unsigned char>(out[1]) == 0x50 && static_cast<unsigned char>(out[2]) == 0x4E &&
+        static_cast<unsigned char>(out[3]) == 0x47 && static_cast<unsigned char>(out[4]) == 0x0D &&
+        static_cast<unsigned char>(out[5]) == 0x0A && static_cast<unsigned char>(out[6]) == 0x1A &&
+        static_cast<unsigned char>(out[7]) == 0x0A)
+    {
+        return isReadComplete;
+    }
+
+    // jpg
+    if (out.size() >= 3 && static_cast<unsigned char>(out[0]) == 0xFF &&
+        static_cast<unsigned char>(out[1]) == 0xD8 &&
+        static_cast<unsigned char>(out[2]) == 0xFF)
+    {
+        return isReadComplete;
+    }
+
+    return false;
 }
 
 bool loadImage(const std::string& path, ImagePayload& out) {
