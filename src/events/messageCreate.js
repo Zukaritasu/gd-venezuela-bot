@@ -39,6 +39,12 @@ const usersWhitelist = [
 ];
 
 /**
+ * @type {Map<string, string[]>} - A map to track users and their recent messages.
+ * The key is the user ID, and the value is an array of message IDs.
+ */
+const users = new Map();
+
+/**
  * Gets the parameters of a command.
  * 
  * @param {string} content 
@@ -59,9 +65,10 @@ function getCommandParameters(content) {
 /**
  * Checks if the replied message contains an embed submit pack.
  * 
- * @param {Client} client 
- * @param {Message} message 
- * @returns {Promise<boolean}
+ * @param {Client} client - The Discord client instance.
+ * @param {Message} message - The message that is replying to another message.
+ * 
+ * @returns {Promise<boolean>}
  */
 async function repliedMessageContainsEmbedSubmitPack(client, message) {
     if (!message.reference || !message.reference?.messageId)
@@ -108,16 +115,43 @@ module.exports = {
                     return
                 }
 
-                if (await ban.banUserIfNoRoles(message.guild, message.author.id)) {
+                const authorId = message.author.id;
+
+                if (await ban.banUserIfNoRoles(message.guild, authorId)) {
                     return;
                 }
 
-                if (attachment.hasSuspiciousRange(message.attachments.size)) {
+                if (users.has(authorId)) {
+                    users.get(authorId).push(message.id)
+                }
+
+                if (attachment.hasSuspiciousRange(message.attachments.size) && !users.has(authorId)) {
+                    // If the user has a suspicious number of attachments and is not already being processed,
+                    // add them to the users map
+                    users.set(authorId, [message.id]);
+
                     attachment.processAttachment(message)
+                        .then(async isMalicious => {
+                            if (isMalicious) {
+                                for (const msgId of users.get(authorId)) {
+                                    await message.channel.messages.fetch(msgId)
+                                        .then(async msg => {
+                                            if (msg) {
+                                                await msg.delete().catch(err => logger.ERR(err))
+                                            }
+                                        })
+                                        .catch(err => logger.ERR(err))
+                                }
+                            }
+                        })
+                        .catch(() => false)
+                        .finally(() => {
+                            users.delete(authorId)
+                        })
                 }
 
                 activity.log(database, message.guild, message.content, message.attachments.size > 0,
-                    message.author.id, message.author.username);
+                    authorId, message.author.username);
 
                 if (message.channel.id === channels.CREACIONES && !message.channel.isThread()) {
                     return await creators.processMessage(message);
