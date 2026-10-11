@@ -15,7 +15,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-const { Message } = require("discord.js");
+const { Message, EmbedBuilder } = require("discord.js");
 const logger = require('../logger')
 const crypto = require('crypto');
 const { spawn } = require('child_process');
@@ -23,6 +23,7 @@ const path = require('node:path');
 const fs = require('fs');
 const { pipeline } = require('stream/promises');
 const { GEMINI_API_KEY } = require('../../.botconfig/token.json');
+const channels = require('../../.botconfig/channels.json');
 
 const SUSPICIOUS_RANGE_ATTACHMENTS = { min: 2, max: 4 }
 const MAX_FILE_SIZE = 2 * 1024 * 1024 // 2MB
@@ -63,8 +64,28 @@ async function executeModeration(message, userId) {
 
 	try {
 		const member = await message.guild.members.fetch(userId)
-		// 1 day
 		await member.timeout(24 * 60 * 60 * 1000, 'Malicious attachments')
+
+		try {
+			let channelMod = message.guild.channels.cache.get(channels.MODERATION) 
+    			?? await message.guild.channels.fetch(channels.MODERATION).catch(() => null);
+
+			await channelMod?.send({
+				embeds: [
+					new EmbedBuilder()
+						.setColor(0x2b2d31)
+						.setTitle(member.user.tag)
+						.setThumbnail(member.user.displayAvatarURL({ size: 128, extension: 'png' }))
+						.setDescription('El usuario ha sido **aislado** durante 1 día por enviar imágenes maliciosas')
+						.addFields([
+							{ name: 'User ID', value: userId }
+						])
+				]
+			})
+		} catch {
+
+		}
+
 		return true
 	} catch (error) {
 		logger.ERR(error)
