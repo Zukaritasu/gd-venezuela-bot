@@ -27,26 +27,6 @@ const { GEMINI_API_KEY } = require('../../.botconfig/token.json');
 const SUSPICIOUS_RANGE_ATTACHMENTS = { min: 2, max: 4 }
 const MAX_FILE_SIZE = 2 * 1024 * 1024 // 2MB
 
-class Mutex {
-	constructor() {
-		this.tail = Promise.resolve();
-	}
-
-	async acquire() {
-		let release;
-		const nextTail = new Promise((resolve) => {
-			release = resolve;
-		});
-		const currentTail = this.tail;
-		this.tail = nextTail;
-
-		await currentTail;
-		return release;
-	}
-}
-
-const mutex = new Mutex();
-
 /**
  * Checks if the number of attachments is within the suspicious range
  * 
@@ -91,15 +71,13 @@ async function executeModeration(_message, userId) {
  * @returns {Promise<string>} - The SHA256 hash of the file in hexadecimal format
  */
 async function getSHA256(filePath) {
-    const hash = crypto.createHash('sha256');
+	const hash = crypto.createHash('sha256')
+	const readStream = fs.createReadStream(filePath, { highWaterMark: 64 * 1024 })
 
-    const readStream = fs.createReadStream(filePath, { 
-        highWaterMark: 64 * 1024 
-    });
+	for await (const chunk of readStream)
+		hash.update(chunk)
 
-    await pipeline(readStream, hash);
-
-    return hash.digest('hex');
+	return hash.digest('hex')
 }
 
 /**
@@ -114,17 +92,19 @@ async function getSHA256(filePath) {
  * information or null if the download failed
  */
 async function downloadAttachment(attachment, directory) {
-	const release = await mutex.acquire();
+	let filePath = null
 
 	try {
 		const randomName = crypto.randomBytes(16).toString('hex') + '.' + attachment.extension
-		const filePath = path.join(directory, randomName)
+		filePath = path.join(directory, randomName)
 
-		const response = await fetch(attachment.url)
+		const response = await fetch(attachment.url, {
+			signal: AbortSignal.timeout(15_000)
+		})
 
-		if (!response.ok) 
+		if (!response.ok)
 			throw new Error(`Failed to fetch attachment: ${response.status} ${response.statusText}`)
-		if (!response.body) 
+		if (!response.body)
 			throw new Error('Attachment response has no body')
 
 		// Use pipeline to stream the response body to a file
@@ -132,24 +112,25 @@ async function downloadAttachment(attachment, directory) {
 		await pipeline(response.body, fs.createWriteStream(filePath))
 
 		const fileHash = await getSHA256(filePath)
-		const maliciusFilePath = path.join(directory, `${fileHash}.malicious`)
+		const maliciousFilePath = path.join(directory, `${fileHash}.malicious`)
 
-		if (fs.existsSync(maliciusFilePath)) {
+		if (fs.existsSync(maliciousFilePath)) {
 			// If the file is already marked as malicious, return its info
 			return { file: filePath, hash: fileHash, malicious: true }
 		}
 
-		const sha256FilePath = path.join(process.env.DIRECTORY_ATTACHMENTS, `${fileHash}.sha256`)
-		if (!fs.existsSync(sha256FilePath)) {
-			await fs.promises.writeFile(sha256FilePath, fileHash)
-		}
+		const sha256FilePath = path.join(directory, `${fileHash}.sha256`)
+		await fs.promises.writeFile(sha256FilePath, fileHash, { flag: 'wx' })
+			.catch(err => {
+				if (err.code !== 'EEXIST') logger.ERR(err)
+			})
 
 		return { file: filePath, hash: fileHash, malicious: false }
 	} catch (error) {
 		logger.ERR(error)
-		await fs.promises.unlink(filePath).catch(() => {})
-	} finally {
-		release()
+		if (filePath && fs.existsSync(filePath)) {
+			await fs.promises.unlink(filePath).catch(() => { })
+		}
 	}
 
 	return null
@@ -167,13 +148,24 @@ async function hasMaliciousDownloadedFiles(filePaths) {
 	return new Promise((resolve, _reject) => {
 		const childProcess = spawn(`${process.env.DIRECTORY_ATTACHMENTS}/gscan`, filePaths);
 
+		childProcess.stdin.on('error', () => {})
 		childProcess.stdin.write(`${GEMINI_API_KEY}\n`);
 		childProcess.stdin.end();
+
+		const timeout = setTimeout(() => {
+			childProcess.kill('SIGTERM');
+			setTimeout(() => childProcess.kill('SIGKILL'), 5000).unref();
+			resolve(new Error('gscan command timed out'));
+		}, 30000);
+
+		childProcess.on('exit', () => {
+			clearTimeout(timeout);
+		});
 
 		let stdout = '';
 
 		childProcess.stdout.on('data', (data) => {
-			stdout += data.toString();
+			if (stdout.length < 4096) stdout += data.toString()
 		});
 
 		childProcess.on('close', (code) => {
@@ -188,6 +180,7 @@ async function hasMaliciousDownloadedFiles(filePaths) {
 		});
 
 		childProcess.on('error', (error) => {
+			clearTimeout(timeout);
 			resolve(new Error(`Error executing gscan: ${error.message}`));
 		});
 	})
@@ -208,7 +201,7 @@ async function processAttachment(message) {
 	if (!process.env.DIRECTORY_ATTACHMENTS)
 		return false
 
-	let filePaths = null
+	let filePaths = []
 
 	try {
 		// Parse attachments and filter for valid image files
@@ -218,21 +211,27 @@ async function processAttachment(message) {
 				att.size < MAX_FILE_SIZE) {
 				return {
 					url: att.url,
-					extension: att.name.split('.').pop().toLowerCase()
+					extension: att.name.split('.').pop().toLowerCase().replace(/[^a-z0-9]/g, '')
 				}
 			}
 
 			return null
 		}).filter(Boolean)
 
-		// Check if the number of attachments matches the message's attachment size
-		if (attachments.length !== message.attachments.size)
+		if (!hasSuspiciousRange(attachments.length))
 			return false
 
 		filePaths = await Promise.all(attachments.map(att =>
 			downloadAttachment(att, process.env.DIRECTORY_ATTACHMENTS)))
-		if (filePaths.some(fp => fp === null)) {
-			return false
+
+		for (const fp of filePaths) {
+			if (!fp) {
+				// If any attachment failed to download, return false
+				return false
+			} else if (fp.malicious) {
+				// If any attachment is already marked as malicious, execute moderation
+				return await executeModeration(message, userId)
+			}
 		}
 
 		const malicious = await hasMaliciousDownloadedFiles(filePaths.map(fp => fp.file))
@@ -241,23 +240,24 @@ async function processAttachment(message) {
 			// Log the error and return false
 			logger.ERR(malicious)
 		} else if (malicious) {
-			filePaths.forEach(fp => {
+			for (const fp of filePaths) {
 				const maliciousFilePath = path.join(process.env.DIRECTORY_ATTACHMENTS, `${fp.hash}.malicious`)
-				fs.promises.writeFile(maliciousFilePath, fp.hash).catch(() => { })
-			})
+				await fs.promises.writeFile(maliciousFilePath, fp.hash, { flag: 'wx' }).catch(
+					err => {
+						if (err.code !== 'EEXIST') logger.ERR(err)
+					})
+			}
 
 			return await executeModeration(message, userId)
 		}
 	} catch (error) {
 		logger.ERR(error)
 	} finally {
-		if (filePaths) {
-			await Promise.all(filePaths.map(fp => {
-				if (fp && fp.file) {
-					return fs.promises.unlink(fp.file).catch(() => { })
-				}
-			}))
-		}
+		await Promise.all(filePaths.map(fp => {
+			if (fp && fp.file) {
+				return fs.promises.unlink(fp.file).catch(() => { })
+			}
+		}))
 	}
 
 	return false
