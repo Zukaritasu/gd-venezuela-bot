@@ -39,7 +39,7 @@ const usersWhitelist = [
 ];
 
 /**
- * @type {Map<string, string[]>} - A map to track users and their recent messages.
+ * @type {Map<string, {id: string, channelId: string}[]>} - A map to track users and their recent messages.
  * The key is the user ID, and the value is an array of message IDs.
  */
 const users = new Map();
@@ -122,25 +122,28 @@ module.exports = {
                 }
 
                 if (users.has(authorId)) {
-                    users.get(authorId).push(message.id)
+                    users.get(authorId).push({ id: message.id, channelId: message.channel.id })
                 }
 
                 if (attachment.hasSuspiciousRange(message.attachments.size) && !users.has(authorId)) {
                     // If the user has a suspicious number of attachments and is not already being processed,
                     // add them to the users map
-                    users.set(authorId, [message.id]);
+                    users.set(authorId, [{ id: message.id, channelId: message.channel.id }]);
 
                     attachment.processAttachment(message)
                         .then(async isMalicious => {
                             if (isMalicious) {
-                                for (const msgId of users.get(authorId)) {
-                                    await message.channel.messages.fetch(msgId)
+                                for (const msg of users.get(authorId)) {
+                                    const channel = await client.channels.fetch(msg.channelId).catch(() => null);
+                                    if (channel && channel.isTextBased()) {
+                                        await channel.messages.fetch(msg.id)
                                         .then(async msg => {
                                             if (msg) {
                                                 await msg.delete().catch(err => logger.ERR(err))
                                             }
                                         })
                                         .catch(err => logger.ERR(err))
+                                    }
                                 }
                             }
                         })
