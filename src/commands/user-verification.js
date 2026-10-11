@@ -135,7 +135,7 @@ async function execute(client, db, interaction) {
             },
             {
                 name: 'Joined Discord',
-                value: utils.formatDateTime(interaction.user.createdAt),
+                value: `<t:${Math.floor(interaction.user.createdTimestamp / 1000)}:F>`,
                 inline: true
             }
         )
