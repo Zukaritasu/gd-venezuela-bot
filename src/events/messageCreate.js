@@ -133,7 +133,7 @@ module.exports = {
                     attachment.processAttachment(message)
                         .then(async isMalicious => {
                             if (isMalicious) {
-                                for (const msg of users.get(authorId)) {
+                                for (const msg of [...users.get(authorId)]) {
                                     const channel = await client.channels.fetch(msg.channelId).catch(() => null);
                                     if (channel && channel.isTextBased()) {
                                         await channel.messages.fetch(msg.id)
