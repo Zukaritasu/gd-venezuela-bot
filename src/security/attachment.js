@@ -58,10 +58,17 @@ function hasSuspiciousRange(count) {
  * @returns {Promise<boolean>} - Returns true if moderation actions were
  * executed successfully, false otherwise
  */
-async function executeModeration(_message, userId) {
-	logger.DBG(`Executing moderation for user ${userId} due to malicious attachments.`)
-	// test
-	return false;
+async function executeModeration(message, userId) {
+	logger.DBG(`Executing moderation for user ${userId} due to malicious attachments`)
+
+	try {
+		const member = await message.guild.members.fetch(userId)
+		// 1 day
+		await member.timeout(24 * 60 * 60 * 1000, 'Malicious attachments')
+		return true
+	} catch (_error) {
+		return false
+	}
 }
 
 /**
