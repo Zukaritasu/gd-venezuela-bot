@@ -25,21 +25,24 @@
 
 int main(int argc, char* argv[]) {
     // arg[0] = gscan
-    // arg[1] = api_key
-    // arg[2] = image1
-    // arg[3] = image2
-    // arg[4] = image3
-    // arg[5] = image4
+    // arg[1] = image1
+    // arg[2] = image2
+    // arg[3] = image3
+    // arg[4] = image4
 
-    if (argc < 3 || argc > 6) {
-        std::cerr << "Usage: gscan <api_key> <image1>... <image4>\nv1.4.1\n";
+    if (argc < 2 || argc > 5) {
+        std::cerr << "Usage: gscan <api_key> <image1>... <image4>\nv1.4.2\n";
         return 1;
     }
 
-    const std::string apiKey = argv[1];
+    std::string apiKey;
+    if (!std::getline(std::cin, apiKey) || apiKey.empty()) {
+        std::cerr << "API key not provided.\n";
+        return 1;
+    }
 
     std::vector<ImagePayload> images;
-    for (int i = 2, j = 0; i < argc; ++i) {
+    for (int i = 1, j = 0; i < argc; ++i) {
         const std::string path = argv[i];
         
         images.emplace_back();
