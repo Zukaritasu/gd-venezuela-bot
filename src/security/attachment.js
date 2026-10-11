@@ -168,6 +168,10 @@ async function hasMaliciousDownloadedFiles(filePaths) {
 			if (stdout.length < 4096) stdout += data.toString()
 		});
 
+		childProcess.stderr.on('data', (data) => {
+			logger.ERR(data.toString());
+		});
+
 		childProcess.on('close', (code) => {
 			if (code !== 0) {
 				resolve(new Error(`gscan exited with code ${code}`));
