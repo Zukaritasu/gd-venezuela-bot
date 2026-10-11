@@ -59,7 +59,7 @@ function hasSuspiciousRange(count) {
  * executed successfully, false otherwise
  */
 async function executeModeration(_message, userId) {
-	logger.INF(`Executing moderation for user ${userId} due to malicious attachments.`)
+	logger.DBG(`Executing moderation for user ${userId} due to malicious attachments.`)
 	// test
 	return false;
 }
