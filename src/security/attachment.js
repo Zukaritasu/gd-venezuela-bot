@@ -66,7 +66,8 @@ async function executeModeration(message, userId) {
 		// 1 day
 		await member.timeout(24 * 60 * 60 * 1000, 'Malicious attachments')
 		return true
-	} catch (_error) {
+	} catch (error) {
+		logger.ERR(error)
 		return false
 	}
 }
@@ -188,7 +189,7 @@ async function hasMaliciousDownloadedFiles(filePaths) {
 				resolve(new Error(`Unexpected output from gscan: '${stdout}'`));
 			} else {
 				const maliciousCount = parseInt(stdout, 10);
-				resolve(maliciousCount > 70 && maliciousCount <= 100);
+				resolve(maliciousCount >= 70 && maliciousCount <= 100);
 			}
 		});
 
