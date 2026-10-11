@@ -173,10 +173,12 @@ async function hasMaliciousDownloadedFiles(filePaths) {
 		});
 
 		childProcess.on('close', (code) => {
+			stdout = stdout.trim()
+
 			if (code !== 0) {
 				resolve(new Error(`gscan exited with code ${code}`));
 			} else if (!/^\d+$/.test(stdout)) {
-				resolve(new Error(`Unexpected output from gscan: ${stdout}`));
+				resolve(new Error(`Unexpected output from gscan: '${stdout}'`));
 			} else {
 				const maliciousCount = parseInt(stdout, 10);
 				resolve(maliciousCount > 70 && maliciousCount <= 100);
