@@ -209,8 +209,9 @@ async function hasMaliciousDownloadedFiles(filePaths) {
 			} else if (!/^\d+$/.test(stdout)) {
 				resolve(new Error(`Unexpected output from gscan: '${stdout}'`));
 			} else {
-				const maliciousCount = parseInt(stdout, 10);
-				resolve(maliciousCount >= 70 && maliciousCount <= 100);
+				const threshold  = parseInt(stdout, 10);
+				logger.DBG('Threshold: ' + threshold)
+				resolve(threshold >= 70 && threshold <= 100);
 			}
 		});
 
