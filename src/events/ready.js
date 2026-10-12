@@ -27,7 +27,8 @@ const services = [
 	'../services/service-youtube-notifications.js',
 	'../services/service-auto-backup.js',
 	'../services/service-main-server.js',
-	'../services/service-ws.js'
+	'../services/service-ws.js',
+	'../services/service-threads-creations.js'
 ]
 
 module.exports = {

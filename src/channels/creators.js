@@ -17,6 +17,31 @@
 
 const { Message, ThreadAutoArchiveDuration } = require("discord.js");
 const logger = require('../logger')
+const { COLL_THREADS_CREATIONS } = require('../../.botconfig/database-info.json')
+
+/**
+ * Records a creator's message in the creations collection.
+ *
+ * Stores the user ID, message ID, and the time the record was created. Any
+ * database errors are logged and suppressed.
+ *
+ * @param {string} userId - The ID of the user who created the message.
+ * @param {string} messageId - The ID of the message to record.
+ * @returns {Promise<void>} A promise that resolves after the insert attempt.
+ */
+async function logMessage(userId, messageId) {
+	try {
+		await global.database.collection(COLL_THREADS_CREATIONS).insertOne(
+			{
+				userId,
+				messageId,
+				createdAt: new Date()
+			}
+		)
+	} catch (error) {
+		logger.ERR(error)
+	}
+}
 
 /**
  * Handles a message sent in a creators channel.
@@ -58,6 +83,8 @@ async function processMessage(message) {
 
 		await message.react('👍')
 		await message.react('👎')
+
+		await logMessage(message.author.id, message.id)
 	} catch (error) {
 		logger.ERR(error)
 	}

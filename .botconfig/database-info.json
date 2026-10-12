@@ -19,6 +19,7 @@
 	"COLL_USER_KICKS": "user_kicks",
 	"COLL_USERS_ACTIVITY": "users_activity_v3",
 	"COLL_USERS_ACTIVITY_CONFIG": "users_activity_config",
+	"COLL_THREADS_CREATIONS": "threads_creations",
 	"doc_types": {
 		"SAU_TYPE_USERS_BLACKLIST": "usersBlacklist",
 		"SAU_TYPE_USER_EXCEPTION_LIST": "usersExceptionList",
