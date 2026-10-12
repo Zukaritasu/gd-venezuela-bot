@@ -185,7 +185,7 @@ async function hasMaliciousDownloadedFiles(filePaths) {
 			childProcess.kill('SIGTERM');
 			setTimeout(() => childProcess.kill('SIGKILL'), 5000).unref();
 			resolve(new Error('gscan command timed out'));
-		}, 30000);
+		}, 60000);
 
 		childProcess.on('exit', () => {
 			clearTimeout(timeout);
