@@ -35,8 +35,17 @@ constexpr const char* kUserAgent = "gscan/1.0";
 constexpr int kMaxAttempts = 3;
 
 constexpr const char* kPrompt =
-    "Analiza estas 4 imagenes. Responde SOLO con un numero entero de 1 a 100, "
-    "donde 1 = imagenes legitimas y 100 = con total certeza estafa de criptomonedas.";
+    "Analyze these images. Your sole objective is to detect the typical Discord scam where "
+    "compromised accounts send fake screenshots claiming to have won USDT through "
+    "a supposed Twitter/X code or external platform.\n\n"
+    "SCORING CRITERIA (1 to 100):\n"
+    "- 1 to 20: Completely legitimate images (normal conversations, personal photos, memes, game UI, "
+    "technical discussions, or legitimate cryptocurrency topics without fake reward incentives).\n"
+    "- 21 to 70: Ambiguous content, general cryptocurrency mentions, or chat screenshots mentioning money "
+    "but lacking the classic gift/reward via code pattern.\n"
+    "- 71 to 100: Confirmed scam (Discord screenshots showing high USDT balances, "
+    "instructions to redeem codes on Twitter/X, or suspicious guaranteed gain links).\n\n"
+    "Respond ONLY with an integer from 1 to 100, without any additional text.";
 
 std::size_t writeCallback(char* data, std::size_t size, std::size_t count, void* userdata) {
     static_cast<std::string*>(userdata)->append(data, size * count);

@@ -211,7 +211,7 @@ async function hasMaliciousDownloadedFiles(filePaths) {
 			} else {
 				const threshold  = parseInt(stdout, 10);
 				logger.DBG('Threshold: ' + threshold)
-				resolve(threshold >= 70 && threshold <= 100);
+				resolve(threshold > 70 && threshold <= 100);
 			}
 		});
 

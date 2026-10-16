@@ -31,7 +31,7 @@ int main(int argc, char* argv[]) {
     // arg[4] = image4
 
     if (argc < 2 || argc > 5) {
-        std::cerr << "Usage: gscan <api_key> <image1>... <image4>\nv1.4.2\n";
+        std::cerr << "Usage: gscan <api_key> <image1>... <image4>\nv1.5.0\n";
         return 1;
     }
 
