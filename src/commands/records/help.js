@@ -48,11 +48,11 @@ async function execute(_client, _database, interaction) {
                 .setFields(
                     {
                         name: '¿Puedo enviar los records de otro usuario?',
-                        value: 'Está prohibido enviar los records de otro usuario en su nombre; solo los usuarios con el rol de <@&1121221914254397592>, superior o autorizados pueden hacerlo.'
+                        value: 'Está prohibido enviar los records de otro usuario en su nombre; solo los usuarios con el rol de <@&1119804806521946155>, superior o autorizados pueden hacerlo.'
                     },
                     {
                         name: '¿Es posible crear perfiles para otros usuarios?',
-                        value: 'Está prohibido crear perfiles a otros usuarios; solo los propios usuarios pueden crearlos. Los usuarios con los roles <@&1121221914254397592>, superior o autorizados pueden crear perfiles ajenos.'
+                        value: 'Está prohibido crear perfiles a otros usuarios; solo los propios usuarios pueden crearlos. Los usuarios con los roles <@&1119804806521946155>, superior o autorizados pueden crear perfiles ajenos.'
                     },
                     {
                         name: '¿Existe otro método para enviar los registros?',

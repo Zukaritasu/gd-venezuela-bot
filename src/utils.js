@@ -169,8 +169,7 @@ function hasUserPermissions(member) {
     const superUserId = '591640548490870805'; // ID of the superuser (bot developer)
     const roles = [
         '1119804656923709512', // Dictador
-        '1119804806521946155', // Tribunal supremo
-        '1121221914254397592'  // Ministerio
+        '1119804806521946155' // Tribunal supremo
     ];
 
     if (member.id === superUserId || member.id === member.guild.ownerId)
