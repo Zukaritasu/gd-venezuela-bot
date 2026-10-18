@@ -40,7 +40,7 @@ async function guildMemberRemove(member) {
 		const logChannel = global.guild.channels.cache.get(channels.LOG) ??
 			await global.guild.channels.fetch(channels.LOG)
 
-		logChannel?.send(`The user ${member.user.tag}#${member.user.id} has left the server`)
+		await logChannel?.send(`The user ${member.user.tag}#${member.user.id} has left the server`)
 	} catch (error) {
 		logger.ERR(error)
 	}
@@ -78,7 +78,7 @@ async function messageDelete(message) {
 			fields.push({ name: 'Attachments', value: message.attachments.size.toString(), inline: true })
 		}
 
-		logChannel.send({
+		await logChannel.send({
 			embeds: [
 				new EmbedBuilder()
 					.setTitle('Message Deleted')
