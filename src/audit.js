@@ -69,12 +69,12 @@ async function messageDelete(message) {
 		if (!logChannel) return
 
 		const fields = [
-			{ name: 'User', value: `${message.author.tag} - ${message.author.id}` },
-			{ name: 'Channel', value: `<#${message.channelId}>` }
+			{ name: 'User', value: `${message.author.tag} - ${message.author.id}`, inline: true },
+			{ name: 'Channel', value: `<#${message.channelId}>`, inline: true }
 		]
 
 		if (message.attachments.size > 0) {
-			fields.push({ name: 'Attachments', value: message.attachments.size.toString() })
+			fields.push({ name: 'Attachments', value: message.attachments.size.toString(), inline: true })
 		}
 
 		logChannel.send({
