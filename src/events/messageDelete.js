@@ -16,10 +16,13 @@
  */
 
 const { Events, Client, ChatInputCommandInteraction, Message,
-	GuildMember, AttachmentBuilder, ChannelType } = require('discord.js');
+	GuildMember, AttachmentBuilder, ChannelType,
+	TextChannel,
+	EmbedBuilder } = require('discord.js');
 const { Db } = require('mongodb');
 const logger = require('../logger');
 const channels = require('../../.botconfig/channels.json')
+const audit = require('../audit')
 
 module.exports = {
 	name: Events.MessageDelete,
@@ -36,6 +39,8 @@ module.exports = {
 				return; */
 
 			//logger.DBG(`Message deleted in [${message.channel.name}] by ${message.author.tag}: ${message.content}`);
+
+			await audit.messageDelete(message)
 
 			if (message.channelId === channels.CREACIONES && message.hasThread) {
 				const thread = message.thread ?? await message.channel.threads.fetch(message.id);

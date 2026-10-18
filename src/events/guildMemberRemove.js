@@ -17,6 +17,7 @@
 
 const { Events, Client, GuildMember } = require('discord.js');
 const logger = require('../logger')
+const audit = require('../audit')
 
 module.exports = {
 	name: Events.GuildMemberRemove,
@@ -30,6 +31,7 @@ module.exports = {
 		try {
 			if (member.guild.id !== process.env.SERVER_GD_VENEZUELA_ID) 
 				return;
+			await audit.guildMemberRemove(member)
 			await require('../commands/leveling/activity').removeMember(database, member)
 		} catch (e) {
 			logger.ERR(e)
