@@ -17,6 +17,7 @@
 
 const { Message, TextChannel, EmbedBuilder, GuildMember } = require("discord.js");
 const channels = require('../.botconfig/channels.json')
+const logger = require('./logger')
 
 const channelsToIgnore = [
 	channels.GDBOT, channels.BOT_MODERATION
@@ -40,8 +41,8 @@ async function guildMemberRemove(member) {
 			await global.guild.channels.fetch(channels.LOG)
 
 		logChannel?.send(`The user ${member.user.tag}#${member.user.id} has left the server`)
-	} catch {
-
+	} catch (error) {
+		logger.ERR(error)
 	}
 }
 
@@ -85,8 +86,8 @@ async function messageDelete(message) {
 					.addFields(fields)
 			]
 		})
-	} catch {
-
+	} catch (error) {
+		logger.ERR(error)
 	}
 }
 
