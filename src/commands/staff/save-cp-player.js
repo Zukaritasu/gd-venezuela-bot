@@ -31,24 +31,17 @@ const ERROR_TIMEOUT_MESSAGE = 'Collector received no interactions before ending 
 /**
  * 
  * @param {ChatInputCommandInteraction} interaction 
- * @param {string} response 
+ * @param {Map<string, string>} userInfo 
  * @returns 
  */
-async function confirmUser(interaction, response) {
-    const map = new Map();
-
-    /* the response is converted into a map so that the information can be processed */
-    const pairs = response.split(':');
-    for (let i = 0; i < pairs.length; i += 2) 
-        map.set(pairs[i], pairs[i + 1]);
-
-    if (map.get('8') === '0') {
+async function confirmUser(interaction, userInfo) {
+    if (userInfo.get('creatorpoints') === '0') {
         return await interaction.editReply(':warning: The user has no creator points');
     }
 
-    const message = `A user with the username ${map.get('1')} has been found. `
+    const message = `A user with the username ${userInfo.get('userName')} has been found. `
         .concat('Confirm if your statistics match the user you are looking for.\n\n')
-        .concat(`stars ${map.get('3')}, demons ${map.get('4')}, creator points ${map.get('8')}`)
+        .concat(`stars ${userInfo.get('stars')}, demons ${userInfo.get('demons')}, creator points ${userInfo.get('creatorpoints')}`)
 
     let userResponse = await interaction.editReply({
         content: message,
@@ -179,7 +172,7 @@ async function processAccountCreatorPoint(interaction, database) {
         const member = interaction.guild.members.cache.find(member => member.user.id === user.id)
         if (await verifyPlayerStatus(interaction, member)) {
             const userResponse = await confirmUser(interaction, response)
-            if (userResponse != null) {
+            if (userResponse) {
                 await saveUserAccount(database, userResponse, member)
             }
         }
