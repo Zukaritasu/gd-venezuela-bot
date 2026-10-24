@@ -21,33 +21,12 @@ const { ChatInputCommandInteraction, ActionRowBuilder,
     MessageFlags} = require('discord.js');
 const utils = require('../../utils');
 const { Db } = require('mongodb');
-const axios = require('axios');
 const { GuildMember } = require('discord.js');
 const { COLL_CREATOR_POINT_PLAYERS } = require('../../../.botconfig/database-info.json')
 const logger = require('../../logger');
+const robtopapi = require('../../apis/robtopapi')
 
-///////////////////////////////////
-
-const ROLE_CREATOR_POINT_ID = '1216234978673819798'
 const ERROR_TIMEOUT_MESSAGE = 'Collector received no interactions before ending with reason: time'
-
-/**
- * 
- * @param {string} playerName 
- */
-async function getGJUsers20(playerName) {
-    const data = new URLSearchParams({
-        "secret": "Wmfd2893gb7",
-        "str": playerName
-    });
-
-    return axios.post('http://www.boomlings.com/database/getGJUsers20.php', data, {
-        headers: {
-            'User-Agent': '',
-            'Content-Type': 'application/x-www-form-urlencoded'
-        }
-    })
-}
 
 /**
  * 
@@ -132,7 +111,7 @@ async function verifyPlayerStatus(interaction, member) {
     if (member === undefined) {
         await interaction.editReply('The user is not available on the Discord server');
         return false
-    } else if (member.roles.cache.find(role => role.id === ROLE_CREATOR_POINT_ID) === undefined) {
+    } else if (member.roles.cache.find(role => role.id === process.env.ID_ROL_CREATOR_POINT) === undefined) {
         await interaction.editReply('The user has not been assigned the role of creator points');
         return false
     }
@@ -192,8 +171,8 @@ async function saveUserAccount(database, userResponse, member) {
  * @param {Db} database 
  */
 async function processAccountCreatorPoint(interaction, database) {
-    const response = `${(await getGJUsers20(interaction.options.getString('player', false))).data}`
-    if (response === '-1') {
+    const response = await robtopapi.getGJUsers20(interaction.options.getString('player', false))
+    if (!response) {
         await interaction.editReply('User not found');
     } else {
         const user = interaction.options.getUser('user', false);
