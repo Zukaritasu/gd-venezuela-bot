@@ -68,7 +68,7 @@ async function confirmUser(interaction, userInfo) {
         if (confirmation.customId === 'accept') {
             return {
                 confirmation: confirmation,
-                accountID: map.get('16')
+                accountID: userInfo.get('accountID')
             }
         } else {
             await interaction.deleteReply(userResponse)
