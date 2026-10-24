@@ -163,9 +163,10 @@ function getUserFlagState(member) {
  * Checks if a user has the necessary permissions to perform an action.
  * 
  * @param {GuildMember} member - The member to check.
+ * @param {boolean} [orMinistry] 
  * @returns {boolean} True if the user has the necessary permissions, false otherwise.
  */
-function hasUserPermissions(member) {
+function hasUserPermissions(member, orMinistry = false) {
     const superUserId = '591640548490870805'; // ID of the superuser (bot developer)
     const roles = [
         '1119804656923709512', // Dictador
@@ -174,7 +175,12 @@ function hasUserPermissions(member) {
 
     if (member.id === superUserId || member.id === member.guild.ownerId)
         return true;
-    return roles.some(role => member.roles.cache.has(role));
+
+    if (roles.some(role => member.roles.cache.has(role))) true
+    if (orMinistry && process.env.ID_ROL_MINISTERIO)
+        return member.roles.cache.has(process.env.ID_ROL_MINISTERIO)
+
+    return false
 }
 
 

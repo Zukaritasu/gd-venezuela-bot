@@ -185,11 +185,11 @@ module.exports = {
 
                 else if (isCommand(message, '--aceptar') && (message.channel.id === channels.SUBMITS || message.channel.id === channels.PL_SUBMITS)) {
                     const submitPack = await repliedMessageContainsEmbedSubmitPack(client, message)
-                    if (utils.hasUserPermissions(message.member) || usersWhitelist.includes(message.member.id))
+                    if (utils.hasUserPermissions(message.member, true) || usersWhitelist.includes(message.member.id))
                         await require(submitPack ? '../commands/packs/pack' : '../commands/records/record').accept(message)
                 } else if (isCommand(message, '--rechazar') && (message.channel.id === channels.SUBMITS || message.channel.id === channels.PL_SUBMITS)) {
                     const submitPack = await repliedMessageContainsEmbedSubmitPack(client, message)
-                    if (utils.hasUserPermissions(message.member) || usersWhitelist.includes(message.member.id))
+                    if (utils.hasUserPermissions(message.member, true) || usersWhitelist.includes(message.member.id))
                         await require(submitPack ? '../commands/packs/pack' : '../commands/records/record').decline(message)
                 }
 
@@ -217,13 +217,13 @@ module.exports = {
                 }
 
                 else if (isCommand(message, '--denegar') && message.channel.id === /*'1119807234076049428'*/ channels.MODERATION) {
-                    if (utils.hasUserPermissions(message.member))
+                    if (utils.hasUserPermissions(message.member, true))
                         await require('../commands/user-verification').denyUser(client, database, message, getCommandParameters(message.content))
                 } else if (isCommand(message, '--aprobar') && message.channel.id === /*'1119807234076049428'*/ channels.MODERATION) {
-                    if (utils.hasUserPermissions(message.member))
+                    if (utils.hasUserPermissions(message.member, true))
                         await require('../commands/user-verification').approveUser(client, database, message, getCommandParameters(message.content))
                 } else if (isCommand(message, '--dm') && [channels.MODERATION, channels.BOT_TESTING].find(channel => channel === message.channel.id)) {
-                    if (utils.hasUserPermissions(message.member))
+                    if (utils.hasUserPermissions(message.member, true))
                         await require('../commands/user-verification').sendDM(client, message, message.content)
                 } else if (isCommand(message, '--save-hash')) {
                     if (utils.hasUserPermissions(message.member))
