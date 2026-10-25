@@ -40,7 +40,27 @@ async function guildMemberRemove(member) {
 		const logChannel = global.guild.channels.cache.get(channels.LOG) ??
 			await global.guild.channels.fetch(channels.LOG)
 
-		await logChannel?.send(`The user ${member.user.tag}#${member.user.id} has left the server`)
+		const user = member.user
+		await logChannel?.send({
+			embeds: [
+				new EmbedBuilder()
+					.setTitle('Guild Member Remove')
+					.setDescription(`The user has left the server`)
+					.setThumbnail(user.displayAvatarURL({ size: 128, extension: 'png' }))
+					.addFields([
+						{
+							name: 'Username',
+							value: user.tag,
+							inline: true
+						},
+						{
+							name: 'User ID',
+							value: user.id,
+							inline: true
+						}
+					])
+			]
+		})
 	} catch (error) {
 		logger.ERR(error)
 	}
@@ -57,8 +77,9 @@ async function guildMemberRemove(member) {
  */
 async function messageDelete(message) {
 	try {
+		const author = message.author
 		if (channelsToIgnore.some(ch => ch === message.channelId)
-			|| message.author.id === process.env.BOT_ID
+			|| author.id === process.env.BOT_ID
 			|| message.guild.id !== process.env.SERVER_GD_VENEZUELA_ID) {
 			return
 		}
@@ -70,7 +91,7 @@ async function messageDelete(message) {
 		if (!logChannel) return
 
 		const fields = [
-			{ name: 'User', value: `${message.author.tag} - ${message.author.id}`, inline: true },
+			{ name: 'User', value: `${author.tag} - ${author.id}`, inline: true },
 			{ name: 'Channel', value: `<#${message.channelId}>`, inline: true }
 		]
 
@@ -83,6 +104,7 @@ async function messageDelete(message) {
 				new EmbedBuilder()
 					.setTitle('Message Deleted')
 					.setDescription(message.content.length == 0 ? '-# No content' : message.content)
+					.setThumbnail(author.displayAvatarURL({ size: 128, extension: 'png' }))
 					.addFields(fields)
 			]
 		})
