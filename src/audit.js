@@ -18,6 +18,7 @@
 const { Message, TextChannel, EmbedBuilder, GuildMember } = require("discord.js");
 const channels = require('../.botconfig/channels.json')
 const logger = require('./logger')
+const utils = require('./utils')
 
 const channelsToIgnore = [
 	channels.GDBOT, channels.BOT_MODERATION
@@ -50,7 +51,7 @@ async function guildMemberRemove(member) {
 					.addFields([
 						{
 							name: 'Username',
-							value: user.tag,
+							value:  utils.escapeDiscordSpecialChars(user.tag),
 							inline: true
 						},
 						{
@@ -91,7 +92,7 @@ async function messageDelete(message) {
 		if (!logChannel) return
 
 		const fields = [
-			{ name: 'User', value: `${author.tag} - ${author.id}`, inline: true },
+			{ name: 'User', value: `${utils.escapeDiscordSpecialChars(author.tag)} - ${author.id}`, inline: true },
 			{ name: 'Channel', value: `<#${message.channelId}>`, inline: true }
 		]
 
