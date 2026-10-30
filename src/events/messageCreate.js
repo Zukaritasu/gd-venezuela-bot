@@ -133,17 +133,24 @@ module.exports = {
                     attachment.processAttachment(message)
                         .then(async isMalicious => {
                             if (isMalicious) {
-                                for (const msg of [...users.get(authorId)]) {
-                                    const channel = await client.channels.fetch(msg.channelId).catch(() => null);
-                                    if (channel && channel.isTextBased()) {
-                                        await channel.messages.fetch(msg.id)
-                                        .then(async msg => {
-                                            if (msg) {
-                                                await msg.delete().catch(err => logger.ERR(err))
-                                            }
-                                        })
-                                        .catch(err => logger.ERR(err))
+                                let userMessages = users.get(authorId);
+                                while (userMessages && userMessages.length > 0) {
+                                    const batch = [...userMessages];
+                                    userMessages.length = 0;
+
+                                    for (const msg of batch) {
+                                        const channel = await client.channels.fetch(msg.channelId).catch(() => null);
+                                        if (channel && channel.isTextBased()) {
+                                            await channel.messages.fetch(msg.id)
+                                                .then(async fetchedMsg => {
+                                                    if (fetchedMsg) {
+                                                        await fetchedMsg.delete().catch(err => logger.ERR(err));
+                                                    }
+                                                })
+                                                .catch(err => logger.ERR(err));
+                                        }
                                     }
+                                    userMessages = users.get(authorId);
                                 }
                             }
                         })
