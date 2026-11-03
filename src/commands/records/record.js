@@ -437,7 +437,7 @@ async function handleProgress(message, isAccept) {
             if (!file) { // File doesn't exist, create it
                 const report = await createRecordFile(message, fileName, levelName, levelId, jsonInfo, userId);
                 await message.reply(`El archivo **${fileName}.json** correspondiente al nivel **${levelName}** no existe, por lo que se ha creado uno nuevo.`);
-                await printChanges(report.changes, message.guild, report.isPlatformer);
+                //await printChanges(report.changes, message.guild, report.isPlatformer);
             } else if (file.content.verifier === jsonInfo.user ||
                 file.content.records.some(oldRecord => oldRecord.user === jsonInfo.user && !('time' in jsonInfo) && oldRecord.percent >= jsonInfo.percent)) {
                 await botRecord.react('✅');
