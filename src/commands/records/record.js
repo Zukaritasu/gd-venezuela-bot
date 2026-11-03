@@ -209,7 +209,7 @@ async function createRecordFile(message, fileName, levelName, levelId, jsonInfo,
         if (insertIndex + 1 < levelLists.length)
             changes.levelNameDown =
                 currentLevels.find(lvl => `${lvl.level_id}` === levelLists[insertIndex + 1].id)?.name || null;
-        if (levelLists.length > 150)
+        if (levelLists.length > 150 && insertIndex >= 150)
             changes.levelLegacy =
                 currentLevels.find(lvl => `${lvl.level_id}` === levelLists[150].id)?.name || null;
         if (insertIndex < 75)
