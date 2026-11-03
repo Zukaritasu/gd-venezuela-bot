@@ -257,10 +257,10 @@ async function execute(_client, database, interaction) {
             }
         }
 
-        if (await isLegacyLevel(levelId, null, !!time)) {
-            await sendErrorDM(interaction, 'El nivel proporcionado es un nivel legacy y no se aceptan records de niveles legacy.');
+        /* if (await isLegacyLevel(levelId, null, !!time)) {
+            await interaction.editReply('El nivel proporcionado es un nivel legacy y no se aceptan records de niveles legacy.');
             return;
-        }
+        } */
 
         const ytvideo = await getVideoLink(interaction, interaction.options.getString('ytvideo'));
         if (!ytvideo) return;
@@ -380,10 +380,10 @@ async function processSubmitRecord(database, message, parts) {
             }
         }
 
-        if (await isLegacyLevel(level.levelId, level.position, level.isPlatformer)) {
+        /* if (await isLegacyLevel(level.levelId, level.position, level.isPlatformer)) {
             await sendErrorDM(message, 'El nivel proporcionado es un nivel legacy y no se aceptan records de niveles legacy.');
             return;
-        }
+        } */
 
         const player = await getPlayerName(message, parts[indexPart++]);
         if (!player) return;
