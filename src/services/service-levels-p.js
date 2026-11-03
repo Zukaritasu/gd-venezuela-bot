@@ -10,7 +10,7 @@ const channels = require('../../.botconfig/channels.json');
 /**
  * @typedef {Object} ListData
  * @property {string} sha - The SHA of the list file.
- * @property {string[]} content - The array of level names in the list.
+ * @property {{id: string, name: string}[]} content - The array of level objects in the list.
  */
 
 /**
@@ -71,7 +71,7 @@ function getLevelName(levelName) {
 
 /**
  * Fetches the GD Venezuela List from GitHub.
- * @returns {Promise<{sha: string, content: string[]} | null>} An object containing the SHA and content
+ * @returns {Promise<{sha: string, content: {id: string, name: string}[]} | null>} An object containing the SHA and content
  * of the list, or null if the request fails with a 502 status.
  * @throws {Error} If the request fails or the response is not successful.
  */
@@ -133,7 +133,7 @@ async function isListUpdatable(db) {
 /**
  * Saves the sorted list to GitHub.
  * @param {string} sha - The SHA of the current list file.
- * @param {string[]} sortedList - The sorted list of level names.
+ * @param {{id: string, name: string}[]} sortedList - The sorted list of level names.
  */
 async function saveSortedList(sha, sortedList) {
     await axios.put(`${process.env.URL_API_GITHUB}/public/data/_list-plat.json`, {
@@ -208,7 +208,7 @@ async function isSortedList(client, listLevels, sortedList) {
     }
 
     for (let i = 0; i < listLevels.content.length; i++) {
-        if (listLevels.content[i] !== sortedList[i].levelId) {
+        if (listLevels.content[i].id !== sortedList[i].levelId) {
             return false;
         }
     }
@@ -226,7 +226,7 @@ function getEventsFromLevelChange(change, normalizedLevels, oldNormalizedLevels)
     let levelIndex = normalizedLevels.findIndex(level => level.levelId === change.affected_level.levelId);
     const events = {
         levelName: change.affected_level.name,
-        from: oldNormalizedLevels.content.findIndex(levelId => levelId === change.affected_level.levelId) + 1,
+        from: oldNormalizedLevels.content.findIndex(level => level.id === change.affected_level.levelId) + 1,
         to: levelIndex + 1,
         above: normalizedLevels[levelIndex - 1] ? normalizedLevels[levelIndex - 1].originName : null,
         below: normalizedLevels[levelIndex + 1] ? normalizedLevels[levelIndex + 1].originName : null,
@@ -245,26 +245,26 @@ function getEventsFromLevelChange(change, normalizedLevels, oldNormalizedLevels)
     // The level that has changed range in the list due to the movement of
     // the affected level before the list normalization is extracted
     if (events.from > 75 && events.to <= 75 && events.from <= 150) {
-        events.pushed = normalizedLevels.find(level => oldNormalizedLevels.content[74] == level.levelId).originName;
+        events.pushed = normalizedLevels.find(level => oldNormalizedLevels.content[74].id === level.levelId).originName;
         events.pushedTarget = 'extended';
     } else if (events.from <= 75 && events.to > 75 && events.to <= 150) {
-        events.pushed = normalizedLevels.find(level => oldNormalizedLevels.content[75] == level.levelId).originName;
+        events.pushed = normalizedLevels.find(level => oldNormalizedLevels.content[75].id === level.levelId).originName;
         events.pushedTarget = 'main';
     } else if (events.from > 150 && events.to <= 150 && events.to > 75) {
-        events.pushed = normalizedLevels.find(level => oldNormalizedLevels.content[149] == level.levelId).originName;
+        events.pushed = normalizedLevels.find(level => oldNormalizedLevels.content[149].id === level.levelId).originName;
         events.pushedTarget = 'legacy';
     } else if (events.from <= 150 && events.from > 75 && events.to > 150) {
-        events.pushed = normalizedLevels.find(level => oldNormalizedLevels.content[150] == level.levelId).originName;
+        events.pushed = normalizedLevels.find(level => oldNormalizedLevels.content[150].id === level.levelId).originName;
         events.pushedTarget = 'extended';
     } else if (events.from > 150 && events.to <= 75) {
-        events.pushed = normalizedLevels.find(level => oldNormalizedLevels.content[74] == level.levelId).originName;
+        events.pushed = normalizedLevels.find(level => oldNormalizedLevels.content[74].id === level.levelId).originName;
         events.pushedTarget = 'extended';
-        events.pushed2 = normalizedLevels.find(level => oldNormalizedLevels.content[149] == level.levelId).originName;
+        events.pushed2 = normalizedLevels.find(level => oldNormalizedLevels.content[149].id === level.levelId).originName;
         events.pushed2Target = 'legacy';
     } else if (events.from <= 75 && events.to > 150) {
-        events.pushed = normalizedLevels.find(level => oldNormalizedLevels.content[75] == level.levelId).originName;
+        events.pushed = normalizedLevels.find(level => oldNormalizedLevels.content[75].id === level.levelId).originName;
         events.pushedTarget = 'main';
-        events.pushed2 = normalizedLevels.find(level => oldNormalizedLevels.content[150] == level.levelId).originName;
+        events.pushed2 = normalizedLevels.find(level => oldNormalizedLevels.content[150].id === level.levelId).originName;
         events.pushed2Target = 'extended';
     } else if (events.from > 150 && events.to > 150) {
         return null;
@@ -286,7 +286,7 @@ function filterChangelogLevels(changelog, doc, normalizedLevels, listData) {
     const filteredLevels = [];
     changelog.slice(0, index).reverse().forEach(entry => {
         const levelIndex = normalizedLevels.findIndex(level => level.originName === entry.affected_level.name);
-        if (levelIndex !== -1 && listData.content[levelIndex] !== normalizedLevels[levelIndex].levelId) {
+        if (levelIndex !== -1 && listData.content[levelIndex].id !== normalizedLevels[levelIndex].levelId) {
             entry.affected_level['levelId'] = normalizedLevels[levelIndex].levelId
             filteredLevels.push(entry);
         }
@@ -373,7 +373,7 @@ async function service(db, client) {
                 
                 const currentLevels = await aredlapi.getLevelsPlatformer();
                 /** @type {NormalizedLevel[]} */
-                let normalizedLevels = currentLevels.filter(level => listData.content.includes(level.level_id.toString()))
+                let normalizedLevels = currentLevels.filter(level => listData.content.findIndex(listLevel => listLevel.id === level.level_id.toString()) !== -1)
                     .map(level => {
                         return {
                             originName: level.name,
@@ -389,7 +389,7 @@ async function service(db, client) {
                 // corresponding channel
 
                 if (!await isSortedList(client, listData, normalizedLevels)) {
-                    await saveSortedList(listData.sha, normalizedLevels.map(level => level.levelId));
+                    await saveSortedList(listData.sha, normalizedLevels.map(level => ({ id: level.levelId, name: level.name })));
                     await printChangelog(db, client, normalizedLevels, listData);
                 }
             }
@@ -414,12 +414,11 @@ async function service(db, client) {
 module.exports = {
     start: service,
     sortStatusError: async () => {
-        try {
-            /** @type {ListData} */
+        /* try {
             const listData = await getListLevels();
             const currentLevels = await aredlapi.getLevelsPlatformer();
-            /** @type {NormalizedLevel[]} */
-            let normalizedLevels = currentLevels.filter(level => listData.content.includes(level.level_id.toString()))
+            
+            let normalizedLevels = currentLevels.filter(level => listData.content.findIndex(listLevel => listLevel.id === level.level_id.toString()) !== -1)
                 .map(level => {
                     return {
                         originName: level.name,
@@ -458,6 +457,6 @@ module.exports = {
         } catch (error) {
             logger.ERR(error);
             return false;
-        }
+        } */
     }
 }

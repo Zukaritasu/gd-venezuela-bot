@@ -178,14 +178,15 @@ async function createRecordFile(message, fileName, levelName, levelId, jsonInfo,
     if (!listRespose)
         throw new Error(`El archivo **${fileNameList}.json** no existe en el repositorio.`);
 
+    /**@type {{id: string, name: string}[]}} */
     const levelLists = listRespose.content;
     const currentLevels = isPlatformer ? levelsPlat : levels;
-    if (!levelLists.includes(fileName)) {
+    if (!levelLists.findIndex(lvl => `${lvl.id}` === levelId)) {
         let insertIndex = levelLists.length;
         const levelIndex = currentLevels.findIndex(lvl => `${lvl.level_id}` === levelId);
 
         for (let i = 0; i < levelLists.length; i++) {
-            const currentLevelId = currentLevels.find(lvl => `${lvl.level_id}` === levelLists[i])?.level_id.toString();
+            const currentLevelId = currentLevels.find(lvl => `${lvl.level_id}` === levelLists[i].id)?.level_id.toString();
             if (currentLevelId) {
                 const currentIndex = currentLevels.findIndex(lvl => `${lvl.level_id}` === currentLevelId);
                 if (levelIndex < currentIndex) {
@@ -195,23 +196,23 @@ async function createRecordFile(message, fileName, levelName, levelId, jsonInfo,
             }
         }
 
-        levelLists.splice(insertIndex, 0, fileName);
+        levelLists.splice(insertIndex, 0, { id: levelId, name: levelName });
 
         changes.levelInserted = levelName;
         changes.indexInserted = insertIndex;
 
         if (insertIndex - 1 >= 0)
             changes.levelNameUp =
-                currentLevels.find(lvl => `${lvl.level_id}` === levelLists[insertIndex - 1])?.name || null;
+                currentLevels.find(lvl => `${lvl.level_id}` === levelLists[insertIndex - 1].id)?.name || null;
         if (insertIndex + 1 < levelLists.length)
             changes.levelNameDown =
-                currentLevels.find(lvl => `${lvl.level_id}` === levelLists[insertIndex + 1])?.name || null;
+                currentLevels.find(lvl => `${lvl.level_id}` === levelLists[insertIndex + 1].id)?.name || null;
         if (levelLists.length > 150)
             changes.levelLegacy =
-                currentLevels.find(lvl => `${lvl.level_id}` === levelLists[150])?.name || null;
+                currentLevels.find(lvl => `${lvl.level_id}` === levelLists[150].id)?.name || null;
         if (insertIndex < 75)
             changes.levelExtended =
-                currentLevels.find(lvl => `${lvl.level_id}` === levelLists[75])?.name || null;
+                currentLevels.find(lvl => `${lvl.level_id}` === levelLists[75].id)?.name || null;
 
         const fileEditedList = Buffer.from(JSON.stringify(levelLists, null, 4)).toString("base64");
         await axios.put(`${process.env.URL_API_GITHUB}/public/data/${fileNameList}.json`, {

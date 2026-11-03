@@ -128,7 +128,7 @@ async function getTop10(db) {
         }
     });
 
-    /** @type {string[]>} */
+    /** @type {{id: string, name: string}[]}} */
     let levels = JSON.parse(Buffer.from(response.data.content, "base64").toString())
 
     if (!Array.isArray(levels)) {
@@ -145,7 +145,7 @@ async function getTop10(db) {
 
     for (let i = 0; i < levels.length; i++) {
         const level = levels[i];
-        const levelResponse = await axios.get(`${process.env.URL_API_GITHUB}/public/data/${level}.json`, {
+        const levelResponse = await axios.get(`${process.env.URL_API_GITHUB}/public/data/${level.id}.json`, {
             headers: {
                 Authorization: `token ${GITHUB_TOKEN}`
             }
@@ -157,7 +157,7 @@ async function getTop10(db) {
             throw new Error(`Invalid level data for ${level}`);
         }
 
-        const index = allRatedLevels.findIndex(l => `${l.level_id}` === level)
+        const index = allRatedLevels.findIndex(l => `${l.level_id}` === level.id)
         if (index === -1) {
             continue
         }
