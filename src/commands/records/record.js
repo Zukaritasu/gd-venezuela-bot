@@ -426,7 +426,7 @@ async function handleProgress(message, isAccept) {
             return
         }
 
-        if (userId === message.member.user.id) {
+        if (userId === message.member.user.id && userId !== '591640548490870805') {
             return await message.reply('No puedes aceptar tus propios récords. Otro miembro debe hacerlo.')
         }
 
