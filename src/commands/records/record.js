@@ -181,9 +181,10 @@ async function createRecordFile(message, fileName, levelName, levelId, jsonInfo,
     /**@type {{id: string, name: string}[]}} */
     const levelLists = listRespose.content;
     const currentLevels = isPlatformer ? levelsPlat : levels;
-    if (!levelLists.findIndex(lvl => `${lvl.id}` === levelId)) {
 
-        logger.DBG(JSON.stringify(levelLists, null, 4));
+    logger.DBG(JSON.stringify(levelLists, null, 4));
+
+    if (!levelLists.findIndex(lvl => `${lvl.id}` === levelId)) {
 
         let insertIndex = levelLists.length;
         const levelIndex = currentLevels.findIndex(lvl => `${lvl.level_id}` === levelId);
