@@ -156,7 +156,7 @@ async function createRecordFile(message, fileName, levelName, levelId, jsonInfo,
 
     // Create new record file
 
-    const fileEdited = Buffer.from(JSON.stringify(fileContent, null, 4)).toString("base64");
+    /* const fileEdited = Buffer.from(JSON.stringify(fileContent, null, 4)).toString("base64");
     await axios.put(`${process.env.URL_API_GITHUB}/public/data/${fileName}.json`, {
         message: `Created record for ${jsonInfo.user} by ${message.author.username}`,
         content: fileEdited,
@@ -165,7 +165,7 @@ async function createRecordFile(message, fileName, levelName, levelId, jsonInfo,
         headers: {
             Authorization: `token ${GITHUB_TOKEN}`
         }
-    });
+    }); */
 
     // Add level to _list.json or _list-plat.json
 
@@ -182,6 +182,9 @@ async function createRecordFile(message, fileName, levelName, levelId, jsonInfo,
     const levelLists = listRespose.content;
     const currentLevels = isPlatformer ? levelsPlat : levels;
     if (!levelLists.findIndex(lvl => `${lvl.id}` === levelId)) {
+
+        logger.DBG(JSON.stringify(levelLists, null, 4));
+
         let insertIndex = levelLists.length;
         const levelIndex = currentLevels.findIndex(lvl => `${lvl.level_id}` === levelId);
 
@@ -196,7 +199,9 @@ async function createRecordFile(message, fileName, levelName, levelId, jsonInfo,
             }
         }
 
-        levelLists.splice(insertIndex, 0, { id: levelId, name: levelName });
+        logger.DBG(JSON.stringify(levelLists.splice(insertIndex, 0, { id: levelId, name: levelName }), null, 4));
+
+        logger.DBG(JSON.stringify(levelLists, null, 4));
 
         changes.levelInserted = levelName;
         changes.indexInserted = insertIndex;
@@ -214,7 +219,9 @@ async function createRecordFile(message, fileName, levelName, levelId, jsonInfo,
             changes.levelExtended =
                 currentLevels.find(lvl => `${lvl.level_id}` === levelLists[75].id)?.name || null;
 
-        const fileEditedList = Buffer.from(JSON.stringify(levelLists, null, 4)).toString("base64");
+        logger.DBG(JSON.stringify(changes, null, 4));
+
+        /* const fileEditedList = Buffer.from(JSON.stringify(levelLists, null, 4)).toString("base64");
         await axios.put(`${process.env.URL_API_GITHUB}/public/data/${fileNameList}.json`, {
             message: `Updated ${fileNameList}.json by ${message.author.username}`,
             content: fileEditedList,
@@ -224,7 +231,7 @@ async function createRecordFile(message, fileName, levelName, levelId, jsonInfo,
             headers: {
                 Authorization: `token ${GITHUB_TOKEN}`
             }
-        });
+        }); */
     }
 
     // Add the user to the _playerStates.json file
