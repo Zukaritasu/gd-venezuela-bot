@@ -156,7 +156,7 @@ async function createRecordFile(message, fileName, levelName, levelId, jsonInfo,
 
     // Create new record file
 
-    /* const fileEdited = Buffer.from(JSON.stringify(fileContent, null, 4)).toString("base64");
+    const fileEdited = Buffer.from(JSON.stringify(fileContent, null, 4)).toString("base64");
     await axios.put(`${process.env.URL_API_GITHUB}/public/data/${fileName}.json`, {
         message: `Created record for ${jsonInfo.user} by ${message.author.username}`,
         content: fileEdited,
@@ -165,7 +165,7 @@ async function createRecordFile(message, fileName, levelName, levelId, jsonInfo,
         headers: {
             Authorization: `token ${GITHUB_TOKEN}`
         }
-    }); */
+    });
 
     // Add level to _list.json or _list-plat.json
 
@@ -198,9 +198,7 @@ async function createRecordFile(message, fileName, levelName, levelId, jsonInfo,
             }
         }
 
-        logger.DBG(JSON.stringify(levelLists.splice(insertIndex, 0, { id: levelId, name: levelName }), null, 4));
-
-        logger.DBG(JSON.stringify(levelLists, null, 4));
+        levelLists.splice(insertIndex, 0, { id: levelId, name: levelName })
 
         changes.levelInserted = levelName;
         changes.indexInserted = insertIndex;
@@ -218,9 +216,7 @@ async function createRecordFile(message, fileName, levelName, levelId, jsonInfo,
             changes.levelExtended =
                 currentLevels.find(lvl => `${lvl.level_id}` === levelLists[75].id)?.name || null;
 
-        logger.DBG(JSON.stringify(changes, null, 4));
-
-        /* const fileEditedList = Buffer.from(JSON.stringify(levelLists, null, 4)).toString("base64");
+        const fileEditedList = Buffer.from(JSON.stringify(levelLists, null, 4)).toString("base64");
         await axios.put(`${process.env.URL_API_GITHUB}/public/data/${fileNameList}.json`, {
             message: `Updated ${fileNameList}.json by ${message.author.username}`,
             content: fileEditedList,
@@ -230,7 +226,7 @@ async function createRecordFile(message, fileName, levelName, levelId, jsonInfo,
             headers: {
                 Authorization: `token ${GITHUB_TOKEN}`
             }
-        }); */
+        });
     }
 
     // Add the user to the _playerStates.json file
@@ -437,7 +433,7 @@ async function handleProgress(message, isAccept) {
             if (!file) { // File doesn't exist, create it
                 const report = await createRecordFile(message, fileName, levelName, levelId, jsonInfo, userId);
                 await message.reply(`El archivo **${fileName}.json** correspondiente al nivel **${levelName}** no existe, por lo que se ha creado uno nuevo.`);
-                //await printChanges(report.changes, message.guild, report.isPlatformer);
+                await printChanges(report.changes, message.guild, report.isPlatformer);
             } else if (file.content.verifier === jsonInfo.user ||
                 file.content.records.some(oldRecord => oldRecord.user === jsonInfo.user && !('time' in jsonInfo) && oldRecord.percent >= jsonInfo.percent)) {
                 await botRecord.react('✅');
