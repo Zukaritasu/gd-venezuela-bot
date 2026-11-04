@@ -241,14 +241,7 @@ async function execute(_client, database, interaction) {
         const [levelName, levelId] = level.split('~')
 
         if (!levelId) {
-            await interaction.editReply('Ha ocurrido un error al procesar el nivel proporcionado. Intenta mas tarde...');
-            
-            try {
-                throw new Error('Level ID is missing in the level parameter (' + level + ')');
-            } catch (error) {
-                logger.ERR('Error processing level parameter:', error);
-            }
-            
+            await interaction.editReply('Nivel no válido. Asegúrate de seleccionar un nivel de la lista de autocompletado correctamente.');
             return;
         }
 
