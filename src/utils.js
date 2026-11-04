@@ -176,7 +176,7 @@ function hasUserPermissions(member, orMinistry = false) {
     if (member.id === superUserId || member.id === member.guild.ownerId)
         return true;
 
-    if (roles.some(role => member.roles.cache.has(role))) true
+    if (roles.some(role => member.roles.cache.has(role))) return true;
     if (orMinistry && process.env.ID_ROL_MINISTERIO)
         return member.roles.cache.has(process.env.ID_ROL_MINISTERIO)
 

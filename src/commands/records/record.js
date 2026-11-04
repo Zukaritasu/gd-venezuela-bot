@@ -258,14 +258,14 @@ async function printChanges(changes, guild, isPlatformer) {
         message += `.`;
     }
 
-    if (changes.levelExtended && changes.levelLegacy) {
+    /* if (changes.levelExtended && changes.levelLegacy) {
         message += `\nEste cambio empuja a **${changes.levelExtended}** a la extended list y a **${changes.levelLegacy}** a la legacy list.`;
     } else if (changes.levelLegacy) {
         message += `\nEste cambio empuja a **${changes.levelLegacy}** a la legacy list.`;
     } else if (changes.levelExtended) {
         message += `\nEste cambio empuja a **${changes.levelExtended}** a la extended list.`;
     }
-
+*/
     /** @type {TextChannel} */
     const channel = await guild.channels.fetch(channels.LIST_CHANGES); // lista-cambios
     if (!channel) {
