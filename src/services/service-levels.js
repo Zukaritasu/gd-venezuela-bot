@@ -43,25 +43,6 @@ const channels = require('../../.botconfig/channels.json');
 
 const TIME_INTERVAL = 14400000; // 4 hours
 
-const RANK_LIMITS = {
-    main: 75,
-    extended: 150
-};
-
-/**
- * Determines the range of a level based on its position.
- * @param {number} position
- * @returns {'main' | 'extended' | 'legacy'} range
- */
-function getRange(position) {
-    if (position <= RANK_LIMITS.main)
-        return 'main';
-    if (position <= RANK_LIMITS.extended)
-        return 'extended';
-    return 'legacy';
-}
-
-
 /**
  * @param {string} levelName 
  * @returns {string} name formatted
@@ -371,7 +352,8 @@ async function service(db, client) {
 
                 const currentLevels = await aredlapi.getLevels();
                 /** @type {NormalizedLevel[]} */
-                let normalizedLevels = currentLevels.filter(level => listData.content.findIndex(listLevel => listLevel.id === level.level_id.toString()) !== -1)
+                let normalizedLevels = currentLevels.filter(level => listData.content.findIndex(
+                    listLevel => listLevel.id === level.level_id.toString() && listLevel.name === level.name) !== -1)
                     .map(level => {
                         return {
                             originName: level.name,
@@ -417,7 +399,8 @@ module.exports = {
             const listData = await getListLevels();
             const currentLevels = await aredlapi.getLevels();
             
-            let normalizedLevels = currentLevels.filter(level => listData.content.findIndex(listLevel => listLevel.id === level.level_id.toString()) !== -1)
+            let normalizedLevels = currentLevels.filter(level => listData.content.findIndex(
+                listLevel => listLevel.id === level.level_id.toString() && listLevel.name === level.name) !== -1)
                 .map(level => {
                     return {
                         originName: level.name.trim(),
