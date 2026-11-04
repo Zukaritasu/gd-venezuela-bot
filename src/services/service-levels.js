@@ -443,10 +443,10 @@ module.exports = {
             let surplus;
 
             if (setA.size > setB.size) {
-                surplus = Array.from(setA).join(', ');
+                surplus = Array.from(setA).map(level => `${level.name} (${level.id})`).join(', ');
                 surplus += ' are extra in the the GDVZLA List result';
             } else if (setB.size > setA.size) {
-                surplus = Array.from(setB).join(', ');
+                surplus = Array.from(setB).map(level => `${level.name} (${level.id})`).join(', ');
                 surplus += ' are extra in the ARED List result';
             } else {
                 surplus = 'There is no name left over';
