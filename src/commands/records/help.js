@@ -60,7 +60,7 @@ async function execute(_client, _database, interaction) {
                     },
                     {
                         name: '¿Puedo enviar cualquier nivel, independientemente de su posición?',
-                        value: 'Solo puedes subir records de niveles que se encuentren dentro del Top 150 de nuestra lista. Cuando un nivel cae fuera del Top 150, aceptamos records durante 24 horas desde el momento en que cae. Después de ese tiempo, el nivel ya no se aceptará y no podrás enviar records de él.'
+                        value: 'Sí, pero con la excepción de los niveles Legacy, que no son aceptados. Los niveles Legacy son aquellos que han sido clasificados como Insane Demon.'
                     },
                     {
                         name: '¿Cómo puedo reclamar un pack?',
