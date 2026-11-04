@@ -240,6 +240,18 @@ async function execute(_client, database, interaction) {
         const level = interaction.options.getString('level');
         const [levelName, levelId] = level.split('~')
 
+        if (!levelId) {
+            await interaction.editReply('Ha ocurrido un error al procesar el nivel proporcionado. Intenta mas tarde...');
+            
+            try {
+                throw new Error('Level ID is missing in the level parameter (' + level + ')');
+            } catch (error) {
+                logger.ERR('Error processing level parameter:', error);
+            }
+            
+            return;
+        }
+
         const recordTime = interaction.options.getString('time');
         let time = null;
         if (recordTime) {
