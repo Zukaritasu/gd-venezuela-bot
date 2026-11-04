@@ -266,6 +266,12 @@ module.exports = {
                         await ban.banUser(message)
                     }
                 }
+
+                else if (isCommand(message, '--test-list')) {
+                    if (utils.hasUserPermissions(message.member)) {
+                        await require('../services/service-levels').sortStatusError()
+                    }
+                }
             }
         } catch (e) {
             logger.ERR(e)

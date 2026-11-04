@@ -412,7 +412,8 @@ async function service(db, client) {
 module.exports = {
     start: service,
     sortStatusError: async () => {
-        /* try {
+        try {
+            /** @type {ListData} */
             const listData = await getListLevels();
             const currentLevels = await aredlapi.getLevels();
             
@@ -427,7 +428,7 @@ module.exports = {
                 }).sort((a, b) => a.position - b.position);
 
             let listA = listData.content;
-            let listB = normalizedLevels.map(level => level.levelId);
+            let listB = normalizedLevels.map(level => ({id: level.levelId, name: level.name}));
 
             const setA = new Set(listA);
             const setB = new Set(listB);
@@ -455,6 +456,6 @@ module.exports = {
         } catch (error) {
             logger.ERR(error);
             return false;
-        } */
+        }
     }
 }
