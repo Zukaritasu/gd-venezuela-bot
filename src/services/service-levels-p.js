@@ -203,7 +203,7 @@ async function isSortedList(client, listLevels, sortedList) {
     if (listLevels.content.length !== sortedList.length) {
         const channel = await client.channels.fetch(channels.SUBMITS);
         if (channel && channel.isTextBased())
-            await channel.send('Ha ocurrido un error al ordenar la lista de niveles de la **GD Venezuela List**.\nPosibles causas:\n\n- Hay más de un nivel con el mismo nombre\n- Se ha eliminado un nivel\n- Error interno en la **API** de la **AREDL**');
+            await channel.send('*(Platformer)* Ha ocurrido un error al ordenar la lista de niveles de la **GD Venezuela List**.\nPosibles causas:\n\n- Hay más de un nivel con el mismo nombre\n- Se ha eliminado un nivel\n- Error interno en la **API** de la **AREDL**');
         throw new Error('The number of levels in the GD Venezuela List does not match the number of levels fetched from the API');
     }
 
@@ -373,7 +373,8 @@ async function service(db, client) {
                 
                 const currentLevels = await aredlapi.getLevelsPlatformer();
                 /** @type {NormalizedLevel[]} */
-                let normalizedLevels = currentLevels.filter(level => listData.content.findIndex(listLevel => listLevel.id === level.level_id.toString()) !== -1)
+                let normalizedLevels = currentLevels.filter(level => listData.content.findIndex(
+                    listLevel => listLevel.id === level.level_id.toString() && listLevel.name === level.name) !== -1)
                     .map(level => {
                         return {
                             originName: level.name,
