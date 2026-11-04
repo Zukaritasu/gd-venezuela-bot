@@ -401,7 +401,6 @@ async function sendMessageToUser(message, member, content) {
 async function handleProgress(message, isAccept) {
     try {
         const botMessage = await getBotMessage(message);
-        logger.ERR("a")
         if (!botMessage) return;
 
         const { userId, levelName, levelId, botRecord, jsonInfo } = botMessage;
@@ -423,12 +422,10 @@ async function handleProgress(message, isAccept) {
         }
 
         if (userId === message.member.user.id && userId !== '591640548490870805') {
-            logger.ERR("b")
             return await message.reply('No puedes aceptar tus propios récords. Otro miembro debe hacerlo.')
         }
 
         if (isAccept) {
-            logger.ERR("c")
             const fileName = levelId;
             let isUpdate = false;
 
@@ -461,7 +458,6 @@ async function handleProgress(message, isAccept) {
                 // update emoji
                 await message.react('🔄');
             }
-            logger.ERR("d")
         } else {
             await sendMessageToUser(message, user, `Tu progreso en el nivel **${levelName}** ha sido rechazado :x:\n**Razón:** ${message.content.substring(11).trim()}`);
             await botRecord.react('❌');
