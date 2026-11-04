@@ -183,6 +183,11 @@ async function getLevelName(message, level) {
         matchLevel = matchingLevels[0]
     }
 
+    if (matchLevel.legacy) {
+        await sendErrorDM(message, 'El nivel proporcionado es un nivel legacy y no se aceptan records de niveles legacy.');
+        return null;
+    }
+
     if (!('isPlatformer' in matchLevel)) {
         matchLevel['isPlatformer'] = false
     }
