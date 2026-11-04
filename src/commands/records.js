@@ -118,7 +118,7 @@ module.exports = {
             levels.push(...levelsPlat);
 
             const filteredLevels = levels
-                .filter(level => level.name.toLowerCase().includes(focusedValue.toLowerCase()) && !level.legacy)
+                .filter(level => level.name.toLowerCase().includes(focusedValue.toLowerCase()) && level.legacy === false)
                 .map(level => ({ name: `${level.name} - ${level.level_id}`, value: `${level.name}~${level.level_id}` }))
                 .slice(0, 25);
 
