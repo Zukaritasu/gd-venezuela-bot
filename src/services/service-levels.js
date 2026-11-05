@@ -369,7 +369,7 @@ async function service(db, client) {
                 // corresponding channel
 
                 if (!await isSortedList(client, listData, normalizedLevels)) {
-                    await saveSortedList(listData.sha, normalizedLevels.map(level => ({ id: level.levelId, name: level.name })));
+                    await saveSortedList(listData.sha, normalizedLevels.map(level => ({ id: level.levelId, name: level.originName })));
                     await printChangelog(db, client, normalizedLevels, listData);
 
                     logger.DBG('The GD Venezuela List has been sorted according to the AREDL API result');
