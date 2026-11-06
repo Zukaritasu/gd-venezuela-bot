@@ -272,6 +272,12 @@ module.exports = {
                         await require('../services/service-levels').sortStatusError()
                     }
                 }
+                
+                else if (isCommand(message, '--test-listp')) {
+                    if (utils.hasUserPermissions(message.member)) {
+                        await require('../services/service-levels-p').sortStatusError()
+                    }
+                }
             }
         } catch (e) {
             logger.ERR(e)

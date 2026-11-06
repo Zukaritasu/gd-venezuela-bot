@@ -390,7 +390,7 @@ async function service(db, client) {
                 // corresponding channel
 
                 if (!await isSortedList(client, listData, normalizedLevels)) {
-                    await saveSortedList(listData.sha, normalizedLevels.map(level => ({ id: level.levelId, name: level.name })));
+                    await saveSortedList(listData.sha, normalizedLevels.map(level => ({ id: level.levelId, name: level.originName })));
                     await printChangelog(db, client, normalizedLevels, listData);
                 }
             }
@@ -415,49 +415,52 @@ async function service(db, client) {
 module.exports = {
     start: service,
     sortStatusError: async () => {
-        /* try {
+        try {
+            /** @type {ListData} */
             const listData = await getListLevels();
             const currentLevels = await aredlapi.getLevelsPlatformer();
-            
-            let normalizedLevels = currentLevels.filter(level => listData.content.findIndex(listLevel => listLevel.id === level.level_id.toString()) !== -1)
+
+            let normalizedLevels = currentLevels.filter(level => listData.content.findIndex(
+                listLevel => listLevel.id === level.level_id.toString() && listLevel.name === level.name) !== -1)
                 .map(level => {
                     return {
-                        originName: level.name,
-                        name: getLevelName(level.name),
+                        originName: level.name.trim(),
+                        name: getLevelName(level.name.trim()),
                         levelId: level.level_id.toString(),
                         position: level.position
                     }
                 }).sort((a, b) => a.position - b.position);
 
             let listA = listData.content;
-            let listB = normalizedLevels.map(level => level.levelId);
+            let listB = normalizedLevels.map(level => ({ id: level.levelId, name: level.originName }));
 
-            const setA = new Set(listA);
-            const setB = new Set(listB);
+            const getLevelKey = level => JSON.stringify([level.id, level.name]);
+            const levelsA = new Map(listA.map(level => [getLevelKey(level), level]));
+            const levelsB = new Map(listB.map(level => [getLevelKey(level), level]));
 
-            listB.forEach(levelId => {
-                if (setA.has(levelId)) {
-                    setA.delete(levelId);
-                    setB.delete(levelId);
+            for (const key of levelsA.keys()) {
+                if (levelsB.has(key)) {
+                    levelsB.delete(key);
+                    levelsA.delete(key);
                 }
-            });
-
-            let surplus;
-
-            if (setA.size > setB.size) {
-                surplus = Array.from(setA).join(', ');
-                surplus += ' are extra in the the GDVZLA List result';
-            } else if (setB.size > setA.size) {
-                surplus = Array.from(setB).join(', ');
-                surplus += ' are extra in the ARED List result';
-            } else {
-                surplus = 'There is no name left over';
             }
 
-            logger.DBG(`The remaining names are: ${surplus}`);
+            const surplus = [];
+
+            if (levelsA.size > 0) {
+                const extraLevels = Array.from(levelsA.values()).map(level => `${level.name} (${level.id})`).join(', ');
+                surplus.push(`${extraLevels} are extra in the GDVZLA List result`);
+            }
+
+            if (levelsB.size > 0) {
+                const extraLevels = Array.from(levelsB.values()).map(level => `${level.name} (${level.id})`).join(', ');
+                surplus.push(`${extraLevels} are extra in the ARED List result`);
+            }
+
+            logger.DBG(`(Platformer) The remaining names are: ${surplus.join('; ') || 'There is no name left over'}`);
         } catch (error) {
             logger.ERR(error);
             return false;
-        } */
+        }
     }
 }
