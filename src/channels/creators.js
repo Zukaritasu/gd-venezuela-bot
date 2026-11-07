@@ -55,11 +55,6 @@ async function logMessage(userId, messageId) {
  */
 async function processMessage(message) {
 	try {
-		const attSize = message.attachments.size
-		if (attSize === 0) {
-			return await message.delete()
-		}
-
 		const hasNonMediaAttachment = message.attachments.some(attachment => {
 			const contentType = attachment.contentType || '';
 			const extension = attachment.name?.split('.').pop()?.toLowerCase();
