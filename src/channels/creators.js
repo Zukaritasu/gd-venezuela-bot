@@ -55,19 +55,26 @@ async function logMessage(userId, messageId) {
  */
 async function processMessage(message) {
 	try {
-		const hasNonMediaAttachment = message.attachments.some(attachment => {
-			const contentType = attachment.contentType || '';
-			const extension = attachment.name?.split('.').pop()?.toLowerCase();
-			const mediaExtensions = [
-				'png', 'jpg', 'jpeg',
-				'mp4', 'mkv', 'mov', 'webm', 'avi', 'mpeg', 'mpg'
-			];
-			return !contentType.startsWith('image/') && !contentType.startsWith('video/') &&
-				!mediaExtensions.includes(extension);
-		});
+		let hasNonMediaAttachment = true
 
-		if (hasNonMediaAttachment && 
-			!/(?:https?:\/\/)?(?:www\.|m\.)?(?:youtube\.com\/(?:watch\?v=|shorts\/|embed\/)|youtu\.be\/)[^\s]+/i.test(message.content)) {
+		if (message.attachments.size > 0) {
+			hasNonMediaAttachment = message.attachments.some(attachment => {
+				const contentType = attachment.contentType || '';
+				const extension = attachment.name?.split('.').pop()?.toLowerCase();
+				const mediaExtensions = [
+					'png', 'jpg', 'jpeg',
+					'mp4', 'mkv', 'mov', 'webm', 'avi', 'mpeg', 'mpg'
+				];
+				return !contentType.startsWith('image/') && !contentType.startsWith('video/') &&
+					!mediaExtensions.includes(extension);
+			});
+		}
+
+		const containsYouTubeLink = /(?:https?:\/\/)?(?:www\.|m\.)?(?:youtube\.com\/(?:watch\?v=|shorts\/|embed\/)|youtu\.be\/)[^\s]+/i.test(message.content);
+
+		// If the message has non-media attachments and does not contain
+		// a YouTube link, delete it
+		if (hasNonMediaAttachment && !containsYouTubeLink) {
 			return await message.delete();
 		}
 
