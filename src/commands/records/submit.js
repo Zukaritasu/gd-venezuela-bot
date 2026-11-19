@@ -325,7 +325,7 @@ ${JSON.stringify(recordObject, null, 4)}
  * Sends an error message to the user via DM if they provided incorrect data.
  * If the DM cannot be sent, reacts to the user's message with ❌.
  *
- * @param {Message} message 
+ * @param {Message | ChatInputCommandInteraction} message 
  * @param {string} errorMessage 
  */
 async function sendErrorDM(message, errorMessage) {
@@ -358,6 +358,8 @@ async function sendErrorDM(message, errorMessage) {
                     logger.ERR('Error deleting message after sending error DM:', error);
                 }
             }, 10000);
+        } else if (message instanceof ChatInputCommandInteraction) {
+            await message.editReply(errorMessage)
         }
     } catch (e) {
         logger.ERR('Error sending DM to user:', e);
