@@ -263,9 +263,9 @@ async function execute(_client, database, interaction) {
         const isPlatform = levelsPlat.findIndex(lvl => lvl.level_id.toString() === levelId) !== -1
 
         if (time && !isPlatform) {
-            return await sendErrorDM(interaction, 'El nivel proporcionado no es un nivel de platformer.');
+            return await sendErrorDM(interaction, 'El nivel proporcionado no es un nivel platformer.');
         } else if (isPlatform && !time) {
-            return await sendErrorDM(interaction, 'El nivel platformer debe de contener el tiempo en el campo **time**.');
+            return await sendErrorDM(interaction, 'El nivel platformer debe contener el tiempo en el campo **time**.');
         }
 
         const ytvideo = await getVideoLink(interaction, interaction.options.getString('ytvideo'));
