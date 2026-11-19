@@ -259,18 +259,14 @@ async function execute(_client, database, interaction) {
             }
         }
 
-        if (time) {
-            const levelsPlat = await aredlapi.getLevelsPlatformer();
-            if (!levelsPlat.some(lvl => lvl.name.toLowerCase() === levelName.trim().toLowerCase())) {
-                await sendErrorDM(interaction, 'El nivel proporcionado no es un nivel de platformer.');
-                return;
-            }
-        }
+        const levelsPlat = await aredlapi.getLevelsPlatformer();
+        const isPlatform = levelsPlat.some(lvl => lvl.id.toString() === levelId)
 
-        /* if (await isLegacyLevel(levelId, null, !!time)) {
-            await interaction.editReply('El nivel proporcionado es un nivel legacy y no se aceptan records de niveles legacy.');
-            return;
-        } */
+        if (time && !isPlatform) {
+            return await sendErrorDM(interaction, 'El nivel proporcionado no es un nivel de platformer.');
+        } else if (isPlatform && !time) {
+            return await sendErrorDM(interaction, 'El nivel platformer debe de contener el tiempo en el campo **time**.');
+        }
 
         const ytvideo = await getVideoLink(interaction, interaction.options.getString('ytvideo'));
         if (!ytvideo) return;
