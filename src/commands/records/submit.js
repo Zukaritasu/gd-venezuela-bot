@@ -252,7 +252,7 @@ async function execute(_client, database, interaction) {
 
         const recordTime = interaction.options.getString('time');
         let time = null;
-        if (recordTime) {
+        if (recordTime && recordTime.trim().length !== 0) {
             time = await getLevelPlatformTime(interaction, recordTime);
             if (!time.isValid) {
                 return;
@@ -262,7 +262,7 @@ async function execute(_client, database, interaction) {
         const levelsPlat = await aredlapi.getLevelsPlatformer();
         const isPlatform = levelsPlat.some(lvl => lvl.id.toString() === levelId)
 
-        logger.DBG(isPlatform, levelName, levelId, recordTime)
+        logger.DBG(isPlatform, levelName, levelId, recordTime, time)
 
         if (time && !isPlatform) {
             return await sendErrorDM(interaction, 'El nivel proporcionado no es un nivel de platformer.');
