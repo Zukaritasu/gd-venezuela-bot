@@ -330,6 +330,10 @@ ${JSON.stringify(recordObject, null, 4)}
  */
 async function sendErrorDM(message, errorMessage) {
     try {
+        if (!(message instanceof Message)) {
+            return await message?.editReply(errorMessage)
+        }
+
         const user = message.author;
         if (!user) {
             logger.WAR('Could not fetch user to send DM');
@@ -337,10 +341,7 @@ async function sendErrorDM(message, errorMessage) {
         }
 
         try {
-            if (message instanceof Message)
-                await user.send(errorMessage);
-            else
-                await message?.editReply(errorMessage)
+            await user.send(errorMessage);
         } catch (error) {
             if (error.code === RESTJSONErrorCodes.CannotSendMessagesToThisUser) {
                 try {
