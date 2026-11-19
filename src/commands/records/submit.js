@@ -358,8 +358,8 @@ async function sendErrorDM(message, errorMessage) {
                     logger.ERR('Error deleting message after sending error DM:', error);
                 }
             }, 10000);
-        } else if (message instanceof ChatInputCommandInteraction) {
-            await message.editReply(errorMessage)
+        } else  {
+            await message?.editReply(errorMessage)
         }
     } catch (e) {
         logger.ERR('Error sending DM to user:', e);
