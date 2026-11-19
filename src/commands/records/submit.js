@@ -254,20 +254,17 @@ async function execute(_client, database, interaction) {
         let time = null;
         if (recordTime) {
             time = await getLevelPlatformTime(interaction, recordTime);
-            logger.DBG('OK')
             if (!time.isValid) {
                 return;
             }
         }
 
         const levelsPlat = await aredlapi.getLevelsPlatformer();
-        const isPlatform = levelsPlat.findIndex(lvl => lvl.id.toString() === levelId) !== -1
+        const isPlatform = levelsPlat.findIndex(lvl => lvl.level_id.toString() === levelId) !== -1
 
-        logger.DBG(time === null, time == null, isPlatform, recordTime === null, recordTime?.trim()?.length ?? 0)
-
-        if (time !== null && !isPlatform) {
+        if (time && !isPlatform) {
             return await sendErrorDM(interaction, 'El nivel proporcionado no es un nivel de platformer.');
-        } else if (isPlatform && time === null) {
+        } else if (isPlatform && !time) {
             return await sendErrorDM(interaction, 'El nivel platformer debe de contener el tiempo en el campo **time**.');
         }
 
