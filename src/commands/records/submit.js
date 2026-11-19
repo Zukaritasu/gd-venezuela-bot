@@ -262,6 +262,8 @@ async function execute(_client, database, interaction) {
         const levelsPlat = await aredlapi.getLevelsPlatformer();
         const isPlatform = levelsPlat.some(lvl => lvl.id.toString() === levelId)
 
+        logger.DBG(isPlatform, levelName, levelId, recordTime)
+
         if (time && !isPlatform) {
             return await sendErrorDM(interaction, 'El nivel proporcionado no es un nivel de platformer.');
         } else if (isPlatform && !time) {
