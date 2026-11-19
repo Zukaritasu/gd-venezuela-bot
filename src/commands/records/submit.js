@@ -337,7 +337,10 @@ async function sendErrorDM(message, errorMessage) {
         }
 
         try {
-            await user.send(errorMessage);
+            if (message instanceof Message)
+                await user.send(errorMessage);
+            else
+                await message?.editReply(errorMessage)
         } catch (error) {
             if (error.code === RESTJSONErrorCodes.CannotSendMessagesToThisUser) {
                 try {
@@ -347,10 +350,10 @@ async function sendErrorDM(message, errorMessage) {
                 }
             }
         }
-        await message.react('❌');
 
         // garbage message after 10 seconds
         if (message instanceof Message) {
+            await message.react('❌').catch(() => null);
             setTimeout(async () => {
                 try {
                     await message.delete();
@@ -358,8 +361,6 @@ async function sendErrorDM(message, errorMessage) {
                     logger.ERR('Error deleting message after sending error DM:', error);
                 }
             }, 10000);
-        } else  {
-            await message?.editReply(errorMessage)
         }
     } catch (e) {
         logger.ERR('Error sending DM to user:', e);
